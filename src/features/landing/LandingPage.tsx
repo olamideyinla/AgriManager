@@ -8,6 +8,7 @@ import { HowItWorks } from './components/HowItWorks'
 import { Testimonials } from './components/Testimonials'
 import { PricingSection } from './components/PricingSection'
 import { FAQSection } from './components/FAQSection'
+import { ContactSection } from './components/ContactSection'
 import { FinalCTA } from './components/FinalCTA'
 import { LandingFooter } from './components/LandingFooter'
 import { WhatsAppButton } from './components/WhatsAppButton'
@@ -26,6 +27,7 @@ export default function LandingPage() {
           <Testimonials />
           <PricingSection />
           <FAQSection />
+          <ContactSection />
           <FinalCTA />
         </main>
         <LandingFooter />

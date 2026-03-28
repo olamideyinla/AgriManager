@@ -7,6 +7,7 @@ import { ProtectedRoute, GuestRoute } from '../shared/components/ProtectedRoute'
 const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
 const PrivacyPage  = lazy(() => import('../features/landing/PrivacyPage'))
 const TermsPage    = lazy(() => import('../features/landing/TermsPage'))
+const ContactPage  = lazy(() => import('../features/landing/ContactPage'))
 
 // Auth pages (guest only)
 const WelcomePage = lazy(() => import('../features/auth/pages/WelcomePage'))
@@ -109,6 +110,7 @@ export function AppRoutes() {
           <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
 
           {/* Auth routes — guest only */}
           <Route path="/auth/welcome" element={<GuestRoute><WelcomePage /></GuestRoute>} />

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export function LandingFooter() {
   const navigate = useNavigate()
@@ -41,6 +41,11 @@ export function LandingFooter() {
                 </a>
               </li>
               <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+              <li>
+                <Link to="/contact" className="hover:text-white transition-colors">
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
 
