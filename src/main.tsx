@@ -46,6 +46,14 @@ const queryClient = new QueryClient({
   },
 })
 
+// ── Capture PWA install prompt early (fires before React mounts) ──────────────
+// InstallPrompt.tsx reads window.__pwaInstallPrompt after mounting
+;(window as any).__pwaInstallPrompt = null
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  ;(window as any).__pwaInstallPrompt = e
+})
+
 // ── Service Worker ────────────────────────────────────────────────────────────
 
 if ('serviceWorker' in navigator) {
