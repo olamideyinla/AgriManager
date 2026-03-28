@@ -1,3 +1,4 @@
+import { CurrencyProvider } from './context/CurrencyContext'
 import { LandingNav } from './components/LandingNav'
 import { HeroSection } from './components/HeroSection'
 import { TrustBar } from './components/TrustBar'
@@ -13,21 +14,23 @@ import { WhatsAppButton } from './components/WhatsAppButton'
 
 export default function LandingPage() {
   return (
-    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <LandingNav />
-      <main>
-        <HeroSection />
-        <TrustBar />
-        <ProblemSolution />
-        <FeaturesSection />
-        <HowItWorks />
-        <Testimonials />
-        <PricingSection />
-        <FAQSection />
-        <FinalCTA />
-      </main>
-      <LandingFooter />
-      <WhatsAppButton />
-    </div>
+    <CurrencyProvider>
+      <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+        <LandingNav />
+        <main>
+          <HeroSection />
+          <TrustBar />
+          <ProblemSolution />
+          <FeaturesSection />
+          <HowItWorks />
+          <Testimonials />
+          <PricingSection />
+          <FAQSection />
+          <FinalCTA />
+        </main>
+        <LandingFooter />
+        <WhatsAppButton />
+      </div>
+    </CurrencyProvider>
   )
 }

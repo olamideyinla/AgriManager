@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 import { trackEvent } from '../../../shared/utils/analytics'
+import { useCurrencyContext } from '../context/CurrencyContext'
+import { formatPrice } from '../config/currencies'
+import { CurrencySelector } from './CurrencySelector'
 
 const freeFeatures = [
   '1 enterprise',
@@ -21,13 +24,19 @@ const proFeatures = [
   'CSV / PDF exports',
 ]
 
+function PriceSkeleton() {
+  return <div className="h-10 w-28 bg-white/20 rounded-lg animate-pulse my-1" />
+}
+
 export function PricingSection() {
   const navigate = useNavigate()
   const [yearly, setYearly] = useState(false)
   const ref = useScrollReveal<HTMLDivElement>()
+  const { currency, isDetecting } = useCurrencyContext()
 
-  const proPrice = yearly ? '$86/year' : '$9/month'
-  const proSub = yearly ? 'Save 20% vs monthly' : 'Billed monthly'
+  const monthlyStr = isDetecting ? null : formatPrice(currency.monthlyGrowth, currency) + '/month'
+  const annualStr  = isDetecting ? null : formatPrice(currency.annualGrowth, currency) + '/year'
+  const savingsPct = currency.annualSavingsPct
 
   return (
     <section id="pricing" className="py-20 bg-white">
@@ -36,10 +45,11 @@ export function PricingSection() {
           <h2 className="font-display text-3xl sm:text-4xl text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-gray-500 text-lg font-body mb-6">Start free. Upgrade when you're ready.</p>
+          <p className="text-gray-500 text-lg font-body mb-3">Start free. Upgrade when you're ready.</p>
+          <CurrencySelector />
 
-          {/* Toggle */}
-          <div className="inline-flex items-center gap-3 bg-gray-100 rounded-full p-1">
+          {/* Monthly / Yearly toggle */}
+          <div className="inline-flex items-center gap-3 bg-gray-100 rounded-full p-1 mt-4">
             <button
               onClick={() => setYearly(false)}
               className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${!yearly ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
@@ -50,7 +60,7 @@ export function PricingSection() {
               onClick={() => setYearly(true)}
               className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${yearly ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
             >
-              Yearly <span className="text-emerald-600">–20%</span>
+              Yearly <span className="text-emerald-600">–{savingsPct}%</span>
             </button>
           </div>
         </div>
@@ -59,7 +69,7 @@ export function PricingSection() {
           {/* Free */}
           <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
             <h3 className="text-xl font-bold text-gray-900 mb-1 font-body">Free</h3>
-            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">$0</p>
+            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">Free</p>
             <p className="text-gray-500 text-sm mb-6">Forever</p>
             <ul className="space-y-3 flex-1 mb-8">
               {freeFeatures.map((f) => (
@@ -86,8 +96,25 @@ export function PricingSection() {
               ⭐ Most Popular
             </div>
             <h3 className="text-xl font-bold text-white mb-1 font-body">Pro</h3>
-            <p className="text-4xl font-bold text-white mb-1 kpi-value">{proPrice}</p>
-            <p className="text-primary-200 text-sm mb-6">{proSub}</p>
+
+            {/* Price — skeleton while detecting */}
+            {isDetecting ? (
+              <PriceSkeleton />
+            ) : yearly ? (
+              <>
+                <p className="text-4xl font-bold text-white mb-1 kpi-value">{annualStr}</p>
+                <p className="text-primary-200 text-sm mb-6">Save {savingsPct}% vs monthly</p>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl font-bold text-white mb-1 kpi-value">{monthlyStr}</p>
+                <p className="text-primary-200 text-sm mb-6">
+                  or {annualStr} (save {savingsPct}%)
+                </p>
+              </>
+            )}
+            {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
+
             <ul className="space-y-3 flex-1 mb-8">
               {proFeatures.map((f) => (
                 <li key={f} className="flex items-center gap-2.5 text-sm text-white">

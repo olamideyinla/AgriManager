@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { trackEvent } from '../../../shared/utils/analytics'
+import { useCurrencyContext } from '../context/CurrencyContext'
 
 export function HeroSection() {
   const navigate = useNavigate()
+  const { currency } = useCurrencyContext()
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 bg-gradient-to-br from-earth-100 via-primary-50 to-white overflow-hidden">
@@ -81,14 +83,15 @@ export function HeroSection() {
                       </div>
                       <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                         <p className="text-xs text-gray-500">Feed Used</p>
-                        <p className="text-lg font-bold text-gray-800">45kg</p>
+                        <p className="text-lg font-bold text-gray-800">45 kg</p>
                         <p className="text-xs text-gray-400">this morning</p>
                       </div>
                     </div>
+                    {/* Localized P&L card */}
                     <div className="bg-accent/10 border border-accent/30 rounded-xl p-3">
                       <p className="text-xs font-semibold text-secondary-700">💰 Month P&amp;L</p>
-                      <p className="text-xl font-bold text-primary-700 mt-1">+$412</p>
-                      <p className="text-xs text-gray-500">Sales $1,840 · Costs $1,428</p>
+                      <p className="text-xl font-bold text-primary-700 mt-1">+{currency.exampleRevenue}</p>
+                      <p className="text-xs text-gray-500">Cost per egg: {currency.exampleCostPerEgg}</p>
                     </div>
                   </div>
                 </div>

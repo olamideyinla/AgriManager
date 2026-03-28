@@ -1,32 +1,10 @@
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
-
-const testimonials = [
-  {
-    quote:
-      'Finally I can see which flock makes me the most profit. Last month I saved $200 just from spotting a feed waste issue early.',
-    name: 'Grace Wanjiku',
-    role: 'Layers Farmer · Kiambu, Kenya',
-    flag: '🇰🇪',
-  },
-  {
-    quote:
-      'The offline mode is everything. My farm has poor internet but I never miss a day of records now.',
-    name: 'Emmanuel Okafor',
-    role: 'Broiler Farmer · Lagos, Nigeria',
-    flag: '🇳🇬',
-  },
-  {
-    quote:
-      'I used to spend Sunday afternoons doing payroll calculations. Now it takes 5 minutes and I\'m confident the numbers are right.',
-    name: 'Priya Sharma',
-    role: 'Mixed Farm · Punjab, India',
-    flag: '🇮🇳',
-  },
-]
+import { useCurrencyContext } from '../context/CurrencyContext'
+import { getLocalizedTestimonials } from '../config/testimonials'
 
 function StarRating() {
   return (
-    <div className="flex gap-0.5 text-accent text-sm">
+    <div className="flex gap-0.5 text-accent text-sm" aria-label="5 stars">
       {Array.from({ length: 5 }).map((_, i) => (
         <span key={i}>★</span>
       ))}
@@ -35,6 +13,8 @@ function StarRating() {
 }
 
 export function Testimonials() {
+  const { countryCode } = useCurrencyContext()
+  const testimonials = getLocalizedTestimonials(countryCode)
   const ref = useScrollReveal<HTMLDivElement>()
 
   return (
@@ -44,13 +24,10 @@ export function Testimonials() {
           <h2 className="font-display text-3xl sm:text-4xl text-gray-900 mb-4">
             Farmers Love AgriManagerX
           </h2>
-          <p className="text-gray-500 text-lg font-body">Real stories from real farms across Africa</p>
+          <p className="text-gray-500 text-lg font-body">Real stories from real farms across Africa &amp; Asia</p>
         </div>
 
-        <div
-          ref={ref}
-          className="reveal grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
+        <div ref={ref} className="reveal grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <div
               key={t.name}
