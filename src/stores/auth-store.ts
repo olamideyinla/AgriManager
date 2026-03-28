@@ -5,6 +5,7 @@ import { db } from '../core/database/db'
 import { seedInitialData } from '../core/database/seed'
 import { cancelDebouncedPush } from '../core/sync/sync-triggers'
 import { syncEngine } from '../core/sync/sync-engine'
+import { toSupabaseRecord } from '../core/sync/table-config'
 import { nowIso } from '../shared/types/base'
 import type { AppUser, UserRole } from '../shared/types'
 
@@ -254,6 +255,17 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         // ── Returning worker: already set up on this device ──────────────────
         const existingUser = await loadAppUser(userId)
         if (existingUser) {
+          // Ensure this worker's AppUser exists in Supabase so RLS resolves.
+          // It may be 'pending' if a previous push failed or was interrupted.
+          if (existingUser.syncStatus !== 'synced') {
+            try {
+              await supabase
+                .from('app_users')
+                .upsert([toSupabaseRecord(existingUser as unknown as Record<string, unknown>)], { onConflict: 'id' })
+              await db.appUsers.update(userId, { syncStatus: 'synced' as const })
+              existingUser.syncStatus = 'synced'
+            } catch { /* non-fatal */ }
+          }
           set({ session, user: session.user, appUser: existingUser, isAuthenticated: true, isLoading: false })
           return
         }
@@ -333,8 +345,21 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           .eq('invite_code', code)
       }
 
-      // Pull all org data so enterprises/infrastructure are available immediately
-      // (worker's local DB only has org + appUser at this point)
+      // Push the worker's AppUser to Supabase BEFORE pulling org data.
+      // Every RLS policy calls get_user_org_id() which does:
+      //   SELECT organization_id FROM app_users WHERE id = auth.uid()
+      // Until this record exists in Supabase, every pull query returns empty.
+      try {
+        const workerAppUser = await db.appUsers.get(userId)
+        if (workerAppUser) {
+          await supabase
+            .from('app_users')
+            .upsert([toSupabaseRecord(workerAppUser as unknown as Record<string, unknown>)], { onConflict: 'id' })
+          await db.appUsers.update(userId, { syncStatus: 'synced' as const })
+        }
+      } catch { /* non-fatal */ }
+
+      // Now pull all org data — enterprises, infrastructure, farm locations etc.
       await syncEngine.pullChanges().catch(() => { /* non-fatal — will retry on next sync */ })
 
       const appUser = await loadAppUser(userId)

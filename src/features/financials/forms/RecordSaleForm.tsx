@@ -224,10 +224,10 @@ export default function RecordSaleForm() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Amount *</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currency}</span>
             <input type="number" step="0.01" min="0" placeholder="0.00"
               {...register('amount', { required: 'Amount is required', min: { value: 0.01, message: 'Must be > 0' } })}
-              className={`input-base pr-3 ${currency.length <= 1 ? 'pl-7' : currency.length <= 2 ? 'pl-9' : 'pl-12'}`} />
+              className="input-base pr-14" />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">{currency}</span>
           </div>
           {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount.message}</p>}
           {lastSale && (
