@@ -34,7 +34,7 @@ export function LandingNav() {
           <a href="#pricing" className="text-gray-600 hover:text-primary-700 text-sm font-medium transition-colors">Pricing</a>
           <a href="#how-it-works" className="text-gray-600 hover:text-primary-700 text-sm font-medium transition-colors">How It Works</a>
           <button
-            onClick={() => navigate('/auth/signin')}
+            onClick={() => navigate('/auth/welcome')}
             className="text-primary-700 text-sm font-semibold hover:text-primary-800 transition-colors"
           >
             Sign In
@@ -50,7 +50,7 @@ export function LandingNav() {
         {/* Mobile: sign in + hamburger */}
         <div className="flex md:hidden items-center gap-3">
           <button
-            onClick={() => navigate('/auth/signin')}
+            onClick={() => navigate('/auth/welcome')}
             className="text-primary-700 text-sm font-semibold"
           >
             Sign In
