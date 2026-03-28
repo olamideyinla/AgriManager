@@ -1,7 +1,9 @@
+import { useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { db } from '../../core/database/db'
+import { useAuthStore } from '../../stores/auth-store'
 import { todayStr } from './entry-store'
 import { LayerEntryForm } from './LayerEntryForm'
 import { BroilerEntryForm } from './BroilerEntryForm'
@@ -18,6 +20,7 @@ export interface EntryFormProps {
   enterprise: EnterpriseInstance
   infrastructure: Infrastructure
   date: string
+  onSaveSuccess: () => void
 }
 
 // ── Back header ───────────────────────────────────────────────────────────────
@@ -46,6 +49,16 @@ export default function EntryFormDispatcher() {
   const { enterpriseId } = useParams<{ enterpriseId: string }>()
   const [searchParams] = useSearchParams()
   const date = searchParams.get('date') ?? todayStr()
+  const navigate = useNavigate()
+  const role = useAuthStore(s => s.appUser?.role)
+
+  const handleSaveSuccess = useCallback(() => {
+    if (role === 'worker' || role === 'viewer') {
+      navigate('/daily-entry')
+    } else {
+      navigate('/dashboard')
+    }
+  }, [role, navigate])
 
   const data = useLiveQuery(async () => {
     if (!enterpriseId) return null
@@ -73,7 +86,7 @@ export default function EntryFormDispatcher() {
   }
 
   const { enterprise, infrastructure } = data
-  const props: EntryFormProps = { enterprise, infrastructure, date }
+  const props: EntryFormProps = { enterprise, infrastructure, date, onSaveSuccess: handleSaveSuccess }
 
   return (
     <div className="h-dvh flex flex-col bg-gray-50">

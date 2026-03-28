@@ -50,9 +50,10 @@ export interface WizardState {
   // Step 4 — Settings
   unitSystem: 'metric' | 'imperial'
   eggCountUnit: 'individual' | 'tray30' | 'crate360'
-  feedBagKg: string    // '25', '50', or custom number string
+  feedBagKg: string       // '25', '50', or custom number string
   currency: string
-  reminderTime: string // HH:MM
+  reminderAmTime: string  // HH:MM — morning entry reminder
+  reminderPmTime: string  // HH:MM — evening entry reminder
   language: string
 
   // Meta (not persisted)
@@ -68,7 +69,7 @@ interface WizardActions {
   initStockEntries: (infras: InfraItem[]) => void
   setStep3: (stockEntries: StockEntry[]) => void
   setStep4: (d: Partial<Pick<WizardState,
-    'unitSystem' | 'eggCountUnit' | 'feedBagKg' | 'currency' | 'reminderTime' | 'language'>>) => void
+    'unitSystem' | 'eggCountUnit' | 'feedBagKg' | 'currency' | 'reminderAmTime' | 'reminderPmTime' | 'language'>>) => void
   advance: () => void
   back: () => void
   goTo: (step: number) => void
@@ -103,7 +104,8 @@ const INITIAL_STATE: Omit<WizardState, 'isSubmitting' | 'isComplete'> = {
   eggCountUnit: 'individual',
   feedBagKg: '50',
   currency: 'USD',
-  reminderTime: '18:00',
+  reminderAmTime: '06:00',
+  reminderPmTime: '18:00',
   language: 'en',
 }
 
@@ -182,7 +184,8 @@ export const useWizardStore = create<WizardState & WizardActions>()(
         eggCountUnit: s.eggCountUnit,
         feedBagKg: s.feedBagKg,
         currency: s.currency,
-        reminderTime: s.reminderTime,
+        reminderAmTime: s.reminderAmTime,
+        reminderPmTime: s.reminderPmTime,
         language: s.language,
         isComplete: s.isComplete,
       }),

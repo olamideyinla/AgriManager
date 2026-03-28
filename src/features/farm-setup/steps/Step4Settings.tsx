@@ -17,7 +17,8 @@ const schema = z.object({
   feedBagKg: z.string(),
   feedBagCustom: z.string(),
   currency: z.string().min(1),
-  reminderTime: z.string(),
+  reminderAmTime: z.string(),
+  reminderPmTime: z.string(),
   language: z.string(),
 })
 
@@ -42,7 +43,8 @@ export const Step4Settings = forwardRef<StepHandle, Step4Props>((props, ref) => 
       feedBagKg: showCustomBag ? 'other' : state.feedBagKg,
       feedBagCustom: showCustomBag ? state.feedBagKg : '',
       currency: state.currency,
-      reminderTime: state.reminderTime,
+      reminderAmTime: state.reminderAmTime,
+      reminderPmTime: state.reminderPmTime,
       language: state.language,
     },
   })
@@ -173,14 +175,27 @@ export const Step4Settings = forwardRef<StepHandle, Step4Props>((props, ref) => 
       {/* Daily reminder */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1">
-          Daily data entry reminder
+          Daily entry reminders
         </label>
-        <p className="text-xs text-gray-500 mb-2">Remind me to enter records at:</p>
-        <input
-          {...form.register('reminderTime')}
-          type="time"
-          className="input-base"
-        />
+        <p className="text-xs text-gray-500 mb-3">Remind me to log records twice a day:</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Morning (AM)</label>
+            <input
+              {...form.register('reminderAmTime')}
+              type="time"
+              className="input-base"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Evening (PM)</label>
+            <input
+              {...form.register('reminderPmTime')}
+              type="time"
+              className="input-base"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Language */}

@@ -49,7 +49,7 @@ const SEVERITY_OPTIONS: { value: string; label: string }[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function CropActivityForm({ enterprise, date }: EntryFormProps) {
+export function CropActivityForm({ enterprise, date, onSaveSuccess }: EntryFormProps) {
   const userId   = useAuthStore(s => s.user?.id) ?? ''
   const addToast = useUIStore(s => s.addToast)
   const [isSaving, setIsSaving]   = useState(false)
@@ -104,6 +104,7 @@ export function CropActivityForm({ enterprise, date }: EntryFormProps) {
       await db.cropActivityRecords.add(record)
       setIsSuccess(true)
       addToast({ message: 'Activity recorded', type: 'success' })
+      setTimeout(() => onSaveSuccess(), 1000)
       // Reset form for another entry
       setTimeout(() => {
         setIsSuccess(false)

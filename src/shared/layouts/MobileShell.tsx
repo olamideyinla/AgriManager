@@ -12,6 +12,7 @@ import { useAuthStore } from '../../stores/auth-store'
 import { alertEngine } from '../../core/services/alert-engine'
 import { initSyncTriggers } from '../../core/sync/sync-triggers'
 import { initReminderScheduler } from '../../core/services/worker-reminder-engine'
+import { useWizardStore } from '../../features/farm-setup/wizard-store'
 import { SyncStatusIndicator } from '../../features/sync/SyncStatusIndicator'
 import InstallPrompt from '../components/InstallPrompt'
 import { UpdateBanner } from '../components/UpdateBanner'
@@ -37,6 +38,38 @@ function ReminderEngineRunner() {
     const scheduler = initReminderScheduler(appUser.id)
     return () => scheduler.stop()
   }, [appUser?.id, appUser?.role])
+  return null
+}
+
+// ── Daily entry reminder runner ────────────────────────────────────────────────
+
+const DAILY_REMINDER_KEY = 'agri_daily_reminder_last'
+
+function DailyEntryReminderRunner() {
+  const amTime = useWizardStore(s => s.reminderAmTime)
+  const pmTime = useWizardStore(s => s.reminderPmTime)
+
+  useEffect(() => {
+    const check = () => {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return
+      const now = new Date()
+      const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+      if (hhmm !== amTime && hhmm !== pmTime) return
+      // Avoid duplicate firing within the same minute
+      const fireKey = `${hhmm}-${now.toDateString()}`
+      if (localStorage.getItem(DAILY_REMINDER_KEY) === fireKey) return
+      localStorage.setItem(DAILY_REMINDER_KEY, fireKey)
+      new Notification('AgriManagerX — Daily Entry', {
+        body: 'Time to log today\'s farm records',
+        icon: '/icons/icon-192.svg',
+        tag: 'daily-entry-reminder',
+      })
+    }
+    check()
+    const interval = setInterval(check, 60_000)
+    return () => clearInterval(interval)
+  }, [amTime, pmTime])
+
   return null
 }
 
@@ -330,6 +363,7 @@ export function MobileShell() {
       <SyncRunner />
       <AlertEngineRunner />
       <ReminderEngineRunner />
+      <DailyEntryReminderRunner />
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 lg:ml-64">
         <UpdateBanner />

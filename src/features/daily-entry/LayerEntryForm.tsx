@@ -51,7 +51,7 @@ function toActualEggs(raw: number, unit: string): number {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function LayerEntryForm({ enterprise, date }: EntryFormProps) {
+export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormProps) {
   const userId   = useAuthStore(s => s.user?.id) ?? ''
   const orgId    = useAuthStore(s => s.appUser?.organizationId) ?? ''
   const addToast = useUIStore(s => s.addToast)
@@ -200,7 +200,7 @@ export function LayerEntryForm({ enterprise, date }: EntryFormProps) {
       clearDraft()
       setIsSuccess(true)
       addToast({ message: 'Entry saved', type: 'success' })
-      setTimeout(() => setIsSuccess(false), 2500)
+      setTimeout(() => onSaveSuccess(), 1000)
     } catch {
       addToast({ message: 'Failed to save — try again', type: 'error' })
     } finally {

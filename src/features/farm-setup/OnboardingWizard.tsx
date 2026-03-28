@@ -219,7 +219,8 @@ export default function OnboardingWizard() {
       eggCountUnit: data.eggCountUnit,
       feedBagKg: feedBag,
       currency: data.currency,
-      reminderTime: data.reminderTime,
+      reminderAmTime: data.reminderAmTime,
+      reminderPmTime: data.reminderPmTime,
       language: data.language,
     })
     await submitWizard()
