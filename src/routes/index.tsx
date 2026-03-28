@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MobileShell } from '../shared/layouts/MobileShell'
-import { ProtectedRoute, GuestRoute } from '../shared/components/ProtectedRoute'
+import { ProtectedRoute, GuestRoute, AdminRoute } from '../shared/components/ProtectedRoute'
+
+// Admin pages
+const AdminContactsPage = lazy(() => import('../features/admin/AdminContactsPage'))
 
 // Landing pages (public)
 const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
@@ -106,6 +109,9 @@ export function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
+          {/* Admin */}
+          <Route path="/admin" element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
+
           {/* Landing & public pages */}
           <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
           <Route path="/privacy" element={<PrivacyPage />} />

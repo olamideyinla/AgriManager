@@ -46,3 +46,17 @@ export function GuestRoute({ children }: { children: React.ReactNode }) {
   if (isAuthenticated) return <Navigate to={homeForRole(appUser?.role)} replace />
   return <>{children}</>
 }
+
+const ADMIN_EMAIL = 'olamide.eyinla@gmail.com'
+
+export function AdminRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const appUser = useAuthStore(s => s.appUser)
+  const user = useAuthStore(s => s.user)
+
+  if (isLoading) return <LoadingScreen />
+  if (!isAuthenticated) return <Navigate to="/auth/welcome" replace />
+  if (user?.email !== ADMIN_EMAIL) return <Navigate to={homeForRole(appUser?.role)} replace />
+  return <>{children}</>
+}
