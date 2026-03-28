@@ -3,6 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MobileShell } from '../shared/layouts/MobileShell'
 import { ProtectedRoute, GuestRoute } from '../shared/components/ProtectedRoute'
 
+// Landing pages (public)
+const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
+const PrivacyPage  = lazy(() => import('../features/landing/PrivacyPage'))
+const TermsPage    = lazy(() => import('../features/landing/TermsPage'))
+
 // Auth pages (guest only)
 const WelcomePage = lazy(() => import('../features/auth/pages/WelcomePage'))
 const SignInPage = lazy(() => import('../features/auth/pages/SignInPage'))
@@ -100,6 +105,11 @@ export function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
+          {/* Landing & public pages */}
+          <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+
           {/* Auth routes — guest only */}
           <Route path="/auth/welcome" element={<GuestRoute><WelcomePage /></GuestRoute>} />
           <Route path="/auth/signin" element={<GuestRoute><SignInPage /></GuestRoute>} />
@@ -112,7 +122,6 @@ export function AppRoutes() {
 
           {/* Main app shell — auth required */}
           <Route element={<ProtectedRoute><MobileShell /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/daily-entry" element={<DailyEntryPage />} />
             <Route path="/reports" element={<ReportsPage />} />
@@ -193,7 +202,7 @@ export function AppRoutes() {
           <Route path="/decision/calendar"        element={<ProtectedRoute><PlanningCalendar /></ProtectedRoute>} />
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

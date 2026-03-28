@@ -47,6 +47,8 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ["'Playfair Display'", 'Georgia', 'serif'],
+        body: ["'DM Sans'", 'system-ui', 'sans-serif'],
       },
       screens: {
         xs: '375px',
