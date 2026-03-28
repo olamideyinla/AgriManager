@@ -243,7 +243,7 @@ export default function DashboardPage() {
         {entryStatus !== undefined && entryStatus.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-700">Today's Entries</p>
+              <p className="text-sm font-bold text-gray-800">Today's Entries</p>
               {pendingEntries.length > 0 && (
                 <button
                   onClick={() => navigate('/daily-entry')}
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <span className="text-2xl">{TYPE_ICON[s.enterpriseType]}</span>
-                  <p className="text-xs font-medium text-gray-700 text-center leading-tight truncate w-full">
+                  <p className="text-xs font-semibold text-gray-800 text-center leading-tight truncate w-full">
                     {s.enterpriseName.split(' ')[0]}
                   </p>
                   {s.hasEntryToday
@@ -411,13 +411,15 @@ export default function DashboardPage() {
 
         {/* Quick actions */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Quick Actions</p>
-          <div className="grid grid-cols-4 gap-2">
+          <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Quick Actions</p>
+          <div className={`grid gap-2 ${appUser?.role === 'worker' ? 'grid-cols-2' : 'grid-cols-4'}`}>
             {[
               { icon: <ShoppingCart size={20} />, label: 'Sale',      path: '/financials?type=sale' },
               { icon: <CreditCard size={20} />,   label: 'Expense',   path: '/financials?type=expense' },
-              { icon: <Package size={20} />,      label: 'Inventory', path: '/inventory' },
-              { icon: <BarChart3 size={20} />,    label: 'Reports',   path: '/reports' },
+              ...(appUser?.role !== 'worker' ? [
+                { icon: <Package size={20} />,    label: 'Inventory', path: '/inventory' },
+                { icon: <BarChart3 size={20} />,  label: 'Reports',   path: '/reports' },
+              ] : []),
             ].map(({ icon, label, path }) => (
               <button
                 key={label}
@@ -425,7 +427,7 @@ export default function DashboardPage() {
                 className="flex flex-col items-center gap-1.5 bg-white border border-gray-100 rounded-2xl py-3 px-2 shadow-sm active:scale-95 transition-transform"
               >
                 <div className="text-primary-600">{icon}</div>
-                <span className="text-xs font-medium text-gray-600">{label}</span>
+                <span className="text-xs font-semibold text-gray-700">{label}</span>
               </button>
             ))}
           </div>

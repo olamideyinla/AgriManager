@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, History, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, History, RefreshCw, ChevronDown, ChevronUp, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
@@ -9,6 +9,7 @@ import { generateDailyChecklist, recalculateChecklistCompletion } from '../../co
 import { initReminderScheduler, loadReminderConfig } from '../../core/services/worker-reminder-engine'
 import { db } from '../../core/database/db'
 import { nowIso } from '../../shared/types/base'
+import InstallPrompt from '../../shared/components/InstallPrompt'
 import type { DailyTask, TimeWindow } from '../../shared/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -142,6 +143,7 @@ function FocusCard({
 export default function WorkerTasksPage() {
   const navigate = useNavigate()
   const appUser  = useAuthStore(s => s.appUser)
+  const signOut  = useAuthStore(s => s.signOut)
   const addToast = useUIStore(s => s.addToast)
 
   const today = format(new Date(), 'yyyy-MM-dd')
@@ -308,6 +310,7 @@ export default function WorkerTasksPage() {
   return (
     <div className="h-dvh flex flex-col bg-gray-50">
       {showConfetti && <ConfettiBurst />}
+      <InstallPrompt />
 
       {/* Header */}
       <div className="bg-primary-600 px-4 pt-3 pb-5 safe-top flex-shrink-0">
@@ -328,6 +331,13 @@ export default function WorkerTasksPage() {
               className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white"
             >
               <History size={20} />
+            </button>
+            <button
+              onClick={() => void signOut()}
+              className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-white"
+              title="Sign out"
+            >
+              <LogOut size={18} />
             </button>
           </div>
         </div>
