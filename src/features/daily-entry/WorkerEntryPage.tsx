@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Clock, Flame } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Flame } from 'lucide-react'
 import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
 import type { EnterpriseInstance } from '../../shared/types'
@@ -145,8 +145,13 @@ export default function WorkerEntryPage() {
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="bg-primary-600 px-4 pt-safe-top pb-4">
-        <p className="text-white/70 text-xs font-medium mt-2">
+      <div className="bg-primary-600 px-4 pt-3 pb-4 safe-top">
+        <div className="flex items-center gap-2 mb-1">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white">
+            <ArrowLeft size={22} />
+          </button>
+        </div>
+        <p className="text-white/70 text-xs font-medium">
           {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
         <h1 className="text-white text-xl font-bold mt-0.5">

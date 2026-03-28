@@ -162,7 +162,6 @@ const BOTTOM_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   worker: [
     { to: '/worker/tasks', icon: CheckSquare, label: 'Tasks' },
     { to: '/worker-entry', icon: PenLine,     label: 'Entry' },
-    { to: '/enterprises',  icon: Building2,   label: 'Records' },
   ],
   viewer: [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', alertBadge: true },
@@ -216,7 +215,6 @@ const SIDEBAR_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   worker: [
     { to: '/worker/tasks',       icon: CheckSquare, label: 'Tasks' },
     { to: '/worker-entry',       icon: PenLine,     label: 'Entry' },
-    { to: '/enterprises',        icon: Building2,   label: 'Records' },
     { to: '/settings/reminders', icon: BellRing,    label: 'Reminders',    dividerBefore: true },
   ],
   viewer: [
@@ -248,22 +246,28 @@ function NavItems({ items, unreadCount, vertical = false }: {
                       ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`
-                : `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
-                    isActive ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+                : `flex-1 flex flex-col items-center justify-center min-h-[56px] py-1.5 gap-0.5 transition-colors ${
+                    isActive ? 'text-primary-600' : 'text-gray-400'
                   }`
             }
           >
             {({ isActive }) => (
               <>
-                <span className="relative">
-                  <Icon className={`w-5 h-5 ${isActive && !vertical ? 'stroke-[2.5]' : ''}`} />
+                <span className={`relative flex items-center justify-center transition-all ${
+                  !vertical && isActive
+                    ? 'bg-primary-100 dark:bg-primary-900/50 rounded-[10px] w-14 h-7'
+                    : !vertical
+                    ? 'w-14 h-7'
+                    : ''
+                }`}>
+                  <Icon className={`w-6 h-6 ${isActive && !vertical ? 'stroke-[2.5]' : ''}`} />
                   {alertBadge && unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                    <span className="absolute -top-0.5 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </span>
-                <span className={vertical ? 'text-sm font-medium' : 'text-[10px] font-medium leading-none'}>
+                <span className={vertical ? 'text-sm font-medium' : `text-[10px] font-medium leading-none ${isActive ? 'font-semibold' : ''}`}>
                   {label}
                 </span>
               </>
@@ -315,7 +319,7 @@ function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[var(--bg-surface)] border-t border-gray-200 dark:border-gray-700 z-50 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[var(--bg-surface)] shadow-[0_-1px_0_rgba(0,0,0,0.08)] dark:border-t dark:border-gray-700 z-50 lg:hidden"
       style={{ paddingBottom: 'var(--sab)' }}
     >
       <div className="flex">

@@ -305,11 +305,20 @@ export default function DashboardPage() {
         {data !== undefined && data !== null && data.items.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
             <p className="text-4xl mb-2">🌱</p>
-            <p className="text-sm font-semibold text-gray-700 mb-1">No active enterprises</p>
-            <p className="text-xs text-gray-400 mb-4">Complete farm setup to start tracking</p>
-            <button onClick={() => navigate('/farm-setup')} className="btn-primary text-sm">
-              Setup Farm
-            </button>
+            {appUser?.role === 'owner' || appUser?.role === 'manager' ? (
+              <>
+                <p className="text-sm font-semibold text-gray-700 mb-1">No active enterprises</p>
+                <p className="text-xs text-gray-400 mb-4">Complete farm setup to start tracking</p>
+                <button onClick={() => navigate('/farm-setup')} className="btn-primary text-sm">
+                  Setup Farm
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-gray-700 mb-1">No enterprises assigned</p>
+                <p className="text-xs text-gray-400">Contact your farm owner to get access.</p>
+              </>
+            )}
           </div>
         )}
 

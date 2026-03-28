@@ -146,7 +146,7 @@ export function CompleteEventSheet({ event, enterpriseName, onClose }: Props) {
               onChange={e => setNotes(e.target.value)}
               rows={3}
               placeholder="Any observations or notes…"
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
+              className="mt-1 input-base resize-none"
             />
           </div>
         </div>

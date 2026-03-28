@@ -15,11 +15,16 @@ export function SaveButton({
   label = 'SAVE',
   type = 'submit',
 }: SaveButtonProps) {
+  const handleClick = () => {
+    navigator.vibrate?.(30)
+    onClick?.()
+  }
+
   return (
     <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 safe-bottom">
       <button
         type={type}
-        onClick={onClick}
+        onClick={handleClick}
         disabled={isLoading || isSuccess}
         className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 ${
           isSuccess

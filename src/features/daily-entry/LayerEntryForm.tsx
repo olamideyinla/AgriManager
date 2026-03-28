@@ -18,7 +18,8 @@ import type { LayerDailyRecord } from '../../shared/types'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface FormValues {
-  eggInput: string       // raw input — may be trays or crates
+  eggMorning: string     // morning collection — raw input (may be trays or crates)
+  eggEvening: string     // evening collection — raw input
   brokenEggs: string
   rejectEggs: string
   currentHenCount: string
@@ -70,7 +71,8 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
 
   const form = useForm<FormValues>({
     defaultValues: {
-      eggInput: '',
+      eggMorning: '',
+      eggEvening: '',
       brokenEggs: '',
       rejectEggs: '',
       currentHenCount: String(enterprise.currentStockCount),
@@ -111,14 +113,17 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
   useEffect(() => {
     if (existingRecord === undefined) return  // still loading
     if (existingRecord) {
-      // Convert stored egg count back to display unit
-      const raw = eggUnit === 'tray30'
-        ? String(Math.round(existingRecord.totalEggs / 30))
-        : eggUnit === 'crate360'
-          ? String(Math.round(existingRecord.totalEggs / 360))
-          : String(existingRecord.totalEggs)
+      // Convert stored egg total back to display unit, split 60/40 morning/evening
+      const toRaw = (eggs: number) =>
+        eggUnit === 'tray30'   ? String(Math.round(eggs / 30))  :
+        eggUnit === 'crate360' ? String(Math.round(eggs / 360)) :
+        String(eggs)
+      const total   = existingRecord.totalEggs
+      const morning = total > 0 ? Math.round(total * 0.6) : 0
+      const evening = total > 0 ? total - morning : 0
       reset({
-        eggInput:           raw,
+        eggMorning:         toRaw(morning),
+        eggEvening:         toRaw(evening),
         brokenEggs:         String(existingRecord.brokenEggs ?? ''),
         rejectEggs:         String(existingRecord.rejectEggs ?? ''),
         currentHenCount:    String(enterprise.currentStockCount),
@@ -142,7 +147,7 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
 
   // ── Running totals ─────────────────────────────────────────────────────────
 
-  const rawEgg    = parseFloat(watch('eggInput')) || 0
+  const rawEgg    = (parseFloat(watch('eggMorning')) || 0) + (parseFloat(watch('eggEvening')) || 0)
   const totalEggs = toActualEggs(rawEgg, eggUnit)
   const stockCount = enterprise.currentStockCount || 1
   const hdpPct    = stockCount > 0 ? Math.round((totalEggs / stockCount) * 1000) / 10 : 0
@@ -160,7 +165,7 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
     setIsSaving(true)
     try {
       const now  = new Date().toISOString()
-      const eggs = toActualEggs(parseFloat(values.eggInput) || 0, eggUnit)
+      const eggs = toActualEggs((parseFloat(values.eggMorning) || 0) + (parseFloat(values.eggEvening) || 0), eggUnit)
       const currentHenCt   = parseInt(values.currentHenCount) || 0
       const mortalityCount = Math.max(0, baseHenCount - currentHenCt)
       const record: LayerDailyRecord = {
@@ -227,12 +232,20 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
       {/* Egg collection */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3">
         <h3 className="text-sm font-semibold text-gray-700">Egg Collection</h3>
-        <NumberInput
-          label={eggLabel(eggUnit)}
-          value={watch('eggInput')}
-          onChange={(v) => setValue('eggInput', v)}
-          min="0"
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <NumberInput
+            label={`Morning · ${eggLabel(eggUnit)}`}
+            value={watch('eggMorning')}
+            onChange={(v) => setValue('eggMorning', v)}
+            min="0"
+          />
+          <NumberInput
+            label={`Evening · ${eggLabel(eggUnit)}`}
+            value={watch('eggEvening')}
+            onChange={(v) => setValue('eggEvening', v)}
+            min="0"
+          />
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <RunningTotal
             label="Total eggs"

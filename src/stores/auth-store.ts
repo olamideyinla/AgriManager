@@ -4,6 +4,7 @@ import { supabase } from '../core/config/supabase'
 import { db } from '../core/database/db'
 import { seedInitialData } from '../core/database/seed'
 import { cancelDebouncedPush } from '../core/sync/sync-triggers'
+import { syncEngine } from '../core/sync/sync-engine'
 import { nowIso } from '../shared/types/base'
 import type { AppUser, UserRole } from '../shared/types'
 
@@ -331,6 +332,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           .update({ redeemed_at: ts, redeemed_by: userId })
           .eq('invite_code', code)
       }
+
+      // Pull all org data so enterprises/infrastructure are available immediately
+      // (worker's local DB only has org + appUser at this point)
+      await syncEngine.pullChanges().catch(() => { /* non-fatal — will retry on next sync */ })
 
       const appUser = await loadAppUser(userId)
       set({ session, user: session!.user, appUser, isAuthenticated: true, isLoading: false })

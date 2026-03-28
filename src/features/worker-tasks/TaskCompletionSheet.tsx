@@ -102,7 +102,7 @@ export function TaskCompletionSheet({ task, onClose, onCompleted }: Props) {
                   onChange={e => setNotes(e.target.value)}
                   rows={2}
                   placeholder="Note anything unusual…"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  className="input-base resize-none"
                 />
               </div>
 

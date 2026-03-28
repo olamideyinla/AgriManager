@@ -1,6 +1,6 @@
 import { db } from './db'
 import { newId, nowIso } from '../../shared/types/base'
-import type { InventoryCategory } from '../../shared/types'
+import type { InventoryCategory, TaskTemplate } from '../../shared/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -204,6 +204,74 @@ export const DEFAULT_INVENTORY_ITEMS: DefaultInventoryItem[] = [
   { category: 'packaging', name: 'Fish Bags',            unitOfMeasurement: 'pcs', reorderPoint: 50 },
 ]
 
+// ── Default task templates ────────────────────────────────────────────────────
+
+/**
+ * Seeds default Feeding and Cleaning task templates for a new organisation.
+ * These are editable — owners can customise titles, times, and frequency.
+ */
+export async function seedDefaultTaskTemplates(orgId: string): Promise<void> {
+  const ts = nowIso()
+  const templates: TaskTemplate[] = [
+    {
+      id: newId(),
+      organizationId: orgId,
+      title: 'Morning Feeding',
+      description: 'Provide morning feed ration to all animals',
+      category: 'feeding',
+      infrastructureId: null,
+      enterpriseTypes: [],
+      timeWindow: 'morning',
+      priority: 'required',
+      frequency: 'daily',
+      specificDays: null,
+      assignedWorkerIds: null,
+      isActive: true,
+      createdAt: ts,
+      updatedAt: ts,
+      syncStatus: 'pending',
+    },
+    {
+      id: newId(),
+      organizationId: orgId,
+      title: 'Evening Feeding',
+      description: 'Provide evening feed ration to all animals',
+      category: 'feeding',
+      infrastructureId: null,
+      enterpriseTypes: [],
+      timeWindow: 'evening',
+      priority: 'required',
+      frequency: 'daily',
+      specificDays: null,
+      assignedWorkerIds: null,
+      isActive: true,
+      createdAt: ts,
+      updatedAt: ts,
+      syncStatus: 'pending',
+    },
+    {
+      id: newId(),
+      organizationId: orgId,
+      title: 'Weekly Cleaning',
+      description: 'Clean housing units, remove waste, refresh bedding and water troughs',
+      category: 'cleaning',
+      infrastructureId: null,
+      enterpriseTypes: [],
+      timeWindow: 'morning',
+      priority: 'recommended',
+      frequency: 'specific_days',
+      specificDays: [1], // Monday
+      assignedWorkerIds: null,
+      isActive: true,
+      createdAt: ts,
+      updatedAt: ts,
+      syncStatus: 'pending',
+    },
+  ]
+
+  await db.taskTemplates.bulkAdd(templates)
+}
+
 // ── Initial data seed ─────────────────────────────────────────────────────────
 
 /**
@@ -256,6 +324,11 @@ export async function seedInitialData(params: {
       updatedAt: ts,
     })
   })
+
+  // Seed default editable task templates
+  try {
+    await seedDefaultTaskTemplates(orgId)
+  } catch { /* may already exist on re-seed */ }
 
   return { orgId, locationId }
 }

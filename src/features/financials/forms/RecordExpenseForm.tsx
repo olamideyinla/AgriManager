@@ -138,19 +138,19 @@ export default function RecordExpenseForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Date *</label>
             <input type="date" {...register('date', { required: true })}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category *</label>
             <select {...register('category', { required: true })}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
+              className="input-base bg-white">
               {EXPENSE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Description</label>
             <input type="text" placeholder="Details about this expense" {...register('description')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export default function RecordExpenseForm() {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currency}</span>
             <input type="number" step="0.01" min="0" placeholder="0.00"
               {...register('amount', { required: 'Amount is required', min: { value: 0.01, message: 'Must be > 0' } })}
-              className={`border border-gray-200 rounded-xl pr-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 ${currency.length <= 1 ? 'pl-7' : currency.length <= 2 ? 'pl-9' : 'pl-12'}`} />
+              className={`input-base pr-3 ${currency.length <= 1 ? 'pl-7' : currency.length <= 2 ? 'pl-9' : 'pl-12'}`} />
           </div>
           {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount.message}</p>}
         </div>
@@ -171,7 +171,7 @@ export default function RecordExpenseForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Enterprise (optional)</label>
             <select {...register('enterpriseId')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
+              className="input-base bg-white">
               <option value="">Farm / General</option>
               {activeEnterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
@@ -182,7 +182,7 @@ export default function RecordExpenseForm() {
               {...register('payeeName')}
               onFocus={() => setPayeeFocused(true)}
               onBlur={() => setTimeout(() => setPayeeFocused(false), 150)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
             {payeeFocused && payeeSuggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg mt-1 overflow-hidden">
                 {payeeSuggestions.slice(0, 5).map(c => (
@@ -221,7 +221,7 @@ export default function RecordExpenseForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Reference</label>
             <input type="text" placeholder="Invoice / receipt number (optional)" {...register('reference')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Receipt Photo</label>

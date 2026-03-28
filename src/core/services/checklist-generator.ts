@@ -52,23 +52,29 @@ async function hasRecordForDate(enterpriseType: string, enterpriseId: string, da
 
 // ── Build routine tasks (feeding + cleaning) per enterprise ───────────────────
 
+interface RoutineSkip {
+  feeding?: boolean
+  cleaning?: boolean
+}
+
 function buildRoutineTasks(
   enterprise: EnterpriseInstance,
   infra: Infrastructure,
   checklistId: string,
   date: string,
   sortBase: number,
+  skip: RoutineSkip = {},
 ): DailyTask[] {
   const now = nowIso()
   const tasks: DailyTask[] = []
 
+  let o = 0
   const make = (
     type: TaskType,
     title: string,
     description: string,
     timeWindow: TimeWindow,
     priority: TaskPriority = 'required',
-    offset = 0,
   ): DailyTask => ({
     id: newId(), checklistId,
     type,
@@ -79,7 +85,7 @@ function buildRoutineTasks(
     status: 'pending',
     completedAt: null, completedBy: null, linkedRecordId: null,
     notes: null,
-    sortOrder: sortBase + offset,
+    sortOrder: sortBase + o++,
     createdAt: now, updatedAt: now, syncStatus: 'pending',
   })
 
@@ -88,44 +94,55 @@ function buildRoutineTasks(
   switch (enterprise.enterpriseType) {
     case 'layers':
     case 'broilers':
-      tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide morning feed ration', 'morning'))
-      tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed ration', 'evening', 'required', 1))
-      if (dow === 1) // Monday
-        tasks.push(make('cleaning', `Weekly coop cleaning — ${infra.name}`, 'Clean house, replace litter if needed', 'morning', 'required', 2))
+      if (!skip.feeding) {
+        tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide morning feed ration', 'morning'))
+        tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed ration', 'evening'))
+      }
+      if (!skip.cleaning && dow === 1)
+        tasks.push(make('cleaning', `Weekly coop cleaning — ${infra.name}`, 'Clean house, replace litter if needed', 'morning'))
       break
 
     case 'cattle_dairy':
     case 'cattle_beef':
-      tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide hay/feed morning ration', 'morning'))
-      tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide hay/feed evening ration', 'evening', 'required', 1))
-      if (dow === 1)
-        tasks.push(make('cleaning', `Stall cleaning — ${infra.name}`, 'Remove manure and refresh bedding', 'morning', 'required', 2))
+      if (!skip.feeding) {
+        tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide hay/feed morning ration', 'morning'))
+        tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide hay/feed evening ration', 'evening'))
+      }
+      if (!skip.cleaning && dow === 1)
+        tasks.push(make('cleaning', `Stall cleaning — ${infra.name}`, 'Remove manure and refresh bedding', 'morning'))
       break
 
     case 'fish':
-      tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Feed morning ration, observe behaviour', 'morning'))
-      tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Feed evening ration, check water quality', 'evening', 'required', 1))
-      if (dow === 0) // Sunday
-        tasks.push(make('cleaning', `Pond / tank cleaning — ${infra.name}`, 'Remove debris, check filters', 'morning', 'recommended', 2))
+      if (!skip.feeding) {
+        tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Feed morning ration, observe behaviour', 'morning'))
+        tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Feed evening ration, check water quality', 'evening'))
+      }
+      if (!skip.cleaning && dow === 0)
+        tasks.push(make('cleaning', `Pond / tank cleaning — ${infra.name}`, 'Remove debris, check filters', 'morning', 'recommended'))
       break
 
     case 'pigs_breeding':
     case 'pigs_growfinish':
-      tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide morning feed ration', 'morning'))
-      tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed ration', 'evening', 'required', 1))
-      if (dow === 1)
-        tasks.push(make('cleaning', `Pen cleaning — ${infra.name}`, 'Wash pen floor and drinking troughs', 'morning', 'required', 2))
+      if (!skip.feeding) {
+        tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide morning feed ration', 'morning'))
+        tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed ration', 'evening'))
+      }
+      if (!skip.cleaning && dow === 1)
+        tasks.push(make('cleaning', `Pen cleaning — ${infra.name}`, 'Wash pen floor and drinking troughs', 'morning'))
       break
 
     case 'rabbit':
-      tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide feed and fresh water', 'morning'))
-      tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed and greens', 'evening', 'required', 1))
-      if (dow === 1)
-        tasks.push(make('cleaning', `Hutch cleaning — ${infra.name}`, 'Remove soiled bedding, clean droppings tray', 'morning', 'required', 2))
+      if (!skip.feeding) {
+        tasks.push(make('feeding',  `Morning feeding — ${infra.name}`, 'Provide feed and fresh water', 'morning'))
+        tasks.push(make('feeding',  `Evening feeding — ${infra.name}`, 'Provide evening feed and greens', 'evening'))
+      }
+      if (!skip.cleaning && dow === 1)
+        tasks.push(make('cleaning', `Hutch cleaning — ${infra.name}`, 'Remove soiled bedding, clean droppings tray', 'morning'))
       break
 
     case 'custom_animal':
-      tasks.push(make('feeding',  `Feeding — ${infra.name}`, 'Provide daily feed ration', 'morning'))
+      if (!skip.feeding)
+        tasks.push(make('feeding',  `Feeding — ${infra.name}`, 'Provide daily feed ration', 'morning'))
       break
   }
 
@@ -137,11 +154,19 @@ function buildRoutineTasks(
 // Only runs if no feeding/cleaning tasks exist yet — safe to call on every load.
 
 async function patchRoutineTasks(checklistId: string, worker: AppUser, date: string): Promise<void> {
-  const existingRoutine = await db.dailyTasks
-    .where('checklistId').equals(checklistId)
-    .filter(t => t.type === 'feeding' || t.type === 'cleaning')
-    .count()
-  if (existingRoutine > 0) return
+  // Determine per-type skip: skip if org has an active template of that category,
+  // or if routine tasks of that type already exist in the checklist.
+  const [orgTemplates, existingFeedingCount, existingCleaningCount] = await Promise.all([
+    db.taskTemplates.where('organizationId').equals(worker.organizationId).filter(t => t.isActive).toArray(),
+    db.dailyTasks.where('checklistId').equals(checklistId).filter(t => t.type === 'feeding').count(),
+    db.dailyTasks.where('checklistId').equals(checklistId).filter(t => t.type === 'cleaning').count(),
+  ])
+
+  const skip: RoutineSkip = {
+    feeding:  existingFeedingCount  > 0 || orgTemplates.some(t => t.category === 'feeding'),
+    cleaning: existingCleaningCount > 0 || orgTemplates.some(t => t.category === 'cleaning'),
+  }
+  if (skip.feeding && skip.cleaning) return
 
   const infraIds = [...(worker.assignedInfrastructureIds ?? [])]
   if (infraIds.length === 0) {
@@ -162,7 +187,7 @@ async function patchRoutineTasks(checklistId: string, worker: AppUser, date: str
       .filter(e => e.status === 'active')
       .toArray()
     for (const ent of enterprises) {
-      const tasks = buildRoutineTasks(ent, infra, checklistId, date, sortBase)
+      const tasks = buildRoutineTasks(ent, infra, checklistId, date, sortBase, skip)
       newTasks.push(...tasks)
       sortBase += tasks.length
     }
@@ -353,6 +378,16 @@ export async function generateDailyChecklist(
   }
 
   // 4. Data entry + routine (feeding/cleaning) tasks per active enterprise
+  // Skip hardcoded routine tasks when the org already has active templates of that category.
+  const orgTemplatesForSkip = await db.taskTemplates
+    .where('organizationId').equals(worker.organizationId)
+    .filter(t => t.isActive)
+    .toArray()
+  const routineSkip: RoutineSkip = {
+    feeding:  orgTemplatesForSkip.some(t => t.category === 'feeding'),
+    cleaning: orgTemplatesForSkip.some(t => t.category === 'cleaning'),
+  }
+
   for (const infraId of infraIds) {
     const infra = await db.infrastructures.get(infraId)
     if (!infra) continue
@@ -367,7 +402,7 @@ export async function generateDailyChecklist(
       allTasks.push(...entryTasks)
       sortCounter += entryTasks.length
 
-      const routineTasks = buildRoutineTasks(ent, infra, checklistId, date, sortCounter)
+      const routineTasks = buildRoutineTasks(ent, infra, checklistId, date, sortCounter, routineSkip)
       allTasks.push(...routineTasks)
       sortCounter += routineTasks.length
     }

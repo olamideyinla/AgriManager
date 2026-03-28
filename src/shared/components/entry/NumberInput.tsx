@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from 'react'
 
-interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
+interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange' | 'enterKeyHint'> {
   label: string
   unit?: string
   helperText?: string
@@ -8,6 +8,7 @@ interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
   value: string
   onChange: (v: string) => void
   isDecimal?: boolean
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send'
 }
 
 export function NumberInput({
@@ -18,6 +19,7 @@ export function NumberInput({
   value,
   onChange,
   isDecimal,
+  enterKeyHint = 'done',
   className,
   ...props
 }: NumberInputProps) {
@@ -28,6 +30,7 @@ export function NumberInput({
         <input
           type="number"
           inputMode={isDecimal ? 'decimal' : 'numeric'}
+          enterKeyHint={enterKeyHint}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`input-base text-lg font-semibold ${unit ? 'pr-14' : ''}`}

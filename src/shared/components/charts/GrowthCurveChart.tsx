@@ -61,7 +61,7 @@ export function GrowthCurveChart({
           unit=" kg"
         />
         <Tooltip
-          contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb', padding: '4px 8px' }}
+          contentStyle={{ fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb', padding: '6px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
           formatter={(v: number, name: string) => [
             v != null ? `${v} kg` : '—',
             name === 'actual' ? 'Actual' : 'Ross 308',
@@ -72,7 +72,7 @@ export function GrowthCurveChart({
           iconType="line"
           iconSize={14}
           formatter={(value) => value === 'actual' ? 'Actual' : 'Ross 308'}
-          wrapperStyle={{ fontSize: 11 }}
+          wrapperStyle={{ fontSize: 12 }}
         />
         {/* Ross 308 standard: dashed gray */}
         <Line
@@ -93,7 +93,7 @@ export function GrowthCurveChart({
           stroke="#f97316"
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4 }}
+          activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
           connectNulls
           isAnimationActive
           animationDuration={600}

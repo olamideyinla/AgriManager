@@ -104,7 +104,7 @@ export default function InviteMemberForm() {
         role: form.role,
         assignedFarmLocationIds: form.assignedFarmLocationIds,
         assignedInfrastructureIds: form.assignedInfrastructureIds,
-        isActive: false, // Becomes active when they first sign in
+        isActive: true,
         createdAt: now,
         updatedAt: now,
         syncStatus: 'pending',
@@ -151,7 +151,7 @@ export default function InviteMemberForm() {
 
   if (invited) {
     const org = appUser?.organizationId ?? ''
-    const msg = `Hi ${invited.member.fullName}! You've been added to our farm management team on AgriManagerX.\n\nYour invite code: *${invited.code}*\n\nTo get started:\n1. Download AgriManagerX\n2. On the welcome screen, tap *"Join with invite code"*\n3. Sign in with your phone number (${invited.member.phone})\n4. Enter the code above when prompted`
+    const msg = `Hi ${invited.member.fullName}! You've been added to our farm management team on AgriManagerX.\n\nYour invite code: *${invited.code}*\n\nTo get started:\n1. Visit *AgriManagerX.com*\n2. On the welcome screen, tap *"Join with invite code"*\n3. Sign in with your phone number (${invited.member.phone})\n4. Enter the code above when prompted`
     const waUrl = `https://wa.me/${invited.member.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`
 
     const handleCopy = async () => {

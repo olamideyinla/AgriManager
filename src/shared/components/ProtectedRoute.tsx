@@ -20,6 +20,10 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[]
 }
 
+function homeForRole(role: UserRole | undefined): string {
+  return role === 'worker' ? '/worker/tasks' : '/dashboard'
+}
+
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
   const isLoading = useAuthStore(s => s.isLoading)
@@ -28,7 +32,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (isLoading) return <LoadingScreen />
   if (!isAuthenticated) return <Navigate to="/auth/welcome" replace />
   if (allowedRoles && appUser && !allowedRoles.includes(appUser.role)) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to={homeForRole(appUser.role)} replace />
   }
   return <>{children}</>
 }
@@ -36,8 +40,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 export function GuestRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
   const isLoading = useAuthStore(s => s.isLoading)
+  const appUser = useAuthStore(s => s.appUser)
 
   if (isLoading) return <LoadingScreen />
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  if (isAuthenticated) return <Navigate to={homeForRole(appUser?.role)} replace />
   return <>{children}</>
 }

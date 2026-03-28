@@ -201,12 +201,12 @@ export default function RecordSaleForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Date *</label>
             <input type="date" {...register('date', { required: true })}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Enterprise</label>
             <select {...register('enterpriseId')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
+              className="input-base bg-white">
               <option value="">Farm / General</option>
               {activeEnterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
@@ -214,7 +214,7 @@ export default function RecordSaleForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Product Type *</label>
             <select {...register('category', { required: true })}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
+              className="input-base bg-white">
               {INCOME_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
@@ -227,7 +227,7 @@ export default function RecordSaleForm() {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currency}</span>
             <input type="number" step="0.01" min="0" placeholder="0.00"
               {...register('amount', { required: 'Amount is required', min: { value: 0.01, message: 'Must be > 0' } })}
-              className={`border border-gray-200 rounded-xl pr-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 ${currency.length <= 1 ? 'pl-7' : currency.length <= 2 ? 'pl-9' : 'pl-12'}`} />
+              className={`input-base pr-3 ${currency.length <= 1 ? 'pl-7' : currency.length <= 2 ? 'pl-9' : 'pl-12'}`} />
           </div>
           {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount.message}</p>}
           {lastSale && (
@@ -250,7 +250,7 @@ export default function RecordSaleForm() {
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Inventory Item</label>
               <select {...register('inventoryItemId')}
-                className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
+                className="input-base bg-white">
                 <option value="">— None —</option>
                 {inventoryItems.map(i => (
                   <option key={i.id} value={i.id}>
@@ -266,7 +266,7 @@ export default function RecordSaleForm() {
                 </label>
                 <input type="number" step="any" min="0" placeholder="0"
                   {...register('inventoryQty')}
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+                  className="input-base" />
                 {invQtyNum > selectedInvItem.currentStock && (
                   <p className="text-xs text-amber-600 mt-1">
                     ⚠ Quantity exceeds current stock ({selectedInvItem.currentStock} {selectedInvItem.unitOfMeasurement})
@@ -314,7 +314,7 @@ export default function RecordSaleForm() {
               {...register('buyerName')}
               onFocus={() => setBuyerFocused(true)}
               onBlur={() => setTimeout(() => setBuyerFocused(false), 150)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
             {buyerFocused && buyerSuggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg mt-1 overflow-hidden">
                 {buyerSuggestions.slice(0, 5).map(c => (
@@ -329,12 +329,12 @@ export default function RecordSaleForm() {
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Reference</label>
             <input type="text" placeholder="Invoice number (optional)" {...register('reference')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" />
+              className="input-base" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Notes</label>
             <textarea rows={2} placeholder="Additional details (optional)" {...register('notes')}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none" />
+              className="input-base resize-none" />
           </div>
         </div>
 

@@ -20,13 +20,13 @@ export function OfflineBanner() {
 
   return (
     <div
-      className="bg-amber-500 text-white px-4 py-2 flex items-center gap-2 animate-slide-down"
+      className="bg-amber-500 text-white px-3 py-1 flex items-center gap-1.5 animate-slide-down"
       role="status"
       aria-live="polite"
     >
-      <WifiOff className="w-4 h-4 shrink-0" />
-      <span className="text-sm font-medium flex-1">
-        You're offline — changes saved locally
+      <WifiOff className="w-3.5 h-3.5 shrink-0" />
+      <span className="text-xs font-semibold tracking-wide flex-1">
+        Offline — changes saved locally
       </span>
     </div>
   )

@@ -50,10 +50,10 @@ export function ComparisonBarChart({
           unit={unit}
         />
         <Tooltip
-          contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb', padding: '4px 8px' }}
+          contentStyle={{ fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb', padding: '6px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
           formatter={(v: number, name: string) => [`${v}${unit}`, name]}
         />
-        <Legend iconSize={12} wrapperStyle={{ fontSize: 11 }} />
+        <Legend iconSize={12} wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="current" name={currentLabel} fill="#2D6A4F" radius={[4, 4, 0, 0]} />
         <Bar dataKey="compared" name={comparedLabel} fill="#9ca3af" radius={[4, 4, 0, 0]} />
       </BarChart>

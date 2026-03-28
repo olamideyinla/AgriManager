@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { History, RefreshCw } from 'lucide-react'
+import { ArrowLeft, History, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
@@ -9,10 +9,13 @@ import { generateDailyChecklist, recalculateChecklistCompletion } from '../../co
 import { initReminderScheduler, loadReminderConfig } from '../../core/services/worker-reminder-engine'
 import { db } from '../../core/database/db'
 import { nowIso } from '../../shared/types/base'
-import { TaskCompletionSheet } from './TaskCompletionSheet'
 import type { DailyTask, TimeWindow } from '../../shared/types'
 
-// ── Confetti burst (CSS-only, lightweight) ────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const SNOOZE_MS = 15 * 60 * 1_000 // 15 minutes
+
+// ── Confetti burst ────────────────────────────────────────────────────────────
 
 function ConfettiBurst() {
   return (
@@ -36,9 +39,9 @@ function ConfettiBurst() {
 
 // ── Progress ring ─────────────────────────────────────────────────────────────
 
-function ProgressRing({ pct, size = 80 }: { pct: number; size?: number }) {
-  const r  = (size - 8) / 2
-  const c  = 2 * Math.PI * r
+function ProgressRing({ pct, size = 72 }: { pct: number; size?: number }) {
+  const r = (size - 8) / 2
+  const c = 2 * Math.PI * r
   const offset = c * (1 - pct / 100)
   return (
     <svg width={size} height={size} className="-rotate-90">
@@ -53,132 +56,83 @@ function ProgressRing({ pct, size = 80 }: { pct: number; size?: number }) {
   )
 }
 
-// ── Time window config ────────────────────────────────────────────────────────
+// ── Time window icons ─────────────────────────────────────────────────────────
 
-const WINDOW_CONFIG: Record<TimeWindow, { icon: string; label: string; color: string }> = {
-  morning: { icon: '☀️', label: 'Morning Tasks', color: 'text-amber-700' },
-  midday:  { icon: '🌤️', label: 'Midday Tasks',  color: 'text-blue-700' },
-  evening: { icon: '🌙', label: 'Evening Tasks', color: 'text-indigo-700' },
-  anytime: { icon: '📋', label: 'Anytime',        color: 'text-gray-700' },
+const WINDOW_ICON: Record<TimeWindow, string> = {
+  morning: '☀️',
+  midday:  '🌤️',
+  evening: '🌙',
+  anytime: '📋',
 }
 
-// ── Priority badge ────────────────────────────────────────────────────────────
-
-function PriorityBadge({ priority }: { priority: string }) {
-  if (priority === 'required')    return <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full flex-shrink-0">REQUIRED</span>
-  if (priority === 'recommended') return <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full flex-shrink-0">RECOMMENDED</span>
-  return <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-full flex-shrink-0">OPTIONAL</span>
+const WINDOW_LABEL: Record<TimeWindow, string> = {
+  morning: 'Morning',
+  midday:  'Midday',
+  evening: 'Evening',
+  anytime: 'Anytime',
 }
 
-// ── Status icon ───────────────────────────────────────────────────────────────
+// ── Focus task card ───────────────────────────────────────────────────────────
 
-function StatusIcon({ status, overdue }: { status: string; overdue: boolean }) {
-  if (status === 'completed')  return <span className="text-xl flex-shrink-0">✅</span>
-  if (status === 'skipped')    return <span className="text-xl flex-shrink-0 opacity-40">⏭</span>
-  if (status === 'in_progress') return <span className="text-xl flex-shrink-0">◐</span>
-  if (overdue)                 return <span className="text-xl flex-shrink-0">🔴</span>
-  return <span className="text-xl flex-shrink-0 opacity-40">○</span>
-}
-
-// ── Task card ─────────────────────────────────────────────────────────────────
-
-function TaskCard({
+function FocusCard({
   task,
-  overdue,
-  onTap,
+  isCompleting,
+  onYes,
+  onNo,
 }: {
   task: DailyTask
-  overdue: boolean
-  onTap: () => void
+  isCompleting: boolean
+  onYes: () => void
+  onNo: () => void
 }) {
-  const isDone = task.status === 'completed' || task.status === 'skipped'
+  const isEntry = task.type === 'data_entry' || task.type === 'health_event'
+
+  const stripColor =
+    task.priority === 'required'
+      ? 'bg-red-50 text-red-700 border-red-100'
+      : task.priority === 'recommended'
+      ? 'bg-blue-50 text-blue-700 border-blue-100'
+      : 'bg-gray-50 text-gray-500 border-gray-100'
 
   return (
-    <button
-      onClick={isDone ? undefined : onTap}
-      disabled={isDone}
-      className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-colors ${
-        task.status === 'completed'
-          ? 'bg-emerald-50 border-emerald-100'
-          : task.status === 'skipped'
-          ? 'bg-gray-50 border-gray-100 opacity-60'
-          : overdue
-          ? 'bg-red-50 border-red-200 active:bg-red-100'
-          : 'bg-white border-gray-100 active:bg-gray-50'
-      }`}
-    >
-      <StatusIcon status={task.status} overdue={overdue} />
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold leading-tight ${
-          task.status === 'completed' ? 'text-emerald-700' : 'text-gray-800'
-        }`}>
-          {task.title}
-        </p>
+    <div className="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden">
+      {/* Time window + priority strip */}
+      <div className={`flex items-center gap-2 px-4 py-2.5 border-b text-sm font-semibold ${stripColor}`}>
+        <span>{WINDOW_ICON[task.timeWindow]}</span>
+        <span>{WINDOW_LABEL[task.timeWindow]}</span>
+        <span className="ml-auto uppercase text-xs tracking-wide opacity-80">{task.priority}</span>
+      </div>
+
+      {/* Task content */}
+      <div className="px-5 pt-5 pb-4">
+        <h2 className="text-xl font-bold text-gray-900 leading-snug">{task.title}</h2>
         {task.description && (
-          <p className="text-xs text-gray-400 mt-0.5 leading-snug">{task.description}</p>
-        )}
-        {task.status === 'completed' && task.completedAt && (
-          <p className="text-xs text-emerald-500 mt-0.5">
-            Done at {format(new Date(task.completedAt), 'h:mm a')}
-          </p>
-        )}
-        {overdue && task.status === 'pending' && (
-          <p className="text-xs text-red-500 mt-0.5 font-medium">Overdue</p>
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed">{task.description}</p>
         )}
       </div>
-      <PriorityBadge priority={task.priority} />
-    </button>
-  )
-}
 
-// ── Task group ────────────────────────────────────────────────────────────────
+      {/* Action buttons */}
+      <div className="px-4 pb-5 space-y-3">
+        <button
+          onClick={onYes}
+          disabled={isCompleting}
+          className={`w-full py-4 rounded-2xl font-bold text-base transition-colors disabled:opacity-60 ${
+            isEntry
+              ? 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800'
+              : 'bg-emerald-500 text-white hover:bg-emerald-600 active:bg-emerald-700'
+          }`}
+        >
+          {isCompleting ? 'Saving…' : isEntry ? '→ Open Entry Form' : '✓  Yes — Done'}
+        </button>
 
-function TaskGroup({
-  window,
-  tasks,
-  isActive,
-  onTaskTap,
-  overdueTasks,
-}: {
-  window: TimeWindow
-  tasks: DailyTask[]
-  isActive: boolean
-  onTaskTap: (task: DailyTask) => void
-  overdueTasks: Set<string>
-}) {
-  const [expanded, setExpanded] = useState(isActive || tasks.some(t => t.status !== 'completed'))
-  const cfg = WINDOW_CONFIG[window]
-
-  const doneCount = tasks.filter(t => t.status === 'completed').length
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-gray-50"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-base">{cfg.icon}</span>
-          <span className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</span>
-          <span className="text-xs text-gray-400 font-medium">
-            {doneCount}/{tasks.length}
-          </span>
-        </div>
-        <span className={`text-gray-400 text-xs font-medium transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</span>
-      </button>
-
-      {expanded && (
-        <div className="px-3 pb-3 space-y-2">
-          {tasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              overdue={overdueTasks.has(task.id)}
-              onTap={() => onTaskTap(task)}
-            />
-          ))}
-        </div>
-      )}
+        <button
+          onClick={onNo}
+          disabled={isCompleting}
+          className="w-full py-3.5 rounded-2xl font-semibold text-base border-2 border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition-colors disabled:opacity-40"
+        >
+          🕐  Not yet — Remind me in 15 min
+        </button>
+      </div>
     </div>
   )
 }
@@ -190,34 +144,33 @@ export default function WorkerTasksPage() {
   const appUser  = useAuthStore(s => s.appUser)
   const addToast = useUIStore(s => s.addToast)
 
-  const today    = format(new Date(), 'yyyy-MM-dd')
-  const hour     = new Date().getHours()
-  const currentWindow: TimeWindow = hour < 12 ? 'morning' : hour < 17 ? 'midday' : 'evening'
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const hour  = new Date().getHours()
 
   const checklistData = useTodayChecklist(appUser?.id)
   const streak        = useWorkerStreak(appUser?.id)
-  const [generating, setGenerating] = useState(false)
-  const [activeTask, setActiveTask] = useState<DailyTask | null>(null)
-  const [showConfetti, setShowConfetti] = useState(false)
-  const reminderRef = useRef<{ stop: () => void } | null>(null)
+
+  const [generating, setGenerating]       = useState(false)
+  const [completing, setCompleting]       = useState<string | null>(null)
+  const [snoozed, setSnoozed]             = useState<Map<string, number>>(new Map()) // taskId → snoozeUntil
+  const snoozeIntervalsRef                = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map())
+  const [showConfetti, setShowConfetti]   = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const reminderRef                       = useRef<{ stop: () => void } | null>(null)
 
   // Generate checklist on mount
   useEffect(() => {
     if (!appUser) return
     const gen = async () => {
       setGenerating(true)
-      try {
-        await generateDailyChecklist(appUser, today)
-      } catch (e) {
-        console.error('Checklist generation failed:', e)
-      } finally {
-        setGenerating(false)
-      }
+      try { await generateDailyChecklist(appUser, today) }
+      catch (e) { console.error('Checklist generation failed:', e) }
+      finally { setGenerating(false) }
     }
     void gen()
   }, [appUser?.id])
 
-  // Init reminder scheduler
+  // Init reminder scheduler (morning/midday/evening notifications)
   useEffect(() => {
     if (!appUser?.id) return
     const cfg = loadReminderConfig()
@@ -225,17 +178,64 @@ export default function WorkerTasksPage() {
     return () => reminderRef.current?.stop()
   }, [appUser?.id])
 
-  // Watch for 100% completion
+  // Clean up all snooze intervals on unmount
   useEffect(() => {
-    if (!checklistData) return
-    const { checklist, tasks } = checklistData
-    if (checklist.completionPct === 100 && tasks.length > 0) {
+    return () => {
+      for (const id of snoozeIntervalsRef.current.values()) clearInterval(id)
+    }
+  }, [])
+
+  // Periodically un-snooze tasks whose time has elapsed
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const now = Date.now()
+      setSnoozed(prev => {
+        let changed = false
+        const next = new Map(prev)
+        for (const [id, until] of next) {
+          if (now >= until) { next.delete(id); changed = true }
+        }
+        return changed ? next : prev
+      })
+    }, 30_000)
+    return () => clearInterval(tick)
+  }, [])
+
+  // Watch for 100% completion → confetti
+  useEffect(() => {
+    if (checklistData?.checklist.completionPct === 100 && (checklistData?.tasks.length ?? 0) > 0) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 2000)
     }
   }, [checklistData?.checklist.completionPct])
 
-  const handleTaskTap = (task: DailyTask) => {
+  // ── Derived state ────────────────────────────────────────────────────────────
+
+  const allTasks       = checklistData?.tasks ?? []
+  const completedTasks = allTasks.filter(t => t.status === 'completed' || t.status === 'skipped')
+  const pendingTasks   = allTasks.filter(t => t.status === 'pending' && !snoozed.has(t.id))
+  const snoozedCount   = allTasks.filter(t => t.status === 'pending' && snoozed.has(t.id)).length
+  const currentTask    = pendingTasks[0] ?? null
+  const nextTask       = pendingTasks[1] ?? null
+  const pct            = checklistData?.checklist.completionPct ?? 0
+  const allDone        = allTasks.length > 0 && pendingTasks.length === 0 && snoozedCount === 0
+
+  const dayName  = format(new Date(), 'EEEE, d MMMM')
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  const clearSnooze = (taskId: string) => {
+    if (snoozeIntervalsRef.current.has(taskId)) {
+      clearInterval(snoozeIntervalsRef.current.get(taskId)!)
+      snoozeIntervalsRef.current.delete(taskId)
+    }
+    setSnoozed(prev => { const m = new Map(prev); m.delete(taskId); return m })
+  }
+
+  const handleYes = async (task: DailyTask) => {
+    clearSnooze(task.id)
+
     if (task.type === 'data_entry' && task.enterpriseInstanceId) {
       navigate(`/daily-entry/${task.enterpriseInstanceId}?date=${today}`)
       return
@@ -244,163 +244,240 @@ export default function WorkerTasksPage() {
       navigate('/health')
       return
     }
-    setActiveTask(task)
+
+    setCompleting(task.id)
+    try {
+      await db.dailyTasks.update(task.id, {
+        status: 'completed',
+        completedAt: nowIso(),
+        completedBy: appUser?.id ?? '',
+        notes: null,
+      })
+      if (checklistData) await recalculateChecklistCompletion(checklistData.checklist.id)
+      addToast({ message: `✓ ${task.title}`, type: 'success' })
+    } finally {
+      setCompleting(null)
+    }
   }
 
-  const handleTaskCompleted = () => {
-    if (checklistData) void recalculateChecklistCompletion(checklistData.checklist.id)
-    addToast({ message: 'Task completed!', type: 'success' })
+  const handleNo = (task: DailyTask) => {
+    // Cancel any existing snooze for this task
+    clearSnooze(task.id)
+
+    // Snooze for 15 minutes
+    const snoozeUntil = Date.now() + SNOOZE_MS
+    setSnoozed(prev => new Map(prev).set(task.id, snoozeUntil))
+    addToast({ message: "We'll remind you in 15 min", type: 'info' })
+
+    // Set a one-shot interval: fires once after 15 min, un-snoozes the task
+    // (if user taps NO again, a NEW interval will be created)
+    const intervalId = setInterval(async () => {
+      clearInterval(intervalId)
+      snoozeIntervalsRef.current.delete(task.id)
+
+      // Check if task is still pending
+      const t = await db.dailyTasks.get(task.id)
+      if (!t || t.status !== 'pending') return
+
+      // Show browser notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Task reminder 🔔', {
+          body: task.title,
+          icon: '/icon-192.png',
+          tag: `task-snooze-${task.id}`,
+        })
+      }
+
+      // Un-snooze so it re-appears as the current task
+      setSnoozed(prev => { const m = new Map(prev); m.delete(task.id); return m })
+      addToast({ message: `⏰ Reminder: ${task.title}`, type: 'warning' })
+    }, SNOOZE_MS)
+
+    snoozeIntervalsRef.current.set(task.id, intervalId)
   }
 
   const handleRefresh = async () => {
     if (!appUser) return
     setGenerating(true)
-    try {
-      await generateDailyChecklist(appUser, today)
-    } finally {
-      setGenerating(false)
-    }
+    try { await generateDailyChecklist(appUser, today) }
+    finally { setGenerating(false) }
   }
 
-  // Group tasks by time window (preserving order)
-  const windows: TimeWindow[] = ['morning', 'midday', 'evening', 'anytime']
-  const grouped: Partial<Record<TimeWindow, DailyTask[]>> = {}
-  if (checklistData) {
-    for (const t of checklistData.tasks) {
-      if (!grouped[t.timeWindow]) grouped[t.timeWindow] = []
-      grouped[t.timeWindow]!.push(t)
-    }
-  }
-
-  // Compute overdue tasks
-  const overdueTasks = new Set<string>()
-  if (checklistData) {
-    for (const t of checklistData.tasks) {
-      if (t.status === 'completed' || t.status === 'skipped') continue
-      if (t.priority === 'optional') continue
-      if (t.timeWindow === 'morning' && hour >= 12) overdueTasks.add(t.id)
-      if (t.timeWindow === 'midday'  && hour >= 17) overdueTasks.add(t.id)
-    }
-  }
-
-  const pct       = checklistData?.checklist.completionPct ?? 0
-  const total     = checklistData?.tasks.length ?? 0
-  const completed = checklistData?.tasks.filter(t => t.status === 'completed').length ?? 0
-  const remaining = total - completed
-  const allDone   = total > 0 && remaining === 0
-  const dayName   = format(new Date(), 'EEEE, d MMMM')
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div className="h-dvh flex flex-col bg-gray-50">
       {showConfetti && <ConfettiBurst />}
 
       {/* Header */}
-      <div className="bg-primary-600 px-4 pt-4 pb-5 safe-top">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <p className="text-white/70 text-xs">{dayName}</p>
-            <h1 className="text-white text-xl font-bold mt-0.5">
-              {hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'},
-              {appUser?.fullName ? ` ${appUser.fullName.split(' ')[0]}` : ''}!
-            </h1>
-          </div>
-          <button onClick={() => navigate('/worker/history')}
-            className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white">
-            <History size={20} />
+      <div className="bg-primary-600 px-4 pt-3 pb-5 safe-top flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white">
+            <ArrowLeft size={22} />
           </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => void handleRefresh()}
+              disabled={generating}
+              className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-white disabled:animate-spin"
+            >
+              <RefreshCw size={16} />
+            </button>
+            <button
+              onClick={() => navigate('/worker/history')}
+              className="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white"
+            >
+              <History size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Progress ring + summary */}
-        <div className="flex items-center gap-4 mt-3">
+        <div className="flex items-start gap-4">
+          {/* Progress ring */}
           <div className="relative flex-shrink-0">
             <ProgressRing pct={pct} size={72} />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-white font-bold text-sm">{pct}%</span>
             </div>
           </div>
-          <div>
+
+          {/* Greeting + summary */}
+          <div className="flex-1 min-w-0 pt-1">
+            <p className="text-white/70 text-xs">{dayName}</p>
+            <h1 className="text-white text-lg font-bold mt-0.5 leading-tight">
+              {greeting}{appUser?.fullName ? `, ${appUser.fullName.split(' ')[0]}` : ''}!
+            </h1>
             {generating ? (
-              <p className="text-white/80 text-sm">Preparing your tasks…</p>
+              <p className="text-white/70 text-xs mt-1">Preparing tasks…</p>
             ) : allDone ? (
-              <p className="text-white font-semibold text-base">All done! 🎉</p>
+              <p className="text-white font-semibold text-sm mt-1">All done! 🎉</p>
             ) : (
-              <p className="text-white font-semibold text-base">{completed} of {total} done</p>
-            )}
-            {(streak?.currentStreak ?? 0) > 0 && (
-              <p className="text-white/80 text-xs mt-0.5">
-                🔥 {streak!.currentStreak} day streak
+              <p className="text-white/80 text-xs mt-1">
+                {completedTasks.length} of {allTasks.length} done
+                {snoozedCount > 0 && ` · ${snoozedCount} snoozed`}
               </p>
             )}
+            {(streak?.currentStreak ?? 0) > 0 && (
+              <p className="text-white/60 text-xs mt-0.5">🔥 {streak!.currentStreak} day streak</p>
+            )}
           </div>
-          <button onClick={() => void handleRefresh()}
-            disabled={generating}
-            className="ml-auto text-white/60 hover:text-white disabled:animate-spin">
-            <RefreshCw size={16} />
-          </button>
         </div>
       </div>
 
-      {/* Task list */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      {/* Scrollable task area */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+
+        {/* Loading state */}
         {generating && !checklistData && (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            <p className="text-3xl mb-3">📋</p>
+          <div className="text-center py-14 text-gray-400 text-sm">
+            <p className="text-4xl mb-3">📋</p>
             <p>Building your task list…</p>
           </div>
         )}
 
-        {!generating && checklistData && total === 0 && (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            <p className="text-3xl mb-3">✅</p>
+        {/* Empty state */}
+        {!generating && allTasks.length === 0 && (
+          <div className="text-center py-14 text-gray-400 text-sm">
+            <p className="text-4xl mb-3">✅</p>
             <p className="font-semibold text-gray-700">No tasks today</p>
-            <p className="text-xs mt-1">Your manager hasn't assigned tasks yet</p>
+            <p className="text-xs mt-1">Your manager hasn't assigned any tasks yet</p>
           </div>
         )}
 
-        {windows.map(win => {
-          const tasks = grouped[win]
-          if (!tasks || tasks.length === 0) return null
-          return (
-            <TaskGroup
-              key={win}
-              window={win}
-              tasks={tasks}
-              isActive={win === currentWindow}
-              onTaskTap={handleTaskTap}
-              overdueTasks={overdueTasks}
-            />
-          )
-        })}
+        {/* All done state */}
+        {allDone && (
+          <div className="text-center py-10">
+            <p className="text-5xl mb-3">🎉</p>
+            <p className="text-xl font-bold text-emerald-700">All done for today!</p>
+            {(streak?.currentStreak ?? 0) > 1 && (
+              <p className="text-sm text-gray-500 mt-2">🔥 {streak!.currentStreak}-day streak — keep it up!</p>
+            )}
+            {streak?.currentStreak === 7  && <p className="text-xs text-emerald-600 mt-1">One full week! Excellent! 🌟</p>}
+            {streak?.currentStreak === 30 && <p className="text-xs text-emerald-600 mt-1">One month straight! 💪</p>}
+          </div>
+        )}
 
-        {/* Bottom summary */}
-        {checklistData && total > 0 && (
-          <div className={`rounded-2xl p-4 text-center ${allDone ? 'bg-emerald-50 border border-emerald-200' : 'bg-white border border-gray-100 shadow-sm'}`}>
-            {allDone ? (
-              <>
-                <p className="text-emerald-700 font-bold text-base">All done for today! 🎉</p>
-                {(streak?.currentStreak ?? 0) > 1 && (
-                  <p className="text-emerald-600 text-sm mt-1">You're on a {streak!.currentStreak}-day streak!</p>
-                )}
-                {streak?.currentStreak === 7  && <p className="text-xs text-emerald-500 mt-1">One full week! Excellent consistency! 🌟</p>}
-                {streak?.currentStreak === 30 && <p className="text-xs text-emerald-500 mt-1">One month straight! You're a farming machine! 💪</p>}
-              </>
-            ) : (
-              <p className="text-gray-600 text-sm">{remaining} more to go — you've got this!</p>
+        {/* All snoozed (no current task, some pending) */}
+        {!allDone && allTasks.length > 0 && pendingTasks.length === 0 && snoozedCount > 0 && (
+          <div className="text-center py-10">
+            <p className="text-4xl mb-3">⏰</p>
+            <p className="text-base font-semibold text-orange-700">All caught up for now</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {snoozedCount} task{snoozedCount > 1 ? 's' : ''} will remind you in 15 min
+            </p>
+          </div>
+        )}
+
+        {/* Current task card */}
+        {currentTask && (
+          <>
+            <p className="text-xs text-gray-400 font-medium text-center">
+              {pendingTasks.length} task{pendingTasks.length !== 1 ? 's' : ''} remaining
+            </p>
+
+            <FocusCard
+              task={currentTask}
+              isCompleting={completing === currentTask.id}
+              onYes={() => void handleYes(currentTask)}
+              onNo={() => handleNo(currentTask)}
+            />
+
+            {/* Next up preview */}
+            {nextTask && (
+              <div className="bg-white/70 rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3">
+                <span className="text-lg">{WINDOW_ICON[nextTask.timeWindow]}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Next up</p>
+                  <p className="text-sm font-semibold text-gray-600 truncate">{nextTask.title}</p>
+                </div>
+                <span className="text-gray-300 text-sm">→</span>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Completed tasks (collapsible) */}
+        {completedTasks.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowCompleted(v => !v)}
+              className="flex items-center gap-2 text-sm text-gray-500 font-medium w-full py-2"
+            >
+              <span>Completed ({completedTasks.length})</span>
+              {showCompleted ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showCompleted && (
+              <div className="space-y-2 mt-1">
+                {completedTasks.map(t => (
+                  <div
+                    key={t.id}
+                    className={`rounded-xl px-3 py-2.5 flex items-center gap-3 border ${
+                      t.status === 'skipped'
+                        ? 'bg-gray-50 border-gray-100'
+                        : 'bg-emerald-50 border-emerald-100'
+                    }`}
+                  >
+                    <span className="text-base">{t.status === 'skipped' ? '⏭' : '✅'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${
+                        t.status === 'skipped' ? 'text-gray-500' : 'text-emerald-700'
+                      }`}>{t.title}</p>
+                      {t.completedAt && (
+                        <p className="text-xs text-gray-400">
+                          {t.status === 'skipped' ? 'Skipped' : 'Done'} at {format(new Date(t.completedAt), 'h:mm a')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
 
         <div className="h-6" />
       </div>
-
-      {/* Task completion sheet */}
-      {activeTask && (
-        <TaskCompletionSheet
-          task={activeTask}
-          onClose={() => setActiveTask(null)}
-          onCompleted={handleTaskCompleted}
-        />
-      )}
     </div>
   )
 }

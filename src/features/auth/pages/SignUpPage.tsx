@@ -10,11 +10,7 @@ import { useAuthStore } from '../../../stores/auth-store'
 
 const step1Schema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
-  phone: z.string().min(7, 'Enter a valid phone number'),
-  email: z.string().refine(
-    v => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-    'Enter a valid email',
-  ),
+  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
 })
 
 const step2Schema = z.object({
@@ -116,14 +112,11 @@ export default function SignUpPage() {
 
   const onStep3Submit = async (data: Step3Form) => {
     if (!step1Data || !step2Data) return
-    const phone = step1Data.phone.startsWith('+')
-      ? step1Data.phone
-      : `+${step1Data.phone}`
 
     await signUp({
       fullName: step1Data.fullName,
-      phone,
-      email: step1Data.email || undefined,
+      phone: '',
+      email: step1Data.email,
       farmName: step2Data.farmName,
       currency: step2Data.currency,
       password: data.password,
@@ -185,25 +178,7 @@ export default function SignUpPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...step1Form.register('phone')}
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+234 800 000 0000"
-                className="input-base"
-              />
-              {step1Form.formState.errors.phone && (
-                <p className="mt-1 text-xs text-red-600">{step1Form.formState.errors.phone.message}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">Include country code, e.g. +234</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-gray-400 font-normal">(optional)</span>
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 {...step1Form.register('email')}
