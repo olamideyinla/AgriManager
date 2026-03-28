@@ -15,7 +15,6 @@ import { initReminderScheduler } from '../../core/services/worker-reminder-engin
 import { useWizardStore } from '../../features/farm-setup/wizard-store'
 import { SyncStatusIndicator } from '../../features/sync/SyncStatusIndicator'
 import InstallPrompt from '../components/InstallPrompt'
-import { UpdateBanner } from '../components/UpdateBanner'
 import { OfflineBanner } from '../components/OfflineBanner'
 import type { UserRole } from '../../shared/types'
 
@@ -370,7 +369,6 @@ export function MobileShell() {
       <DailyEntryReminderRunner />
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 lg:ml-64">
-        <UpdateBanner />
         <InstallPrompt />
         <OfflineBanner />
         <ViewAsBanner />

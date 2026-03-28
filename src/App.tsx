@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/auth-store'
 import { useUIStore } from './stores/ui-store'
 import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ToastContainer'
+import { UpdateBanner } from './shared/components/UpdateBanner'
 
 export default function App() {
   const initialize = useAuthStore(s => s.initialize)
@@ -58,6 +59,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <UpdateBanner />
       <AppRoutes />
       <ToastContainer />
     </ErrorBoundary>
