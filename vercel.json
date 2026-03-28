@@ -2,7 +2,7 @@
   "buildCommand": "npm run build:production",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite",
+  "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
