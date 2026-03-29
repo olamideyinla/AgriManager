@@ -235,28 +235,32 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const normPhone = phone.startsWith('+') ? phone : `+${phone}`
       const code = inviteCode.toUpperCase().trim()
 
-      // Fetch invite first (anon) to get the canonical phone the owner used.
-      // This prevents email-mismatch when the worker enters their number in a
-      // different format (e.g. 0712... vs +254712...) than the owner stored.
+      // ── Fetch ALL invite fields as anon BEFORE any auth attempt ───────────
+      // This avoids a second authenticated query after sign-up. A newly created
+      // worker account has no app_users row in Supabase yet, so get_user_org_id()
+      // returns null and every RLS policy blocks the query.
       // Requires: CREATE POLICY "anon invite lookup" ON team_invites
       //   FOR SELECT TO anon USING (true);
-      const { data: preInvite } = await supabase
+      const { data: invite, error: inviteFetchErr } = await supabase
         .from('team_invites')
-        .select('phone')
+        .select('*')
         .eq('invite_code', code)
         .maybeSingle()
 
-      const canonicalPhone = preInvite?.phone as string | undefined
+      if (inviteFetchErr || !invite) {
+        set({ error: 'Invalid invite code. Please check the code and try again.', isLoading: false })
+        return
+      }
 
-      // Verify entered phone matches the invite's canonical phone (last 9 digits)
-      if (canonicalPhone && normalizePhone(canonicalPhone) !== normalizePhone(normPhone)) {
+      // ── Verify phone matches the canonical phone stored on the invite ──────
+      const canonicalPhone = invite.phone as string
+      if (normalizePhone(canonicalPhone) !== normalizePhone(normPhone)) {
         set({ error: 'This invite code does not match your phone number.', isLoading: false })
         return
       }
 
-      // Derive worker email from canonical phone if available, else entered phone.
-      // Using canonical prevents creating a duplicate auth account on format mismatch.
-      const digits = (canonicalPhone ?? normPhone).replace(/\D/g, '')
+      // ── Derive worker email from canonical phone (always consistent) ───────
+      const digits = canonicalPhone.replace(/\D/g, '')
       const workerEmail = `${digits}@agrimanager.app`
 
       // Try sign-in first (returning worker), then sign-up for new workers.
@@ -272,11 +276,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         session = signInData.session
         userId  = signInData.user.id
 
+        // Returning worker: invite may already be redeemed — only allow if redeemed by this user
+        if (invite.redeemed_at && (invite.redeemed_by as string | null) !== userId) {
+          set({ error: 'This invite code has already been used. Ask your farm owner for a new code.', isLoading: false })
+          return
+        }
+
         // ── Returning worker: already set up on this device ──────────────────
         const existingUser = await loadAppUser(userId)
         if (existingUser) {
           // Ensure this worker's AppUser exists in Supabase so RLS resolves.
-          // It may be 'pending' if a previous push failed or was interrupted.
           if (existingUser.syncStatus !== 'synced') {
             try {
               await supabase
@@ -290,9 +299,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           return
         }
         // Sign-in succeeded but no local data (re-install / new device) →
-        // fall through to re-seed from the invite record below.
+        // fall through to re-seed from the already-fetched invite data.
       } else {
-        // ── New worker: create Supabase Auth account ──────────────────────────
+        // ── New worker: invite must be unredeemed ─────────────────────────────
+        if (invite.redeemed_at) {
+          set({ error: 'This invite code has already been used. Ask your farm owner for a new code.', isLoading: false })
+          return
+        }
+
         const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
           email: workerEmail,
           password: code,
@@ -308,36 +322,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         userId  = signUpData.user.id
       }
 
-      // ── Validate invite code ────────────────────────────────────────────────
-      // Allow unredeemed codes (new workers) OR codes redeemed by this user (re-install).
-      const { data: invite, error: fetchErr } = await supabase
-        .from('team_invites')
-        .select('*')
-        .eq('invite_code', code)
-        .or(`redeemed_at.is.null,redeemed_by.eq.${userId}`)
-        .single()
-
-      if (fetchErr || !invite) {
-        set({ error: 'Invalid or already used invite code.', isLoading: false }); return
-      }
-
-      // Verify phone matches the invited member
-      if (normalizePhone(invite.phone as string) !== normalizePhone(normPhone)) {
-        set({ error: 'This invite code does not match your phone number.', isLoading: false }); return
-      }
-
       const ts = nowIso()
 
       await db.transaction('rw', [db.organizations, db.appUsers], async () => {
         try {
           await db.organizations.add({
-            id:                 invite.organization_id as string,
-            name:               invite.org_name as string,
-            currency:           (invite.org_currency as string) || 'USD',
-            defaultUnitSystem:  'metric',
-            syncStatus:         'pending',
-            createdAt:          ts,
-            updatedAt:          ts,
+            id:                invite.organization_id as string,
+            name:              invite.org_name as string,
+            currency:          (invite.org_currency as string) || 'USD',
+            defaultUnitSystem: 'metric',
+            syncStatus:        'pending',
+            createdAt:         ts,
+            updatedAt:         ts,
           })
         } catch { /* org may already exist on this device */ }
 
