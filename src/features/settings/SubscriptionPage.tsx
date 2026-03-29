@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, Crown, Zap, Star } from 'lucide-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { TIERS, type TierSlug } from '@/core/config/tiers'
-import { getCurrencyConfig, formatPrice } from '@/core/config/currencies'
+import { getCurrencyConfigByCode, formatPrice } from '@/core/config/currencies'
+import { useAuthStore } from '@/stores/auth-store'
+import { db } from '@/core/database/db'
 import { format } from 'date-fns'
 
 // ── Tier badge ────────────────────────────────────────────────────────────────
@@ -59,10 +62,25 @@ const X_DISPLAY_FEATURES = [
 
 export default function SubscriptionPage() {
   const navigate = useNavigate()
-  const { tier, expiresAt, countryCode } = useSubscriptionStore()
+  const appUser = useAuthStore(s => s.appUser)
+  const { tier, expiresAt, loadFromSupabase } = useSubscriptionStore()
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
 
-  const currency = getCurrencyConfig(countryCode)
+  // Load subscription status from Supabase on mount (non-blocking; updates tier if paid)
+  useLiveQuery(async () => {
+    if (!appUser?.organizationId) return
+    await loadFromSupabase(appUser.organizationId)
+  }, [appUser?.organizationId])
+
+  // Derive currency config from the org's stored currency code (e.g. 'KES' → KE prices)
+  // This ensures local pricing is shown even for new users with no Supabase subscription record.
+  const org = useLiveQuery(
+    () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
+    [appUser?.organizationId]
+  )
+  const currency = getCurrencyConfigByCode(org?.currency ?? 'USD')
+
+  const freeDisplay  = 'Free'
   const proMonthly = formatPrice(currency.pro.monthly, currency)
   const proAnnual  = formatPrice(currency.pro.annual, currency)
   const xAnnual    = formatPrice(currency.x.annual, currency)
@@ -146,7 +164,7 @@ export default function SubscriptionPage() {
               <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-full">Current</span>
             )}
           </div>
-          <p className="text-3xl font-bold text-gray-900 mb-0.5">$0</p>
+          <p className="text-3xl font-bold text-gray-900 mb-0.5">{freeDisplay}</p>
           <p className="text-xs text-gray-400 mb-4">Forever</p>
           <ul className="space-y-2 mb-5">
             {FREE_DISPLAY_FEATURES.map(f => (

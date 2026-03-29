@@ -221,8 +221,23 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   },
 }
 
+/** Reverse map: currency code → country code for CURRENCY_MAP lookup.
+ *  Populated from CURRENCY_MAP automatically to stay in sync. */
+export const CURRENCY_CODE_TO_COUNTRY: Record<string, string> = Object.fromEntries(
+  Object.entries(CURRENCY_MAP)
+    .filter(([k]) => k !== 'DEFAULT')
+    .map(([country, cfg]) => [cfg.code, country])
+)
+
 export function getCurrencyConfig(countryCode: string): CurrencyConfig {
   return CURRENCY_MAP[countryCode] ?? CURRENCY_MAP['DEFAULT']!
+}
+
+/** Looks up CurrencyConfig by currency code (e.g. 'KES', 'NGN').
+ *  Falls back to DEFAULT (USD) for unknown codes. */
+export function getCurrencyConfigByCode(currencyCode: string): CurrencyConfig {
+  const country = CURRENCY_CODE_TO_COUNTRY[currencyCode]
+  return country ? CURRENCY_MAP[country]! : CURRENCY_MAP['DEFAULT']!
 }
 
 export function formatPrice(amount: number, config: CurrencyConfig): string {

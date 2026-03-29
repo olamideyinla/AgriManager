@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useUnreadHighCriticalCount, useAlerts } from '../../core/database/hooks/useAlerts'
 import { useAuthStore } from '../../stores/auth-store'
+import { useSubscriptionStore } from '../../stores/subscription-store'
 import { alertEngine } from '../../core/services/alert-engine'
 import { initSyncTriggers } from '../../core/sync/sync-triggers'
 import { initReminderScheduler } from '../../core/services/worker-reminder-engine'
@@ -69,6 +70,19 @@ function DailyEntryReminderRunner() {
     return () => clearInterval(interval)
   }, [amTime, pmTime])
 
+  return null
+}
+
+// ── Subscription loader ───────────────────────────────────────────────────────
+
+function SubscriptionLoader() {
+  const appUser          = useAuthStore(s => s.appUser)
+  const loadFromSupabase = useSubscriptionStore(s => s.loadFromSupabase)
+  useEffect(() => {
+    if (appUser?.organizationId) {
+      loadFromSupabase(appUser.organizationId).catch(() => { /* offline — keep cached */ })
+    }
+  }, [appUser?.organizationId]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }
 
@@ -364,6 +378,7 @@ export function MobileShell() {
   return (
     <div className="flex flex-col h-dvh bg-gray-50 dark:bg-[var(--bg-base)] lg:flex-row">
       <SyncRunner />
+      <SubscriptionLoader />
       <AlertEngineRunner />
       <ReminderEngineRunner />
       <DailyEntryReminderRunner />

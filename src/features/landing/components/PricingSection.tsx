@@ -54,6 +54,7 @@ export function PricingSection() {
 
   const currency = getCurrencyConfig(countryCode)
 
+  const freeStr       = isDetecting ? null : formatPrice(0, currency)
   const proMonthlyStr = isDetecting ? null : formatPrice(currency.pro.monthly, currency) + '/mo'
   const proAnnualStr  = isDetecting ? null : formatPrice(currency.pro.annual, currency) + '/yr'
   const xAnnualStr    = isDetecting ? null : formatPrice(currency.x.annual, currency) + '/yr'
@@ -89,7 +90,11 @@ export function PricingSection() {
           {/* Free */}
           <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
             <h3 className="text-xl font-bold text-gray-900 mb-1 font-body">Free</h3>
-            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">$0</p>
+            {isDetecting ? (
+              <div className="h-10 w-20 bg-gray-100 rounded-lg animate-pulse my-1" />
+            ) : (
+              <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">{freeStr}</p>
+            )}
             <p className="text-gray-500 text-sm mb-6">Forever</p>
             <ul className="space-y-3 flex-1 mb-8">
               {freeFeatures.map((f) => (
