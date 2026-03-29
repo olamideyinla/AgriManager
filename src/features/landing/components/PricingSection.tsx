@@ -1,27 +1,45 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Crown, Zap } from 'lucide-react'
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 import { trackEvent } from '../../../shared/utils/analytics'
 import { useCurrencyContext } from '../context/CurrencyContext'
-import { formatPrice } from '../config/currencies'
+import { getCurrencyConfig, formatPrice } from '@/core/config/currencies'
 import { CurrencySelector } from './CurrencySelector'
 
 const freeFeatures = [
-  '1 enterprise',
+  'Up to 3 enterprises',
   'Daily production tracking',
-  'Basic reports',
-  'Offline sync',
+  'Financial entry & dashboard',
+  'Basic inventory (10 items)',
+  'Critical alerts',
+  'Health schedule view',
+  'CSV export',
+  'Offline mode',
   '1 user',
 ]
 
 const proFeatures = [
-  'Unlimited enterprises',
-  'Team management',
-  'Advanced analytics',
-  'Labor & payroll module',
+  'Up to 10 enterprises',
+  'Up to 10 team members',
+  'Exportable PDF & CSV reports',
+  'Decision tools & calculators',
+  'Labor & payroll tracking',
+  'Full alert suite',
+  'Unlimited inventory items',
+  'Batch comparison analysis',
+  'Accounts receivable',
+]
+
+const xFeatures = [
+  'Unlimited enterprises & locations',
+  'Cross-location dashboard',
+  'Custom report builder',
+  'Scheduled email reports',
+  'Trend forecasting & analysis',
+  'API access & webhooks',
+  'Full audit trail',
   'Priority support',
-  'CSV / PDF exports',
 ]
 
 function PriceSkeleton() {
@@ -32,11 +50,13 @@ export function PricingSection() {
   const navigate = useNavigate()
   const [yearly, setYearly] = useState(false)
   const ref = useScrollReveal<HTMLDivElement>()
-  const { currency, isDetecting } = useCurrencyContext()
+  const { countryCode, isDetecting } = useCurrencyContext()
 
-  const monthlyStr = isDetecting ? null : formatPrice(currency.monthlyGrowth, currency) + '/month'
-  const annualStr  = isDetecting ? null : formatPrice(currency.annualGrowth, currency) + '/year'
-  const savingsPct = currency.annualSavingsPct
+  const currency = getCurrencyConfig(countryCode)
+
+  const proMonthlyStr = isDetecting ? null : formatPrice(currency.pro.monthly, currency) + '/mo'
+  const proAnnualStr  = isDetecting ? null : formatPrice(currency.pro.annual, currency) + '/yr'
+  const xAnnualStr    = isDetecting ? null : formatPrice(currency.x.annual, currency) + '/yr'
 
   return (
     <section id="pricing" className="py-20 bg-white">
@@ -60,16 +80,16 @@ export function PricingSection() {
               onClick={() => setYearly(true)}
               className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${yearly ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
             >
-              Yearly <span className="text-emerald-600">–{savingsPct}%</span>
+              Yearly <span className="text-emerald-600">–17%</span>
             </button>
           </div>
         </div>
 
-        <div ref={ref} className="reveal grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div ref={ref} className="reveal grid md:grid-cols-3 gap-6">
           {/* Free */}
           <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
             <h3 className="text-xl font-bold text-gray-900 mb-1 font-body">Free</h3>
-            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">Free</p>
+            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">$0</p>
             <p className="text-gray-500 text-sm mb-6">Forever</p>
             <ul className="space-y-3 flex-1 mb-8">
               {freeFeatures.map((f) => (
@@ -92,8 +112,8 @@ export function PricingSection() {
 
           {/* Pro */}
           <div className="bg-primary-600 border-2 border-primary-600 rounded-2xl p-8 flex flex-col relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-accent text-gray-900 text-xs font-bold px-2.5 py-1 rounded-full">
-              ⭐ Most Popular
+            <div className="absolute top-4 right-4 bg-accent text-gray-900 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Zap size={10} /> Most Popular
             </div>
             <h3 className="text-xl font-bold text-white mb-1 font-body">Pro</h3>
 
@@ -102,14 +122,14 @@ export function PricingSection() {
               <PriceSkeleton />
             ) : yearly ? (
               <>
-                <p className="text-4xl font-bold text-white mb-1 kpi-value">{annualStr}</p>
-                <p className="text-primary-200 text-sm mb-6">Save {savingsPct}% vs monthly</p>
+                <p className="text-4xl font-bold text-white mb-1 kpi-value">{proAnnualStr}</p>
+                <p className="text-primary-200 text-sm mb-6">Save 17% vs monthly</p>
               </>
             ) : (
               <>
-                <p className="text-4xl font-bold text-white mb-1 kpi-value">{monthlyStr}</p>
+                <p className="text-4xl font-bold text-white mb-1 kpi-value">{proMonthlyStr}</p>
                 <p className="text-primary-200 text-sm mb-6">
-                  or {annualStr} (save {savingsPct}%)
+                  or {proAnnualStr} (save 17%)
                 </p>
               </>
             )}
@@ -130,7 +150,43 @@ export function PricingSection() {
               }}
               className="w-full bg-white text-primary-700 font-semibold py-3 rounded-xl hover:bg-primary-50 transition-colors"
             >
-              Start Pro Trial
+              Get Pro
+            </button>
+          </div>
+
+          {/* X */}
+          <div className="bg-gray-900 border-2 border-gray-700 rounded-2xl p-8 flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              <Crown size={20} className="text-amber-400" />
+              <h3 className="text-xl font-bold text-white font-body">X</h3>
+            </div>
+
+            {isDetecting ? (
+              <PriceSkeleton />
+            ) : (
+              <>
+                <p className="text-4xl font-bold text-white mb-1 kpi-value">{xAnnualStr}</p>
+                <p className="text-gray-400 text-sm mb-6">per year · billed annually</p>
+              </>
+            )}
+            {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
+
+            <ul className="space-y-3 flex-1 mb-8">
+              {xFeatures.map((f) => (
+                <li key={f} className="flex items-center gap-2.5 text-sm text-gray-300">
+                  <Check size={16} className="text-amber-400 flex-shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => {
+                trackEvent('CTA Click', { button: 'pricing-x' })
+                navigate('/auth/signup?plan=x')
+              }}
+              className="w-full bg-amber-400 text-gray-900 font-semibold py-3 rounded-xl hover:bg-amber-300 transition-colors"
+            >
+              Contact Us
             </button>
           </div>
         </div>

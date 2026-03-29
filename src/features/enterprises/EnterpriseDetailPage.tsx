@@ -11,6 +11,7 @@ import { EnterpriseRecords } from './tabs/EnterpriseRecords'
 import { EnterpriseAnalysis } from './tabs/EnterpriseAnalysis'
 import { EnterpriseFinancials } from './tabs/EnterpriseFinancials'
 import { EnterpriseHealthTab } from './tabs/EnterpriseHealthTab'
+import { FeatureGate } from '@/shared/components/FeatureGate'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
 
 // ── Type labels & badges ──────────────────────────────────────────────────────
@@ -156,7 +157,11 @@ export default function EnterpriseDetailPage() {
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'Overview'  && <Overview enterprise={enterprise} />}
         {activeTab === 'Records'   && <EnterpriseRecords enterprise={enterprise} />}
-        {activeTab === 'Analysis'  && <EnterpriseAnalysis enterprise={enterprise} />}
+        {activeTab === 'Analysis'  && (
+          <FeatureGate feature="batch_comparison" softLock>
+            <EnterpriseAnalysis enterprise={enterprise} />
+          </FeatureGate>
+        )}
         {activeTab === 'Financial' && <EnterpriseFinancials enterprise={enterprise} />}
         {activeTab === 'Health'    && <EnterpriseHealthTab enterprise={enterprise} />}
       </div>

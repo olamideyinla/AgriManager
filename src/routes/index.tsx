@@ -85,6 +85,10 @@ const WorkerReminderSettings = lazy(() => import('../features/settings/WorkerRem
 const HealthSchedulePage   = lazy(() => import('../features/health/HealthSchedulePage'))
 const ProtocolManagement   = lazy(() => import('../features/health/ProtocolManagement'))
 
+// Subscription pages
+const SubscriptionPage         = lazy(() => import('../features/settings/SubscriptionPage'))
+const SubscriptionPaymentPage  = lazy(() => import('../features/settings/SubscriptionPaymentPage'))
+
 // Decision support tools
 const DecisionToolsPage    = lazy(() => import('../features/decision-support/DecisionToolsPage'))
 const BroilerSellCalculator= lazy(() => import('../features/decision-support/BroilerSellCalculator'))
@@ -196,6 +200,10 @@ export function AppRoutes() {
           {/* Task templates & reminder settings — outside shell */}
           <Route path="/settings/task-templates" element={<ProtectedRoute><TaskTemplatesPage /></ProtectedRoute>} />
           <Route path="/settings/reminders"      element={<ProtectedRoute><WorkerReminderSettings /></ProtectedRoute>} />
+
+          {/* Subscription — outside shell */}
+          <Route path="/settings/subscription"         element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
+          <Route path="/settings/subscription/payment" element={<ProtectedRoute><SubscriptionPaymentPage /></ProtectedRoute>} />
 
           {/* Health — outside shell (specific before dynamic) */}
           <Route path="/health/protocols" element={<ProtectedRoute><ProtocolManagement /></ProtectedRoute>} />

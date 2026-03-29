@@ -5,16 +5,26 @@ import { useUIStore } from './stores/ui-store'
 import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ToastContainer'
 import { UpdateBanner } from './shared/components/UpdateBanner'
+import { checkSubscriptionStatus } from './core/services/subscription-checker'
 
 export default function App() {
-  const initialize = useAuthStore(s => s.initialize)
-  const setOnline  = useUIStore(s => s.setOnline)
-  const theme      = useUIStore(s => s.theme)
-  const fontSize   = useUIStore(s => s.fontSize)
-  const mqRef      = useRef<MediaQueryList | null>(null)
+  const initialize     = useAuthStore(s => s.initialize)
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+  const appUser        = useAuthStore(s => s.appUser)
+  const setOnline      = useUIStore(s => s.setOnline)
+  const theme          = useUIStore(s => s.theme)
+  const fontSize       = useUIStore(s => s.fontSize)
+  const mqRef          = useRef<MediaQueryList | null>(null)
 
   // Initialize auth (reads Supabase session from localStorage — works offline)
   useEffect(() => { initialize() }, [initialize])
+
+  // Load subscription status once authenticated
+  useEffect(() => {
+    if (isAuthenticated && appUser?.organizationId) {
+      checkSubscriptionStatus(appUser.organizationId)
+    }
+  }, [isAuthenticated, appUser?.organizationId])
 
   // Track online/offline state
   useEffect(() => {

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
@@ -77,6 +77,8 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 
 export default function SignUpPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const plan = searchParams.get('plan') as 'free' | 'pro' | 'x' | null
   const { signUp, isLoading, error, clearError } = useAuthStore()
 
   const [step, setStep] = useState(0)
@@ -126,8 +128,14 @@ export default function SignUpPage() {
     const state = useAuthStore.getState()
     if (!state.error && !state.isAuthenticated) {
       navigate('/auth/signin')
+      return
     }
-    // If authenticated, GuestRoute auto-redirects to /dashboard
+    // If authenticated and came from a paid plan CTA, go to subscription page
+    if (state.isAuthenticated && (plan === 'pro' || plan === 'x')) {
+      navigate('/settings/subscription')
+      return
+    }
+    // Otherwise GuestRoute auto-redirects to /dashboard
   }
 
   const stepTitles = ['Your Details', 'Your Farm', 'Set Password']
@@ -140,7 +148,19 @@ export default function SignUpPage() {
           <ChevronLeft size={24} />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900">Create Account</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-gray-900">Create Account</h1>
+            {plan === 'pro' && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
+                <Zap size={10} /> Pro
+              </span>
+            )}
+            {plan === 'x' && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                <Crown size={10} /> X
+              </span>
+            )}
+          </div>
           <p className="text-xs text-gray-500">{stepTitles[step]}</p>
         </div>
       </div>

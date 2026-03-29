@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { FeatureGate } from '@/shared/components/FeatureGate'
 
 const TOOLS = [
   {
@@ -66,23 +67,25 @@ export default function DecisionToolsPage() {
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-3">
-        {TOOLS.map(({ to, emoji, title, subtitle, desc, color, accent }) => (
-          <button
-            key={to}
-            onClick={() => navigate(to)}
-            className={`w-full text-left rounded-2xl border p-4 flex items-start gap-3 active:scale-[0.98] transition-transform ${color}`}
-          >
-            <span className="text-3xl mt-0.5 shrink-0">{emoji}</span>
-            <div className="flex-1 min-w-0">
-              <p className={`font-bold text-base leading-tight ${accent}`}>{title}</p>
-              <p className="text-xs font-medium text-gray-500 mt-0.5">{subtitle}</p>
-              <p className="text-sm text-gray-600 mt-1 leading-snug">{desc}</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
-          </button>
-        ))}
-      </div>
+      <FeatureGate feature="decision_tools" softLock>
+        <div className="px-4 py-4 space-y-3">
+          {TOOLS.map(({ to, emoji, title, subtitle, desc, color, accent }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className={`w-full text-left rounded-2xl border p-4 flex items-start gap-3 active:scale-[0.98] transition-transform ${color}`}
+            >
+              <span className="text-3xl mt-0.5 shrink-0">{emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className={`font-bold text-base leading-tight ${accent}`}>{title}</p>
+                <p className="text-xs font-medium text-gray-500 mt-0.5">{subtitle}</p>
+                <p className="text-sm text-gray-600 mt-1 leading-snug">{desc}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
+            </button>
+          ))}
+        </div>
+      </FeatureGate>
     </div>
   )
 }
