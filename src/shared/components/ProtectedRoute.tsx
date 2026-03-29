@@ -39,10 +39,12 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
 export function GuestRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
-  const isLoading = useAuthStore(s => s.isLoading)
+  const hasInitialized  = useAuthStore(s => s.hasInitialized)
   const appUser = useAuthStore(s => s.appUser)
 
-  if (isLoading) return <LoadingScreen />
+  // Use hasInitialized (not isLoading) so that auth operations such as acceptInvite —
+  // which temporarily set isLoading:true — do NOT unmount the guest page and reset its state.
+  if (!hasInitialized) return <LoadingScreen />
   if (isAuthenticated) return <Navigate to={homeForRole(appUser?.role)} replace />
   return <>{children}</>
 }
