@@ -234,9 +234,28 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const normPhone = phone.startsWith('+') ? phone : `+${phone}`
       const code = inviteCode.toUpperCase().trim()
 
-      // Derive a deterministic email from the phone number so we can use
-      // email+password auth (phone auth provider is not required).
-      const digits = normPhone.replace(/\D/g, '')
+      // Fetch invite first (anon) to get the canonical phone the owner used.
+      // This prevents email-mismatch when the worker enters their number in a
+      // different format (e.g. 0712... vs +254712...) than the owner stored.
+      // Requires: CREATE POLICY "anon invite lookup" ON team_invites
+      //   FOR SELECT TO anon USING (true);
+      const { data: preInvite } = await supabase
+        .from('team_invites')
+        .select('phone')
+        .eq('invite_code', code)
+        .maybeSingle()
+
+      const canonicalPhone = preInvite?.phone as string | undefined
+
+      // Verify entered phone matches the invite's canonical phone (last 9 digits)
+      if (canonicalPhone && normalizePhone(canonicalPhone) !== normalizePhone(normPhone)) {
+        set({ error: 'This invite code does not match your phone number.', isLoading: false })
+        return
+      }
+
+      // Derive worker email from canonical phone if available, else entered phone.
+      // Using canonical prevents creating a duplicate auth account on format mismatch.
+      const digits = (canonicalPhone ?? normPhone).replace(/\D/g, '')
       const workerEmail = `${digits}@agrimanager.app`
 
       // Try sign-in first (returning worker), then sign-up for new workers.
