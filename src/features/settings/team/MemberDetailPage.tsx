@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { supabase } from '../../../core/config/supabase'
 import {
   ChevronLeft, Save, Crown, ShieldCheck, Hammer, Users, Eye,
   ToggleLeft, ToggleRight, Trash2, AlertTriangle, Copy, Check, MessageCircle, KeyRound,
@@ -72,7 +73,9 @@ export default function MemberDetailPage() {
   const [deleting, setDeleting]                   = useState(false)
 
   // ── Invite code state ────────────────────────────────────────────────────────
-  const [codeCopied, setCodeCopied] = useState(false)
+  const [codeCopied, setCodeCopied]       = useState(false)
+  const [remoteCode, setRemoteCode]       = useState<string | null>(null)
+  const [codeLoading, setCodeLoading]     = useState(false)
 
   // ── Queries ──────────────────────────────────────────────────────────────────
   const member = useLiveQuery(() => userId ? db.appUsers.get(userId) : undefined, [userId])
@@ -88,11 +91,27 @@ export default function MemberDetailPage() {
 
   const activity = useAuditLogQuery(userId ? { userId } : undefined)
 
-  // Invite code stored in syncMeta by InviteMemberForm
-  const inviteCode = useLiveQuery(
+  // Invite code — local syncMeta first (instant), then Supabase fallback
+  const localCode = useLiveQuery(
     () => userId ? db.syncMeta.get(`invite_${userId}`).then(r => r?.lastSyncedAt ?? null) : Promise.resolve(null),
     [userId]
   )
+
+  useEffect(() => {
+    if (!userId) return
+    setCodeLoading(true)
+    supabase
+      .from('team_invites')
+      .select('invite_code')
+      .eq('local_user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.invite_code) setRemoteCode(data.invite_code as string)
+        setCodeLoading(false)
+      })
+  }, [userId])
 
   if (!member) {
     return (
@@ -347,46 +366,63 @@ export default function MemberDetailPage() {
         )}
 
         {/* ── Invite code ───────────────────────────────────────────────────── */}
-        {canEdit && inviteCode && (
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="w-4 h-4 text-primary-600" />
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invite Code</p>
-            </div>
-            <p className="text-3xl font-mono font-bold text-primary-700 tracking-widest text-center py-2">
-              {inviteCode}
-            </p>
-            <p className="text-xs text-center text-gray-400 mb-4">
-              Share this code with {member.fullName} to let them join the app
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  await navigator.clipboard.writeText(inviteCode)
-                  setCodeCopied(true)
-                  setTimeout(() => setCodeCopied(false), 2000)
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white active:bg-gray-50"
-              >
-                {codeCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                {codeCopied ? 'Copied!' : 'Copy Code'}
-              </button>
-              {member.phone && (
-                <a
-                  href={`https://wa.me/${member.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                    `Hi ${member.fullName}! You've been added to our farm team on AgriManagerX.\n\nYour invite code: *${inviteCode}*\n\nTo join:\n1. Visit agrimanagerx.com\n2. Tap "Join with invite code"\n3. Enter your phone (${member.phone}) and the code above`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] rounded-xl text-sm font-medium text-white active:opacity-90"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp
-                </a>
+        {canEdit && (() => {
+          const code = localCode ?? remoteCode
+          return (
+            <div className="card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <KeyRound className="w-4 h-4 text-primary-600" />
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Invite Code</p>
+              </div>
+
+              {codeLoading && !code ? (
+                <div className="flex items-center justify-center py-4 gap-2 text-gray-400">
+                  <div className="w-4 h-4 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin" />
+                  <span className="text-sm">Loading…</span>
+                </div>
+              ) : code ? (
+                <>
+                  <p className="text-3xl font-mono font-bold text-primary-700 tracking-widest text-center py-2">
+                    {code}
+                  </p>
+                  <p className="text-xs text-center text-gray-400 mb-4">
+                    Share this code with {member.fullName} to let them join the app
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(code)
+                        setCodeCopied(true)
+                        setTimeout(() => setCodeCopied(false), 2000)
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white active:bg-gray-50"
+                    >
+                      {codeCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      {codeCopied ? 'Copied!' : 'Copy Code'}
+                    </button>
+                    {member.phone && (
+                      <a
+                        href={`https://wa.me/${member.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                          `Hi ${member.fullName}! You've been added to our farm team on AgriManagerX.\n\nYour invite code: *${code}*\n\nTo join:\n1. Visit agrimanagerx.com\n2. Tap "Join with invite code"\n3. Enter your phone (${member.phone}) and the code above`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] rounded-xl text-sm font-medium text-white active:opacity-90"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-center text-gray-400 py-2">
+                  No invite code found. Try re-inviting this member.
+                </p>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── Activity log ──────────────────────────────────────────────────── */}
         <div className="card">
