@@ -247,10 +247,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       })
 
       if (fnErr || !data || data.error) {
-        set({
-          error: data?.error ?? fnErr?.message ?? 'Failed to authenticate. Please check your details.',
-          isLoading: false,
-        })
+        // data?.error = business-logic message from Edge Function (shown as-is)
+        // fnErr?.message = network/SDK error (mapped to a friendly string)
+        const msg = data?.error ?? mapError(fnErr?.message ?? 'Failed to authenticate. Please check your details.')
+        set({ error: msg, isLoading: false })
         return
       }
 

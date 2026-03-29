@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ChevronLeft, Loader2, KeyRound } from 'lucide-react'
+import { ChevronLeft, Loader2, KeyRound, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
@@ -27,8 +27,14 @@ export default function AcceptInvitePage() {
 
   const [step, setStep]            = useState<'phone' | 'code'>('phone')
   const [submittedPhone, setPhone] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { clearError() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to top whenever an error appears so it's always visible
+  useEffect(() => {
+    if (error) scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [error])
 
   const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) })
   const codeForm  = useForm<CodeForm>({ resolver: zodResolver(codeSchema) })
@@ -80,14 +86,7 @@ export default function AcceptInvitePage() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6">
-        {/* Error banner */}
-        {error && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6">
         {/* ── Step 1: Phone number ─────────────────────────────────────────── */}
         {step === 'phone' && (
           <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-5">
@@ -146,6 +145,14 @@ export default function AcceptInvitePage() {
                 <p className="mt-1 text-xs text-red-600">{codeForm.formState.errors.inviteCode.message}</p>
               )}
             </div>
+
+            {/* Error shown inline — always visible without scrolling */}
+            {error && (
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
 
             <button type="submit" disabled={isLoading} className="btn-primary w-full">
               {isLoading ? <Loader2 size={20} className="mx-auto animate-spin" /> : 'Join Farm'}
