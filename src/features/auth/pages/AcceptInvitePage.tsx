@@ -6,62 +6,10 @@ import { z } from 'zod'
 import { ChevronLeft, Loader2, KeyRound } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
 
-// ── Country codes ─────────────────────────────────────────────────────────────
-
-const COUNTRY_CODES = [
-  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
-  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
-  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
-  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
-  { code: '+256', flag: '🇺🇬', name: 'Uganda' },
-  { code: '+255', flag: '🇹🇿', name: 'Tanzania' },
-  { code: '+260', flag: '🇿🇲', name: 'Zambia' },
-  { code: '+265', flag: '🇲🇼', name: 'Malawi' },
-  { code: '+250', flag: '🇷🇼', name: 'Rwanda' },
-  { code: '+251', flag: '🇪🇹', name: 'Ethiopia' },
-  { code: '+263', flag: '🇿🇼', name: 'Zimbabwe' },
-  { code: '+91',  flag: '🇮🇳', name: 'India' },
-  { code: '+880', flag: '🇧🇩', name: 'Bangladesh' },
-  { code: '+1',   flag: '🇺🇸', name: 'USA / Canada' },
-  { code: '+44',  flag: '🇬🇧', name: 'UK' },
-]
-
-const TZ_CODE: Record<string, string> = {
-  'Africa/Nairobi':       '+254',
-  'Africa/Lagos':         '+234',
-  'Africa/Accra':         '+233',
-  'Africa/Johannesburg':  '+27',
-  'Africa/Kampala':       '+256',
-  'Africa/Dar_es_Salaam': '+255',
-  'Africa/Lusaka':        '+260',
-  'Africa/Blantyre':      '+265',
-  'Africa/Kigali':        '+250',
-  'Africa/Addis_Ababa':   '+251',
-  'Africa/Harare':        '+263',
-  'Asia/Kolkata':         '+91',
-  'Asia/Dhaka':           '+880',
-  'America/New_York':     '+1',
-  'America/Chicago':      '+1',
-  'America/Los_Angeles':  '+1',
-  'Europe/London':        '+44',
-}
-
-function detectCountryCode(): string {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    return TZ_CODE[tz] ?? '+254'
-  } catch {
-    return '+254'
-  }
-}
-
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const phoneSchema = z.object({
-  countryCode: z.string().min(2),
-  phone: z.string()
-    .min(6, 'Enter your phone number')
-    .regex(/^\d[\d\s\-()]*$/, 'Enter digits only'),
+  phone: z.string().min(6, 'Enter your phone number'),
 })
 
 const codeSchema = z.object({
@@ -82,17 +30,14 @@ export default function AcceptInvitePage() {
 
   useEffect(() => { clearError() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const phoneForm = useForm<PhoneForm>({
-    resolver: zodResolver(phoneSchema),
-    defaultValues: { countryCode: detectCountryCode(), phone: '' },
-  })
-  const codeForm = useForm<CodeForm>({ resolver: zodResolver(codeSchema) })
+  const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) })
+  const codeForm  = useForm<CodeForm>({ resolver: zodResolver(codeSchema) })
 
   const onPhoneSubmit = (data: PhoneForm) => {
-    // Strip leading zeros from local number (e.g. 0712... → 712...)
-    const local = data.phone.trim().replace(/\s|-|\(|\)/g, '').replace(/^0+/, '')
-    const full = `${data.countryCode}${local}`
-    setPhone(full)
+    // Normalise: ensure a leading + so the auth store can process any format
+    const raw = data.phone.trim().replace(/\s/g, '')
+    const phone = raw.startsWith('+') ? raw : `+${raw}`
+    setPhone(phone)
     clearError()
     setStep('code')
   }
@@ -151,36 +96,20 @@ export default function AcceptInvitePage() {
               <p className="text-sm text-gray-500 mb-4">
                 Use the phone number your farm owner registered you with.
               </p>
-
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-
-              {/* Country code + local number */}
-              <div className="flex gap-2">
-                <select
-                  {...phoneForm.register('countryCode')}
-                  className="input-base w-36 shrink-0 pr-2"
-                >
-                  {COUNTRY_CODES.map(c => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.code}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  {...phoneForm.register('phone')}
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  placeholder="712 345 678"
-                  className="input-base flex-1 min-w-0"
-                />
-              </div>
-
+              <input
+                {...phoneForm.register('phone')}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="0712 345 678"
+                className="input-base text-lg"
+              />
               {phoneForm.formState.errors.phone && (
                 <p className="mt-1 text-xs text-red-600">{phoneForm.formState.errors.phone.message}</p>
               )}
               <p className="mt-1.5 text-xs text-gray-400">
-                Enter digits only — no need to add the country code prefix
+                You can enter with or without the country code — both work
               </p>
             </div>
 

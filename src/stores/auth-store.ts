@@ -73,9 +73,10 @@ async function loadAppUser(userId: string): Promise<AppUser | null> {
   }
 }
 
-/** Normalise to last 9 digits for loose phone matching (handles +254 vs 0254 etc.) */
+/** Normalise to last 8 digits for loose phone matching.
+ *  Handles +254712345678 / 0712345678 / 712345678 all matching each other. */
 function normalizePhone(p: string): string {
-  return p.replace(/\D/g, '').slice(-9)
+  return p.replace(/\D/g, '').slice(-8)
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
