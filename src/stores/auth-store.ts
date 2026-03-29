@@ -235,93 +235,61 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       const normPhone = phone.startsWith('+') ? phone : `+${phone}`
       const code = inviteCode.toUpperCase().trim()
 
-      // ── Fetch ALL invite fields as anon BEFORE any auth attempt ───────────
-      // This avoids a second authenticated query after sign-up. A newly created
-      // worker account has no app_users row in Supabase yet, so get_user_org_id()
-      // returns null and every RLS policy blocks the query.
-      // Requires: CREATE POLICY "anon invite lookup" ON team_invites
-      //   FOR SELECT TO anon USING (true);
-      const { data: invite, error: inviteFetchErr } = await supabase
-        .from('team_invites')
-        .select('*')
-        .eq('invite_code', code)
-        .maybeSingle()
-
-      if (inviteFetchErr || !invite) {
-        set({ error: 'Invalid invite code. Please check the code and try again.', isLoading: false })
-        return
-      }
-
-      // ── Verify phone matches the canonical phone stored on the invite ──────
-      const canonicalPhone = invite.phone as string
-      if (normalizePhone(canonicalPhone) !== normalizePhone(normPhone)) {
-        set({ error: 'This invite code does not match your phone number.', isLoading: false })
-        return
-      }
-
-      // ── Derive worker email from canonical phone (always consistent) ───────
-      const digits = canonicalPhone.replace(/\D/g, '')
-      const workerEmail = `${digits}@agrimanager.app`
-
-      // Try sign-in first (returning worker), then sign-up for new workers.
-      let session: Session | null = null
-      let userId = ''
-
-      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: workerEmail,
-        password: code,
+      // ── Call Edge Function ─────────────────────────────────────────────────
+      // The worker-auth function uses the Supabase admin API (service role key)
+      // to create accounts with email_confirm: true, completely bypassing the
+      // "Confirm email" setting in the Supabase project. It handles:
+      //   • invite lookup + phone verification (server-side)
+      //   • returning workers (sign-in) vs new workers (admin createUser → sign-in)
+      //   • redeemed-invite guards
+      const { data, error: fnErr } = await supabase.functions.invoke('worker-auth', {
+        body: { phone: normPhone, inviteCode: code },
       })
 
-      if (!signInErr && signInData.session) {
-        session = signInData.session
-        userId  = signInData.user.id
-
-        // Returning worker: invite may already be redeemed — only allow if redeemed by this user
-        if (invite.redeemed_at && (invite.redeemed_by as string | null) !== userId) {
-          set({ error: 'This invite code has already been used. Ask your farm owner for a new code.', isLoading: false })
-          return
-        }
-
-        // ── Returning worker: already set up on this device ──────────────────
-        const existingUser = await loadAppUser(userId)
-        if (existingUser) {
-          // Ensure this worker's AppUser exists in Supabase so RLS resolves.
-          if (existingUser.syncStatus !== 'synced') {
-            try {
-              await supabase
-                .from('app_users')
-                .upsert([toSupabaseRecord(existingUser as unknown as Record<string, unknown>)], { onConflict: 'id' })
-              await db.appUsers.update(userId, { syncStatus: 'synced' as const })
-              existingUser.syncStatus = 'synced'
-            } catch { /* non-fatal */ }
-          }
-          set({ session, user: session.user, appUser: existingUser, isAuthenticated: true, isLoading: false })
-          return
-        }
-        // Sign-in succeeded but no local data (re-install / new device) →
-        // fall through to re-seed from the already-fetched invite data.
-      } else {
-        // ── New worker: invite must be unredeemed ─────────────────────────────
-        if (invite.redeemed_at) {
-          set({ error: 'This invite code has already been used. Ask your farm owner for a new code.', isLoading: false })
-          return
-        }
-
-        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-          email: workerEmail,
-          password: code,
+      if (fnErr || !data || data.error) {
+        set({
+          error: data?.error ?? fnErr?.message ?? 'Failed to authenticate. Please check your details.',
+          isLoading: false,
         })
-        if (signUpErr || !signUpData.user) {
-          set({ error: mapError(signUpErr?.message ?? 'Could not create account'), isLoading: false }); return
-        }
-        if (!signUpData.session) {
-          // Supabase has email confirmation enabled — must be disabled for this flow
-          set({ error: 'Account setup requires email confirmation to be disabled. Please ask your farm owner to check Supabase Authentication settings.', isLoading: false }); return
-        }
-        session = signUpData.session
-        userId  = signUpData.user.id
+        return
       }
 
+      const { session: rawSession, invite } = data as {
+        session: { access_token: string; refresh_token: string }
+        user: User
+        invite: Record<string, unknown>
+      }
+
+      // ── Persist session to the Supabase client (localStorage + auth state) ──
+      const { data: sessionData, error: setErr } = await supabase.auth.setSession({
+        access_token:  rawSession.access_token,
+        refresh_token: rawSession.refresh_token,
+      })
+      if (setErr || !sessionData.session) {
+        set({ error: 'Could not save session. Please try again.', isLoading: false })
+        return
+      }
+
+      const session = sessionData.session
+      const userId  = session.user.id
+
+      // ── Returning worker: already set up on this device ──────────────────
+      const existingUser = await loadAppUser(userId)
+      if (existingUser) {
+        if (existingUser.syncStatus !== 'synced') {
+          try {
+            await supabase
+              .from('app_users')
+              .upsert([toSupabaseRecord(existingUser as unknown as Record<string, unknown>)], { onConflict: 'id' })
+            await db.appUsers.update(userId, { syncStatus: 'synced' as const })
+            existingUser.syncStatus = 'synced'
+          } catch { /* non-fatal */ }
+        }
+        set({ session, user: session.user, appUser: existingUser, isAuthenticated: true, isLoading: false })
+        return
+      }
+
+      // ── New worker / new device: seed local DB from invite data ──────────
       const ts = nowIso()
 
       await db.transaction('rw', [db.organizations, db.appUsers], async () => {
@@ -353,13 +321,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         })
       })
 
-      // Mark invite as redeemed (idempotent — skip if already done)
-      if (!invite.redeemed_at) {
-        await supabase
-          .from('team_invites')
-          .update({ redeemed_at: ts, redeemed_by: userId })
-          .eq('invite_code', code)
-      }
+      // Mark invite as redeemed (idempotent — only update if not already done)
+      await supabase
+        .from('team_invites')
+        .update({ redeemed_at: ts, redeemed_by: userId })
+        .eq('invite_code', code)
+        .is('redeemed_at', null)
 
       // Push the worker's AppUser to Supabase BEFORE pulling org data.
       // Every RLS policy calls get_user_org_id() which does:
@@ -375,11 +342,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
       } catch { /* non-fatal */ }
 
-      // Now pull all org data — enterprises, infrastructure, farm locations etc.
+      // Pull all org data — enterprises, infrastructure, farm locations etc.
       await syncEngine.pullChanges().catch(() => { /* non-fatal — will retry on next sync */ })
 
       const appUser = await loadAppUser(userId)
-      set({ session, user: session!.user, appUser, isAuthenticated: true, isLoading: false })
+      set({ session, user: session.user, appUser, isAuthenticated: true, isLoading: false })
     } catch (e: any) {
       set({ error: mapError(e?.message ?? 'Failed to redeem invite'), isLoading: false })
     }
