@@ -108,9 +108,6 @@ export default function AcceptInvitePage() {
               {phoneForm.formState.errors.phone && (
                 <p className="mt-1 text-xs text-red-600">{phoneForm.formState.errors.phone.message}</p>
               )}
-              <p className="mt-1.5 text-xs text-gray-400">
-                You can enter with or without the country code — both work
-              </p>
             </div>
 
             <button type="submit" className="btn-primary w-full">
