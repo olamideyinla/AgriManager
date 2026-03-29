@@ -58,7 +58,7 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   NG: {
     code: 'NGN', symbol: '₦', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 5000, annual: 40000 },
+    pro: { monthly: 10000, annual: 100000 },
     x: { annual: 750000 },
     exampleRevenue: '₦2,400,000',
     exampleCostPerEgg: '₦85',

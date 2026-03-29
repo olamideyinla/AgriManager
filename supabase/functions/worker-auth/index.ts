@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const digits = canonicalPhone.replace(/\D/g, '')
     const workerEmail = `${digits}@agrimanager.app`
 
-    // ── 3. Try sign-in first (returning worker) ───────────────────────────────
+    // ── 3. Try sign-in first (returning worker with matching password) ─────────
     const { data: signInData } = await supabaseAdmin.auth.signInWithPassword({
       email: workerEmail,
       password: code,
@@ -88,8 +88,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // ── 5. Create worker account via admin API (email_confirm: true skips email
-    //       verification, so it works regardless of Supabase project settings) ──
+    // ── 5. Create account via admin API (email_confirm bypasses email verification) ─
     const { data: createData, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: workerEmail,
       password: code,
@@ -101,19 +100,56 @@ Deno.serve(async (req) => {
       },
     })
 
-    if (createErr || !createData.user) {
-      return jsonOk({ error: createErr?.message ?? 'Could not create worker account.' })
+    if (createErr) {
+      // An account already exists for this phone (from a previous invite attempt with a
+      // different code). Find the user and reset their password to the new invite code.
+      const isAlreadyExists =
+        createErr.message?.toLowerCase().includes('already') ||
+        createErr.message?.toLowerCase().includes('duplicate')
+
+      if (!isAlreadyExists) {
+        return jsonOk({ error: createErr.message ?? 'Could not create worker account.' })
+      }
+
+      // List users and find by email (admin only — service role required)
+      const { data: listData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      })
+
+      if (listErr) {
+        return jsonOk({ error: 'Could not locate existing account. Please contact support.' })
+      }
+
+      const existingUser = listData.users.find(
+        (u: { email?: string; id: string }) => u.email === workerEmail
+      )
+
+      if (!existingUser) {
+        return jsonOk({ error: 'Could not locate existing account. Please contact support.' })
+      }
+
+      // Reset password to the new invite code so sign-in will succeed
+      const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+        password: code,
+      })
+
+      if (updateErr) {
+        return jsonOk({ error: 'Could not update worker account. Please try again.' })
+      }
+    } else if (!createData?.user) {
+      return jsonOk({ error: 'Could not create worker account.' })
     }
 
-    // ── 6. Sign the new user in ───────────────────────────────────────────────
+    // ── 6. Sign the user in ───────────────────────────────────────────────────
     const { data: signInData2, error: signInErr2 } = await supabaseAdmin.auth.signInWithPassword({
       email: workerEmail,
       password: code,
     })
 
-    if (signInErr2 || !signInData2.session) {
+    if (signInErr2 || !signInData2?.session) {
       return jsonOk({
-        error: 'Account created but sign-in failed. Please try again in a moment.',
+        error: 'Account ready but sign-in failed. Please try again in a moment.',
       })
     }
 
