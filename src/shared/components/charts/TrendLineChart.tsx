@@ -60,7 +60,7 @@ export function TrendLineChart({
         />
         <Tooltip
           contentStyle={{ fontSize: 13, borderRadius: 8, border: '1px solid #e5e7eb', padding: '6px 10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-          formatter={(v: number) => [`${v}${unit}`, label]}
+          formatter={(v) => [`${v}${unit}`, label]}
           labelStyle={{ color: '#6b7280', fontSize: 11 }}
         />
         <Line

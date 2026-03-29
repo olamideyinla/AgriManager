@@ -8,6 +8,10 @@ declare let self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<{ url: string; revision: string | null }>
 }
 
+// Background Sync API types (not yet in TypeScript's standard webworker lib)
+interface SyncEvent extends ExtendableEvent { readonly tag: string; readonly lastChance: boolean }
+interface PeriodicSyncEvent extends ExtendableEvent { readonly tag: string }
+
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
