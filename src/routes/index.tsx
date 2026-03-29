@@ -68,6 +68,9 @@ const ActivityLogPage      = lazy(() => import('../features/settings/ActivityLog
 // Data management
 const DataManagement       = lazy(() => import('../features/settings/DataManagement'))
 
+// CSV farm setup import
+const SetupImportWizard    = lazy(() => import('../features/import/SetupImportWizard'))
+
 // Labor pages
 const LaborHomePage        = lazy(() => import('../features/labor/LaborHomePage'))
 const WorkerDetailPage     = lazy(() => import('../features/labor/WorkerDetailPage'))
@@ -185,6 +188,9 @@ export function AppRoutes() {
 
           {/* Data management — outside shell */}
           <Route path="/settings/data-management" element={<ProtectedRoute><DataManagement /></ProtectedRoute>} />
+
+          {/* CSV farm setup import — owner only */}
+          <Route path="/import/setup" element={<ProtectedRoute allowedRoles={['owner']}><SetupImportWizard /></ProtectedRoute>} />
 
           {/* Labor — outside shell */}
           <Route path="/labor" element={<ProtectedRoute><LaborHomePage /></ProtectedRoute>} />

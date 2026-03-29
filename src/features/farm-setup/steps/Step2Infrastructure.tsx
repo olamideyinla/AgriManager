@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import type { EnterpriseType } from '../../../shared/types'
 import {
@@ -19,6 +20,25 @@ interface Step2FormValues {
 
 interface Step2Props {
   onComplete: (data: Step2FormValues) => void
+}
+
+// ── Import prompt card ─────────────────────────────────────────────────────────
+
+function ImportFromCSVCard() {
+  const navigate = useNavigate()
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/import/setup')}
+      className="w-full flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-left hover:bg-amber-100 active:scale-[0.98] transition-all"
+    >
+      <span className="text-2xl shrink-0">📁</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-amber-900">Already have records in a spreadsheet?</p>
+        <p className="text-xs text-amber-700 mt-0.5">Import from CSV to set up your farm in minutes →</p>
+      </div>
+    </button>
+  )
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -90,6 +110,9 @@ export const Step2Infrastructure = forwardRef<StepHandle, Step2Props>((props, re
 
   return (
     <div className="px-4 py-5 space-y-6">
+      {/* CSV import shortcut */}
+      <ImportFromCSVCard />
+
       {/* Enterprise type selection */}
       <div>
         <h2 className="text-sm font-semibold text-gray-700 mb-1">What do you farm?</h2>

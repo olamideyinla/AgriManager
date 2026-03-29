@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import JSZip from 'jszip'
 import Papa from 'papaparse'
-import { ArrowLeft, Download, Upload, Trash2, FileDown, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Download, Upload, Trash2, FileDown, AlertTriangle, CheckCircle2, FolderInput } from 'lucide-react'
 import { db } from '../../core/database/db'
 import { useAuthStore } from '../../stores/auth-store'
 import { shareFile } from '../../shared/utils/file-download'
@@ -176,6 +176,23 @@ export default function DataManagement() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-8">
+
+        {/* Import Farm Setup — owner only */}
+        {appUser?.role === 'owner' && (
+          <Section title="Farm Setup Import">
+            <p className="text-xs text-gray-500 mb-3">
+              Import your farm structure (locations, infrastructure, enterprises, inventory, contacts) from CSV files.
+              You can also add data to an existing farm — duplicates will be skipped.
+            </p>
+            <button
+              onClick={() => navigate('/import/setup')}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-semibold active:bg-amber-600 transition-colors"
+            >
+              <FolderInput className="w-4 h-4" />
+              Import Farm Setup from CSV
+            </button>
+          </Section>
+        )}
 
         {/* Full Backup */}
         <Section title="Full Backup">
