@@ -15,6 +15,10 @@ interface PeriodicSyncEvent extends ExtendableEvent { readonly tag: string }
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
+// Activate new SW immediately — skip the waiting phase
+self.addEventListener('install', () => { self.skipWaiting() })
+self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()) })
+
 // Runtime caching: Supabase API calls
 registerRoute(
   ({ url }: { url: URL }) => url.hostname.includes('.supabase.co'),

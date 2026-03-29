@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.ts',
-        registerType: 'prompt',
+        registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icons/*.svg', 'icons/*.png'],
         manifest: false,
         injectManifest: {
