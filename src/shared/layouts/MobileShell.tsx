@@ -4,7 +4,7 @@ import {
   LayoutDashboard, PenLine, FileText, Package, MoreHorizontal,
   Building2, CheckSquare, Eye, X,
   Stethoscope, HardHat, Wallet, Lightbulb, Users, ClipboardList,
-  Bell, BellRing,
+  Bell, BellRing, TrendingUp, Receipt, LogOut,
   type LucideIcon,
 } from 'lucide-react'
 import { useUnreadHighCriticalCount, useAlerts } from '../../core/database/hooks/useAlerts'
@@ -173,8 +173,11 @@ const BOTTOM_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
     { to: '/more',        icon: MoreHorizontal,    label: 'More' },
   ],
   worker: [
-    { to: '/worker/tasks', icon: CheckSquare, label: 'Tasks' },
-    { to: '/worker-entry', icon: PenLine,     label: 'Entry' },
+    { to: '/worker/tasks',       icon: CheckSquare, label: 'Tasks' },
+    { to: '/worker-entry',       icon: PenLine,     label: 'Entry' },
+    { to: '/settings/reminders', icon: BellRing,    label: 'Reminder' },
+    { to: '/financials/sale',    icon: TrendingUp,  label: 'Sales' },
+    { to: '/financials/expense', icon: Receipt,     label: 'Expense' },
   ],
   viewer: [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', alertBadge: true },
@@ -228,7 +231,9 @@ const SIDEBAR_NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   worker: [
     { to: '/worker/tasks',       icon: CheckSquare, label: 'Tasks' },
     { to: '/worker-entry',       icon: PenLine,     label: 'Entry' },
-    { to: '/settings/reminders', icon: BellRing,    label: 'Reminders',    dividerBefore: true },
+    { to: '/settings/reminders', icon: BellRing,    label: 'Reminder',  dividerBefore: true },
+    { to: '/financials/sale',    icon: TrendingUp,  label: 'Sales',     dividerBefore: true },
+    { to: '/financials/expense', icon: Receipt,     label: 'Expense' },
   ],
   viewer: [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', alertBadge: true },
@@ -292,6 +297,33 @@ function NavItems({ items, unreadCount, vertical = false }: {
   )
 }
 
+// ── Worker sign-out ───────────────────────────────────────────────────────────
+
+function useWorkerSignOut() {
+  const signOut  = useAuthStore(s => s.signOut)
+  const navigate = useNavigate()
+  return async () => {
+    await signOut()
+    navigate('/auth/welcome', { replace: true })
+  }
+}
+
+/** Small sign-out button rendered in the top bar on mobile (workers only). */
+function WorkerTopBarSignOut() {
+  const role        = useAuthStore(s => s.appUser?.role)
+  const handleSignOut = useWorkerSignOut()
+  if (role !== 'worker') return null
+  return (
+    <button
+      onClick={handleSignOut}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 transition-colors lg:hidden"
+    >
+      <LogOut size={14} />
+      Sign Out
+    </button>
+  )
+}
+
 // ── View-As banner ─────────────────────────────────────────────────────────────
 
 function ViewAsBanner() {
@@ -346,6 +378,7 @@ function Sidebar() {
   const role        = useAuthStore(s => (s.viewingAs ?? s.appUser)?.role ?? 'owner')
   const unreadCount = useUnreadHighCriticalCount() ?? 0
   const navItems    = SIDEBAR_NAV_BY_ROLE[role]
+  const handleSignOut = useWorkerSignOut()
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-[var(--bg-surface)] z-30">
@@ -368,6 +401,17 @@ function Sidebar() {
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-4 space-y-0.5">
         <NavItems items={navItems} unreadCount={unreadCount} vertical />
       </nav>
+      {role === 'worker' && (
+        <div className="border-t border-gray-100 dark:border-gray-700 p-3">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium"
+          >
+            <LogOut size={18} />
+            Sign Out
+          </button>
+        </div>
+      )}
     </aside>
   )
 }
@@ -387,7 +431,8 @@ export function MobileShell() {
         <InstallPrompt />
         <OfflineBanner />
         <ViewAsBanner />
-        <div className="flex justify-end border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[var(--bg-surface)]">
+          <WorkerTopBarSignOut />
           <SyncStatusIndicator />
         </div>
         <main className="flex-1 overflow-y-auto content-with-nav lg:pb-0">
