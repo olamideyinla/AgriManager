@@ -10,8 +10,8 @@ import type { UserRole } from '../../shared/types'
 
 // Paths that appear in the desktop sidebar per role — hide from More on lg+ screens
 const SIDEBAR_PATHS_BY_ROLE: Record<UserRole, ReadonlySet<string>> = {
-  owner:      new Set(['/enterprises', '/financials', '/reports', '/inventory', '/health', '/labor', '/decision', '/team', '/settings/task-templates', '/alerts', '/settings/reminders']),
-  manager:    new Set(['/enterprises', '/financials', '/reports', '/inventory', '/health', '/labor', '/decision', '/alerts', '/settings/reminders']),
+  owner:      new Set(['/enterprises', '/financials', '/invoicing', '/reports', '/inventory', '/health', '/labor', '/decision', '/team', '/settings/task-templates', '/alerts', '/settings/reminders']),
+  manager:    new Set(['/enterprises', '/financials', '/invoicing', '/reports', '/inventory', '/health', '/labor', '/decision', '/alerts', '/settings/reminders']),
   supervisor: new Set(['/enterprises', '/health', '/labor', '/alerts', '/settings/reminders']),
   worker:     new Set(['/enterprises', '/settings/reminders']),
   viewer:     new Set(['/reports', '/alerts']),
