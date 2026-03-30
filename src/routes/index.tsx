@@ -92,6 +92,14 @@ const ProtocolManagement   = lazy(() => import('../features/health/ProtocolManag
 const SubscriptionPage         = lazy(() => import('../features/settings/SubscriptionPage'))
 const SubscriptionPaymentPage  = lazy(() => import('../features/settings/SubscriptionPaymentPage'))
 
+// Invoicing pages
+const InvoicingPage        = lazy(() => import('../features/invoicing/InvoicingPage'))
+const CreateInvoicePage    = lazy(() => import('../features/invoicing/CreateInvoicePage'))
+const CreateReceiptPage    = lazy(() => import('../features/invoicing/CreateReceiptPage'))
+const InvoiceDetailPage    = lazy(() => import('../features/invoicing/InvoiceDetailPage'))
+const ReceiptDetailPage    = lazy(() => import('../features/invoicing/ReceiptDetailPage'))
+const InvoiceSettingsPage  = lazy(() => import('../features/invoicing/InvoiceSettingsPage'))
+
 // Decision support tools
 const DecisionToolsPage    = lazy(() => import('../features/decision-support/DecisionToolsPage'))
 const BroilerSellCalculator= lazy(() => import('../features/decision-support/BroilerSellCalculator'))
@@ -214,6 +222,14 @@ export function AppRoutes() {
           {/* Health — outside shell (specific before dynamic) */}
           <Route path="/health/protocols" element={<ProtectedRoute><ProtocolManagement /></ProtectedRoute>} />
           <Route path="/health" element={<ProtectedRoute><HealthSchedulePage /></ProtectedRoute>} />
+
+          {/* Invoicing — outside shell (specific before dynamic) */}
+          <Route path="/invoicing"                    element={<ProtectedRoute><InvoicingPage /></ProtectedRoute>} />
+          <Route path="/invoicing/create-invoice"     element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} />
+          <Route path="/invoicing/create-receipt"     element={<ProtectedRoute><CreateReceiptPage /></ProtectedRoute>} />
+          <Route path="/invoicing/settings"           element={<ProtectedRoute><InvoiceSettingsPage /></ProtectedRoute>} />
+          <Route path="/invoicing/invoice/:id"        element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
+          <Route path="/invoicing/receipt/:id"        element={<ProtectedRoute><ReceiptDetailPage /></ProtectedRoute>} />
 
           {/* Decision support tools — outside shell */}
           <Route path="/decision"                 element={<ProtectedRoute><DecisionToolsPage /></ProtectedRoute>} />

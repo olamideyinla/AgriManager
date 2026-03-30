@@ -19,6 +19,12 @@ export const SYNC_ORDER = [
   'financialTransactions',
   'contacts',
   'appUsers',
+  'invoiceSettings',
+  'invoices',
+  'invoiceItems',
+  'invoicePayments',
+  'receipts',
+  'receiptItems',
 ] as const
 
 export type SyncTableName = typeof SYNC_ORDER[number]
@@ -42,6 +48,12 @@ export const TABLE_SUPABASE_NAME: Record<SyncTableName, string> = {
   financialTransactions: 'financial_transactions',
   contacts: 'contacts',
   appUsers: 'app_users',
+  invoiceSettings: 'invoice_settings',
+  invoices: 'invoices',
+  invoiceItems: 'invoice_items',
+  invoicePayments: 'invoice_payments',
+  receipts: 'receipts',
+  receiptItems: 'receipt_items',
 }
 
 /**

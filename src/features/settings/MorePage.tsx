@@ -4,7 +4,7 @@ import { supabase } from '../../core/config/supabase'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
 import type { Theme, FontSize } from '../../stores/ui-store'
-import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard } from 'lucide-react'
+import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText } from 'lucide-react'
 import { PermissionGate } from '../../shared/components/PermissionGate'
 import type { UserRole } from '../../shared/types'
 
@@ -61,6 +61,7 @@ export default function MorePage() {
 
   const allItems = [
     { icon: CreditCard,    label: 'Subscription',    to: '/settings/subscription',     permission: null },
+    { icon: FileText,      label: 'Invoicing',       to: '/invoicing',                 permission: 'financial:read' as const },
     { icon: BrainCircuit,  label: 'Decision Tools',  to: '/decision',                  permission: null },
     { icon: Stethoscope,   label: 'Health Schedule', to: '/health',                    permission: null },
     { icon: Users2,        label: 'Labor',           to: '/labor',                     permission: null },

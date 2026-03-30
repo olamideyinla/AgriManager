@@ -9,6 +9,8 @@ import type {
   HealthProtocol, ScheduledHealthEvent,
   Worker, AttendanceRecord, CasualLaborEntry, PayrollEntry,
   DailyTaskChecklist, DailyTask, ReminderSchedule, TaskTemplate,
+  Invoice, InvoiceItem, InvoicePayment,
+  Receipt, ReceiptItem, InvoiceSettings,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -64,6 +66,12 @@ export class AgriDatabase extends Dexie {
   dailyTasks!: EntityTable<DailyTask, 'id'>
   reminderSchedules!: EntityTable<ReminderSchedule, 'id'>
   taskTemplates!: EntityTable<TaskTemplate, 'id'>
+  invoices!: EntityTable<Invoice, 'id'>
+  invoiceItems!: EntityTable<InvoiceItem, 'id'>
+  invoicePayments!: EntityTable<InvoicePayment, 'id'>
+  receipts!: EntityTable<Receipt, 'id'>
+  receiptItems!: EntityTable<ReceiptItem, 'id'>
+  invoiceSettings!: EntityTable<InvoiceSettings, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -150,7 +158,23 @@ export class AgriDatabase extends Dexie {
       reminderSchedules: '&id, organizationId, role, reminderType',
       taskTemplates: '&id, organizationId, isActive, infrastructureId',
     })
+    // v9 -- adds invoicing (invoices, receipts, invoice settings)
+    this.version(9).stores({
+      invoices:
+        '&id, organizationId, invoiceNumber, status, buyerId, issueDate, dueDate, [organizationId+status], [buyerId+status], syncStatus',
+      invoiceItems:
+        '&id, invoiceId',
+      invoicePayments:
+        '&id, invoiceId, receiptId, date',
+      receipts:
+        '&id, organizationId, receiptNumber, type, status, buyerId, date, [organizationId+type], [organizationId+date], syncStatus',
+      receiptItems:
+        '&id, receiptId',
+      invoiceSettings:
+        '&id, organizationId',
+    })
   }
 }
 
 export const db = new AgriDatabase()
+
