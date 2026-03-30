@@ -196,8 +196,8 @@ export default function AdminContactsPage() {
             ← App
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-lg leading-tight">Contact Messages</h1>
-            <p className="text-xs text-primary-200">Admin view</p>
+            <h1 className="font-bold text-lg leading-tight">Admin</h1>
+            <p className="text-xs text-primary-200">AgriManagerX dashboard</p>
           </div>
           <button
             onClick={() => setRefreshKey(k => k + 1)}
@@ -213,6 +213,16 @@ export default function AdminContactsPage() {
           >
             <LogOut size={16} />
           </button>
+        </div>
+
+        {/* Tab nav */}
+        <div className="max-w-3xl mx-auto flex gap-0 -mb-px">
+          <button onClick={() => navigate('/admin/users')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80">
+            Users
+          </button>
+          <div className="px-4 py-2.5 text-sm font-semibold border-b-2 border-white text-white">
+            Contacts
+          </div>
         </div>
       </header>
 

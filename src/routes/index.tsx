@@ -5,6 +5,7 @@ import { ProtectedRoute, GuestRoute, AdminRoute } from '../shared/components/Pro
 
 // Admin pages
 const AdminContactsPage = lazy(() => import('../features/admin/AdminContactsPage'))
+const AdminUsersPage    = lazy(() => import('../features/admin/AdminUsersPage'))
 
 // Landing pages (public)
 const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
@@ -125,7 +126,8 @@ export function AppRoutes() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Admin */}
-          <Route path="/admin" element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
+          <Route path="/admin"       element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
 
           {/* Landing & public pages */}
           <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
