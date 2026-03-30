@@ -20,11 +20,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
 
       # ── Vercel prebuilt deploy sequence ───────────────────────────────────────
       # vercel pull  → writes .vercel/project.json (identifies the project)
@@ -78,7 +81,6 @@ jobs:
 
       # ── Lighthouse CI ─────────────────────────────────────────────────────────
       # continue-on-error so a Lighthouse regression doesn't block the deploy.
-      # Fix any reported regressions separately.
 
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
