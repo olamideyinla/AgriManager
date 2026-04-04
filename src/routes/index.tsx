@@ -101,6 +101,13 @@ const InvoiceDetailPage    = lazy(() => import('../features/invoicing/InvoiceDet
 const ReceiptDetailPage    = lazy(() => import('../features/invoicing/ReceiptDetailPage'))
 const InvoiceSettingsPage  = lazy(() => import('../features/invoicing/InvoiceSettingsPage'))
 
+// Payroll pages
+const PayrollPage          = lazy(() => import('../features/payroll/PayrollPage'))
+const PayrollSettingsPage  = lazy(() => import('../features/payroll/PayrollSettingsPage'))
+const WorkerPayrollSetup   = lazy(() => import('../features/payroll/WorkerPayrollSetup'))
+const RunPayrollFlow       = lazy(() => import('../features/payroll/RunPayrollFlow'))
+const PayslipDetailPage    = lazy(() => import('../features/payroll/PayslipDetailPage'))
+
 // Decision support tools
 const DecisionToolsPage    = lazy(() => import('../features/decision-support/DecisionToolsPage'))
 const BroilerSellCalculator= lazy(() => import('../features/decision-support/BroilerSellCalculator'))
@@ -232,6 +239,14 @@ export function AppRoutes() {
           <Route path="/invoicing/settings"           element={<ProtectedRoute><InvoiceSettingsPage /></ProtectedRoute>} />
           <Route path="/invoicing/invoice/:id"        element={<ProtectedRoute><InvoiceDetailPage /></ProtectedRoute>} />
           <Route path="/invoicing/receipt/:id"        element={<ProtectedRoute><ReceiptDetailPage /></ProtectedRoute>} />
+
+          {/* Payroll — outside shell (specific before dynamic) */}
+          <Route path="/payroll"                  element={<ProtectedRoute><PayrollPage /></ProtectedRoute>} />
+          <Route path="/payroll/settings"         element={<ProtectedRoute><PayrollSettingsPage /></ProtectedRoute>} />
+          <Route path="/payroll/worker/:workerId" element={<ProtectedRoute><WorkerPayrollSetup /></ProtectedRoute>} />
+          <Route path="/payroll/run"              element={<ProtectedRoute><RunPayrollFlow /></ProtectedRoute>} />
+          <Route path="/payroll/run/:runId"       element={<ProtectedRoute><RunPayrollFlow /></ProtectedRoute>} />
+          <Route path="/payroll/payslip/:payslipId" element={<ProtectedRoute><PayslipDetailPage /></ProtectedRoute>} />
 
           {/* Decision support tools — outside shell */}
           <Route path="/decision"                 element={<ProtectedRoute><DecisionToolsPage /></ProtectedRoute>} />

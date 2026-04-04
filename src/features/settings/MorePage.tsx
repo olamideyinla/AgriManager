@@ -4,14 +4,14 @@ import { supabase } from '../../core/config/supabase'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
 import type { Theme, FontSize } from '../../stores/ui-store'
-import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText } from 'lucide-react'
+import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText, Banknote } from 'lucide-react'
 import { PermissionGate } from '../../shared/components/PermissionGate'
 import type { UserRole } from '../../shared/types'
 
 // Paths that appear in the desktop sidebar per role — hide from More on lg+ screens
 const SIDEBAR_PATHS_BY_ROLE: Record<UserRole, ReadonlySet<string>> = {
-  owner:      new Set(['/enterprises', '/financials', '/invoicing', '/reports', '/inventory', '/health', '/labor', '/decision', '/team', '/settings/task-templates', '/alerts', '/settings/reminders']),
-  manager:    new Set(['/enterprises', '/financials', '/invoicing', '/reports', '/inventory', '/health', '/labor', '/decision', '/alerts', '/settings/reminders']),
+  owner:      new Set(['/enterprises', '/financials', '/invoicing', '/payroll', '/reports', '/inventory', '/health', '/labor', '/decision', '/team', '/settings/task-templates', '/alerts', '/settings/reminders']),
+  manager:    new Set(['/enterprises', '/financials', '/invoicing', '/payroll', '/reports', '/inventory', '/health', '/labor', '/decision', '/alerts', '/settings/reminders']),
   supervisor: new Set(['/enterprises', '/health', '/labor', '/alerts', '/settings/reminders']),
   worker:     new Set(['/enterprises', '/settings/reminders']),
   viewer:     new Set(['/reports', '/alerts']),
@@ -62,6 +62,7 @@ export default function MorePage() {
   const allItems = [
     { icon: CreditCard,    label: 'Subscription',    to: '/settings/subscription',     permission: null },
     { icon: FileText,      label: 'Invoicing',       to: '/invoicing',                 permission: 'financial:read' as const },
+    { icon: Banknote,      label: 'Payroll',         to: '/payroll',                   permission: 'financial:read' as const },
     { icon: BrainCircuit,  label: 'Decision Tools',  to: '/decision',                  permission: null },
     { icon: Stethoscope,   label: 'Health Schedule', to: '/health',                    permission: null },
     { icon: Users2,        label: 'Labor',           to: '/labor',                     permission: null },

@@ -11,6 +11,7 @@ import type {
   DailyTaskChecklist, DailyTask, ReminderSchedule, TaskTemplate,
   Invoice, InvoiceItem, InvoicePayment,
   Receipt, ReceiptItem, InvoiceSettings,
+  PayrollSettings, WorkerPayrollProfile, PayrollRun, PayslipRecord, RemittanceObligation,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -72,6 +73,11 @@ export class AgriDatabase extends Dexie {
   receipts!: EntityTable<Receipt, 'id'>
   receiptItems!: EntityTable<ReceiptItem, 'id'>
   invoiceSettings!: EntityTable<InvoiceSettings, 'id'>
+  payrollSettings!: EntityTable<PayrollSettings, 'id'>
+  workerPayrollProfiles!: EntityTable<WorkerPayrollProfile, 'id'>
+  payrollRuns!: EntityTable<PayrollRun, 'id'>
+  payslipRecords!: EntityTable<PayslipRecord, 'id'>
+  remittanceObligations!: EntityTable<RemittanceObligation, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -158,7 +164,7 @@ export class AgriDatabase extends Dexie {
       reminderSchedules: '&id, organizationId, role, reminderType',
       taskTemplates: '&id, organizationId, isActive, infrastructureId',
     })
-    // v9 -- adds invoicing (invoices, receipts, invoice settings)
+    // v9 — adds invoicing (invoices, receipts, invoice settings)
     this.version(9).stores({
       invoices:
         '&id, organizationId, invoiceNumber, status, buyerId, issueDate, dueDate, [organizationId+status], [buyerId+status], syncStatus',
@@ -172,6 +178,20 @@ export class AgriDatabase extends Dexie {
         '&id, receiptId',
       invoiceSettings:
         '&id, organizationId',
+    })
+
+    // v10 — adds payroll module tables
+    this.version(10).stores({
+      payrollSettings:
+        '&id, organizationId',
+      workerPayrollProfiles:
+        '&id, workerId, organizationId',
+      payrollRuns:
+        '&id, organizationId, period, status, [organizationId+period]',
+      payslipRecords:
+        '&id, payrollRunId, workerId, period, [payrollRunId], [workerId+period]',
+      remittanceObligations:
+        '&id, organizationId, period, status, deductionType, [organizationId+period]',
     })
   }
 }
