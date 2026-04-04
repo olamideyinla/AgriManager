@@ -306,13 +306,13 @@ export async function markPayrollPaid(
         type: 'expense',
         category: 'labor',
         amount: payslip.netPay,
-        description: `Salary — ${payslip.workerName} (${payslip.period})`,
+        notes: `Salary — ${payslip.workerName} (${payslip.period})`,
+        reference: runId,
         paymentMethod: 'bank',
-        payrollRunId: runId,
         createdAt: now,
         updatedAt: now,
         syncStatus: 'pending',
-      } as any)
+      })
     }
 
     // Employer costs summary transaction
@@ -324,13 +324,13 @@ export async function markPayrollPaid(
         type: 'expense',
         category: 'labor',
         amount: run.totalEmployerCosts - run.totalGrossPay,
-        description: `Employer statutory contributions — ${run.period}`,
+        notes: `Employer statutory contributions — ${run.period}`,
+        reference: runId,
         paymentMethod: 'bank',
-        payrollRunId: runId,
         createdAt: now,
         updatedAt: now,
         syncStatus: 'pending',
-      } as any)
+      })
     }
 
     await db.payrollRuns.update(runId, {

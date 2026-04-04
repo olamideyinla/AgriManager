@@ -10,7 +10,7 @@ import { newId, nowIso } from '../../shared/types/base'
 import { updateInvoiceStatus } from './services/document-calculator'
 import { generateInvoicePDF } from './services/invoice-pdf'
 import { getOrCreateInvoiceSettings } from './services/document-numbers'
-import type { InvoicePayment, InvoicePaymentMethod } from '../../shared/types'
+import type { InvoicePayment, InvoicePaymentMethod, FinancialTransaction } from '../../shared/types'
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
@@ -33,6 +33,12 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Record payment sheet ──────────────────────────────────────────────────────
 
+// Map InvoicePaymentMethod → FinancialTransaction paymentMethod
+function toFinancialPaymentMethod(m: InvoicePaymentMethod): FinancialTransaction['paymentMethod'] {
+  if (m === 'cheque' || m === 'other') return 'bank'
+  return m as FinancialTransaction['paymentMethod']
+}
+
 function RecordPaymentSheet({
   invoiceId,
   amountDue,
@@ -47,6 +53,7 @@ function RecordPaymentSheet({
   onSaved: () => void
 }) {
   const { fmt } = useCurrency()
+  const organizationId = useAuthStore(s => s.appUser?.organizationId)
   const [amount, setAmount]         = useState(String(amountDue))
   const [method, setMethod]         = useState<InvoicePaymentMethod>('cash')
   const [reference, setReference]   = useState('')
@@ -55,10 +62,35 @@ function RecordPaymentSheet({
 
   const handleSave = async () => {
     const amt = parseFloat(amount)
-    if (!amt || amt <= 0) return
+    if (!amt || amt <= 0 || !organizationId) return
     setSaving(true)
     try {
       const ts = nowIso()
+
+      const [invoice, allPayments] = await Promise.all([
+        db.invoices.get(invoiceId),
+        db.invoicePayments.where('invoiceId').equals(invoiceId).toArray(),
+      ])
+
+      if (!invoice) throw new Error('Invoice not found')
+
+      // Create matching FinancialTransaction (income)
+      const ftxn: FinancialTransaction = {
+        id:              newId(),
+        organizationId,
+        enterpriseInstanceId: invoice.enterpriseInstanceId ?? undefined,
+        date,
+        type:            'income',
+        category:        'sales_other',
+        amount:          amt,
+        paymentMethod:   toFinancialPaymentMethod(method),
+        reference:       invoice.invoiceNumber,
+        notes:           `Invoice payment — ${invoice.buyerName}`,
+        createdAt:       ts,
+        updatedAt:       ts,
+        syncStatus:      'pending',
+      }
+
       const payment: InvoicePayment = {
         id:                           newId(),
         invoiceId,
@@ -68,23 +100,17 @@ function RecordPaymentSheet({
         paymentMethod:                method,
         reference:                    reference || null,
         notes:                        null,
-        linkedFinancialTransactionId: null,
+        linkedFinancialTransactionId: ftxn.id,
         createdAt:                    ts,
         updatedAt:                    ts,
         syncStatus:                   'pending',
       }
 
-      const [invoice, allPayments] = await Promise.all([
-        db.invoices.get(invoiceId),
-        db.invoicePayments.where('invoiceId').equals(invoiceId).toArray(),
-      ])
-
-      if (!invoice) throw new Error('Invoice not found')
-
       const updatedPayments = [...allPayments, payment]
       const { amountPaid, amountDue: newDue, status } = updateInvoiceStatus(invoice, updatedPayments)
 
-      await db.transaction('rw', [db.invoices, db.invoicePayments], async () => {
+      await db.transaction('rw', [db.invoices, db.invoicePayments, db.financialTransactions], async () => {
+        await db.financialTransactions.add(ftxn)
         await db.invoicePayments.add(payment)
         await db.invoices.update(invoiceId, {
           amountPaid,

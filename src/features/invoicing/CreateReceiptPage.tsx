@@ -16,7 +16,7 @@ import {
   lineItemTotal,
 } from './services/document-calculator'
 import { getNextReceiptNumber, getOrCreateInvoiceSettings } from './services/document-numbers'
-import type { Receipt, ReceiptItem } from '../../shared/types'
+import type { Receipt, ReceiptItem, FinancialTransaction, PaymentMethod } from '../../shared/types'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -141,6 +141,30 @@ export default function CreateReceiptPage() {
         syncStatus:  'pending',
       }))
 
+      // Map receipt payment method to FinancialTransaction paymentMethod
+      const financialPaymentMethod: PaymentMethod =
+        (['cash', 'bank', 'mobile_money'] as const).includes(values.paymentMethod as PaymentMethod)
+          ? (values.paymentMethod as PaymentMethod)
+          : 'bank'
+
+      // Create matching FinancialTransaction (income)
+      const ftxnId = newId()
+      const ftxn: FinancialTransaction = {
+        id:              ftxnId,
+        organizationId:  appUser.organizationId,
+        enterpriseInstanceId: values.enterpriseInstanceId ?? undefined,
+        date:            values.date,
+        type:            'income',
+        category:        'sales_other',
+        amount:          totals.totalAmount,
+        paymentMethod:   financialPaymentMethod,
+        reference:       receiptNumber,
+        notes:           `Receipt — ${values.buyerName}`,
+        createdAt:       ts,
+        updatedAt:       ts,
+        syncStatus:      'pending',
+      }
+
       const receipt: Receipt = {
         id:                          receiptId,
         organizationId:              appUser.organizationId,
@@ -164,7 +188,7 @@ export default function CreateReceiptPage() {
         paymentMethod:               values.paymentMethod,
         paymentReference:            values.paymentReference ?? null,
         linkedInvoiceId:             values.linkedInvoiceId ?? null,
-        linkedFinancialTransactionId:null,
+        linkedFinancialTransactionId:ftxnId,
         enterpriseInstanceId:        values.enterpriseInstanceId ?? null,
         currency,
         notes:                       values.notes ?? null,
@@ -173,7 +197,8 @@ export default function CreateReceiptPage() {
         syncStatus:                  'pending',
       }
 
-      await db.transaction('rw', [db.receipts, db.receiptItems], async () => {
+      await db.transaction('rw', [db.receipts, db.receiptItems, db.financialTransactions], async () => {
+        await db.financialTransactions.add(ftxn)
         await db.receipts.add(receipt)
         await db.receiptItems.bulkAdd(itemRows)
       })
