@@ -6,7 +6,7 @@ export function LandingFooter() {
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
           {/* Brand */}
           <div>
             <p className="text-white font-bold text-xl mb-2 font-body">🌾 AgriManagerX</p>
@@ -44,6 +44,28 @@ export function LandingFooter() {
               <li>
                 <Link to="/contact" className="hover:text-white transition-colors">
                   Contact Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Partners */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3 font-body">Partners</h4>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/partners" className="hover:text-white transition-colors">
+                  Partner Program
+                </Link>
+              </li>
+              <li>
+                <Link to="/partners/apply" className="hover:text-white transition-colors">
+                  Apply to Partner
+                </Link>
+              </li>
+              <li>
+                <Link to="/partners/signin" className="hover:text-white transition-colors">
+                  Partner Sign In
                 </Link>
               </li>
             </ul>

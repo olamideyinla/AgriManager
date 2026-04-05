@@ -2,10 +2,23 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MobileShell } from '../shared/layouts/MobileShell'
 import { ProtectedRoute, GuestRoute, AdminRoute } from '../shared/components/ProtectedRoute'
+import { PartnerRoute } from '../shared/components/PartnerRoute'
 
 // Admin pages
-const AdminContactsPage = lazy(() => import('../features/admin/AdminContactsPage'))
-const AdminUsersPage    = lazy(() => import('../features/admin/AdminUsersPage'))
+const AdminContactsPage     = lazy(() => import('../features/admin/AdminContactsPage'))
+const AdminUsersPage        = lazy(() => import('../features/admin/AdminUsersPage'))
+const AdminPartnersPage     = lazy(() => import('../features/admin/AdminPartnersPage'))
+const AdminPartnerDetailPage= lazy(() => import('../features/admin/AdminPartnerDetailPage'))
+
+// Partner pages (public + portal)
+const LandingPartnersPage   = lazy(() => import('../features/partners/LandingPartnersPage'))
+const PartnerApplyPage      = lazy(() => import('../features/partners/PartnerApplyPage'))
+const PartnerSignInPage     = lazy(() => import('../features/partners/PartnerSignInPage'))
+const PartnerPortalLayout   = lazy(() => import('../features/partners/portal/PartnerPortalLayout'))
+const PartnerDashboardPage  = lazy(() => import('../features/partners/portal/PartnerDashboardPage'))
+const PartnerReferralsPage  = lazy(() => import('../features/partners/portal/PartnerReferralsPage'))
+const PartnerEarningsPage   = lazy(() => import('../features/partners/portal/PartnerEarningsPage'))
+const PartnerToolkitPage    = lazy(() => import('../features/partners/portal/PartnerToolkitPage'))
 
 // Landing pages (public)
 const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
@@ -133,14 +146,29 @@ export function AppRoutes() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Admin */}
-          <Route path="/admin"       element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
-          <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin"                element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
+          <Route path="/admin/users"          element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/partners"       element={<AdminRoute><AdminPartnersPage /></AdminRoute>} />
+          <Route path="/admin/partners/:id"   element={<AdminRoute><AdminPartnerDetailPage /></AdminRoute>} />
 
           {/* Landing & public pages */}
           <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+
+          {/* Partner public pages — no auth required */}
+          <Route path="/partners"        element={<LandingPartnersPage />} />
+          <Route path="/partners/apply"  element={<PartnerApplyPage />} />
+          <Route path="/partners/signin" element={<PartnerSignInPage />} />
+
+          {/* Partner portal — PartnerRoute guard, nested layout */}
+          <Route path="/partners/portal" element={<PartnerRoute><PartnerPortalLayout /></PartnerRoute>}>
+            <Route index              element={<PartnerDashboardPage />} />
+            <Route path="referrals"   element={<PartnerReferralsPage />} />
+            <Route path="earnings"    element={<PartnerEarningsPage />} />
+            <Route path="toolkit"     element={<PartnerToolkitPage />} />
+          </Route>
 
           {/* Auth routes — guest only */}
           <Route path="/auth/welcome" element={<GuestRoute><WelcomePage /></GuestRoute>} />

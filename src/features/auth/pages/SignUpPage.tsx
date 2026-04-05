@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
+import { supabase } from '../../../core/config/supabase'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,12 @@ export default function SignUpPage() {
   const [step1Data, setStep1Data] = useState<Step1Form | null>(null)
   const [step2Data, setStep2Data] = useState<Step2Form | null>(null)
 
+  // Capture ?ref= from URL into localStorage so it survives multi-step signup
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref) localStorage.setItem('agri-ref-code', ref)
+  }, [])
+
   const step1Form = useForm<Step1Form>({ resolver: zodResolver(step1Schema) })
   const step2Form = useForm<Step2Form>({
     resolver: zodResolver(step2Schema),
@@ -130,6 +137,20 @@ export default function SignUpPage() {
       navigate('/auth/signin')
       return
     }
+
+    // Record partner referral if a ref code was captured
+    if (state.isAuthenticated && state.appUser) {
+      const refCode = localStorage.getItem('agri-ref-code')
+      if (refCode) {
+        await supabase.rpc('record_partner_referral', {
+          ref_code:  refCode,
+          org_id:    state.appUser.organizationId,
+          ref_email: step1Data?.email ?? '',
+        }).catch(() => {}) // non-fatal — never block signup
+        localStorage.removeItem('agri-ref-code')
+      }
+    }
+
     // If authenticated and came from a paid plan CTA, go to subscription page
     if (state.isAuthenticated && (plan === 'pro' || plan === 'x')) {
       navigate('/settings/subscription')
