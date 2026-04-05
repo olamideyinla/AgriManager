@@ -35,7 +35,10 @@ const REFERRAL_STATUS_COLORS: Record<ReferralStatus, string> = {
   churned:   'bg-red-100 text-red-700',
 }
 
-const PLAN_TYPES = ['pro_monthly', 'pro_annual'] as const
+const PLAN_TYPES: { value: string; label: string; defaultAmount: number }[] = [
+  { value: 'pro_monthly', label: 'Pro Monthly',  defaultAmount: 9   },
+  { value: 'pro_annual',  label: 'Pro Annual',   defaultAmount: 86  },
+]
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -85,11 +88,16 @@ export default function AdminPartnerDetailPage() {
     setSavingNotes(false)
   }
 
-  const markReferralConverted = async (refId: string, planType: string) => {
+  const markReferralConverted = async (refId: string, planType: string, subscriptionAmount: number) => {
     setUpdating(refId)
     const { error } = await supabase
       .from('partner_referrals')
-      .update({ status: 'converted', plan_type: planType, converted_at: new Date().toISOString() })
+      .update({
+        status: 'converted',
+        plan_type: planType,
+        subscription_amount: subscriptionAmount,
+        converted_at: new Date().toISOString(),
+      })
       .eq('id', refId)
     if (!error) {
       setRefreshKey(k => k + 1)
@@ -250,7 +258,10 @@ export default function AdminPartnerDetailPage() {
                 {commissions.map(c => (
                   <div key={c.id} className="px-4 py-3.5 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800">${c.amount.toFixed(2)}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        ${c.amount.toFixed(2)}
+                        <span className="text-xs font-normal text-gray-400 ml-1">({(c.rate * 100).toFixed(0)}%)</span>
+                      </p>
                       <p className="text-xs text-gray-400">{c.period} · {c.commissionType} · {fmt(c.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -323,10 +334,27 @@ function ReferralAdminRow({
 }: {
   referral: PartnerReferral
   isUpdating: boolean
-  onMarkConverted: (id: string, planType: string) => void
+  onMarkConverted: (id: string, planType: string, subscriptionAmount: number) => void
 }) {
-  const [planType, setPlanType] = useState<string>('pro_monthly')
+  const defaultPlan   = PLAN_TYPES[0]
+  const [planType,    setPlanType]    = useState(defaultPlan.value)
+  const [amount,      setAmount]      = useState<string>(String(defaultPlan.defaultAmount))
   const [showConvert, setShowConvert] = useState(false)
+
+  const commissionRate    = 0.30
+  const parsedAmount      = parseFloat(amount) || 0
+  const commissionPreview = (parsedAmount * commissionRate).toFixed(2)
+
+  const handlePlanChange = (value: string) => {
+    setPlanType(value)
+    const plan = PLAN_TYPES.find(p => p.value === value)
+    if (plan) setAmount(String(plan.defaultAmount))
+  }
+
+  const handleConfirm = () => {
+    if (parsedAmount <= 0) return
+    onMarkConverted(referral.id, planType, parsedAmount)
+  }
 
   return (
     <div className="px-4 py-3.5">
@@ -350,23 +378,50 @@ function ReferralAdminRow({
               Mark as Converted
             </button>
           ) : (
-            <div className="flex items-center gap-2 mt-1">
-              <select
-                value={planType}
-                onChange={e => setPlanType(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none"
-              >
-                {PLAN_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-              <button
-                onClick={() => onMarkConverted(referral.id, planType)}
-                disabled={isUpdating}
-                className="flex items-center gap-1 bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-60"
-              >
-                {isUpdating ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
-                Confirm
-              </button>
-              <button onClick={() => setShowConvert(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+            <div className="space-y-2 mt-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Plan selector */}
+                <select
+                  value={planType}
+                  onChange={e => handlePlanChange(e.target.value)}
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none"
+                >
+                  {PLAN_TYPES.map(p => (
+                    <option key={p.value} value={p.value}>{p.label}</option>
+                  ))}
+                </select>
+
+                {/* Subscription amount paid */}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500">$</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount paid"
+                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none w-24"
+                  />
+                </div>
+
+                <button
+                  onClick={handleConfirm}
+                  disabled={isUpdating || parsedAmount <= 0}
+                  className="flex items-center gap-1 bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-60"
+                >
+                  {isUpdating ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
+                  Confirm
+                </button>
+                <button onClick={() => setShowConvert(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+              </div>
+
+              {/* Commission preview */}
+              {parsedAmount > 0 && (
+                <p className="text-xs text-green-700 bg-green-50 rounded-lg px-2.5 py-1.5">
+                  Commission: ${amount} × 30% = <strong>${commissionPreview}</strong>
+                </p>
+              )}
             </div>
           )}
         </>

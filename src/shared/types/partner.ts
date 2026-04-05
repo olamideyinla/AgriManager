@@ -31,6 +31,7 @@ export interface PartnerReferral {
   referredEmail?: string | null
   status: ReferralStatus
   planType?: PlanType | null
+  subscriptionAmount?: number | null   // actual amount paid — commission = this × rate
   convertedAt?: string | null
   createdAt: string
 }
