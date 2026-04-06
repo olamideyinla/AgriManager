@@ -36,8 +36,8 @@ const REFERRAL_STATUS_COLORS: Record<ReferralStatus, string> = {
 }
 
 const PLAN_TYPES: { value: string; label: string; defaultAmount: number }[] = [
-  { value: 'pro_monthly', label: 'Pro Monthly',  defaultAmount: 9   },
-  { value: 'pro_annual',  label: 'Pro Annual',   defaultAmount: 86  },
+  { value: 'pro_monthly', label: 'Pro Monthly',  defaultAmount: 15000  },
+  { value: 'pro_annual',  label: 'Pro Annual',   defaultAmount: 120000 },
 ]
 
 function fmt(iso: string) {
@@ -341,9 +341,9 @@ function ReferralAdminRow({
   const [amount,      setAmount]      = useState<string>(String(defaultPlan.defaultAmount))
   const [showConvert, setShowConvert] = useState(false)
 
-  const commissionRate    = 0.30
+  const commissionRate    = 0.20
   const parsedAmount      = parseFloat(amount) || 0
-  const commissionPreview = (parsedAmount * commissionRate).toFixed(2)
+  const commissionPreview = Math.round(parsedAmount * commissionRate).toLocaleString()
 
   const handlePlanChange = (value: string) => {
     setPlanType(value)
@@ -393,15 +393,15 @@ function ReferralAdminRow({
 
                 {/* Subscription amount paid */}
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500">$</span>
+                  <span className="text-xs text-gray-500">₦</span>
                   <input
                     type="number"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     min="0"
-                    step="0.01"
+                    step="1"
                     placeholder="Amount paid"
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none w-24"
+                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none w-28"
                   />
                 </div>
 
@@ -419,7 +419,7 @@ function ReferralAdminRow({
               {/* Commission preview */}
               {parsedAmount > 0 && (
                 <p className="text-xs text-green-700 bg-green-50 rounded-lg px-2.5 py-1.5">
-                  Commission: ${amount} × 30% = <strong>${commissionPreview}</strong>
+                  Commission: ₦{Number(amount).toLocaleString()} × 20% = <strong>₦{commissionPreview}</strong>
                 </p>
               )}
             </div>

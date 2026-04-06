@@ -68,10 +68,10 @@ export default function LandingPartnersPage() {
             Partner Program
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
-            Earn 30% Referring Farmers
+            Earn 20% Referring Farmers
           </h1>
           <p className="text-lg text-primary-200 mb-8 max-w-xl mx-auto">
-            Join AgriManagerX as a Commission Sales Partner. Share your referral link, help farmers discover the app, and earn monthly commissions as long as they stay subscribed.
+            Join AgriManagerX as a Commission Sales Partner. Share your referral link, help farmers discover the app, and earn recurring commissions as long as they stay subscribed.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
@@ -100,7 +100,7 @@ export default function LandingPartnersPage() {
               { step: '1', icon: '📋', title: 'Apply', desc: 'Fill out the short partner application. We review and approve within 3 business days.' },
               { step: '2', icon: '✅', title: 'Get Approved', desc: 'Receive your unique referral link, WhatsApp script, and access to the partner dashboard.' },
               { step: '3', icon: '🔗', title: 'Share Your Link', desc: 'Send your link to farmers via WhatsApp, in-person demos, or any channel you prefer.' },
-              { step: '4', icon: '💰', title: 'Earn Monthly', desc: 'Earn 30% commission on every Pro signup. 20% every time they renew. Paid monthly.' },
+              { step: '4', icon: '💰', title: 'Earn Monthly', desc: 'Earn 20% commission on every Pro signup. 10% every time they renew. Paid monthly.' },
             ].map(s => (
               <div key={s.step} className="bg-white rounded-2xl p-5 shadow-sm text-center">
                 <div className="text-3xl mb-3">{s.icon}</div>
@@ -130,9 +130,9 @@ export default function LandingPartnersPage() {
               </thead>
               <tbody>
                 {[
-                  { type: 'Pro Monthly ($9/mo)', commission: '30% = $2.70 per active subscriber / month' },
-                  { type: 'Pro Annual ($86/yr)',  commission: '30% = $25.80 upfront per sale' },
-                  { type: 'Renewal (Year 2+)',    commission: '20% recurring as long as subscribed' },
+                  { type: 'Pro Monthly (₦15,000/mo)', commission: '20% = ₦3,000 per month per active subscriber' },
+                  { type: 'Pro Annual (₦120,000/yr)', commission: '20% = ₦24,000 upfront per subscription sold' },
+                  { type: 'Renewal (Year 2+)',         commission: '10% recurring as long as the farmer stays subscribed' },
                 ].map((row, i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                     <td className="px-4 py-3 text-gray-700">{row.type}</td>
@@ -169,7 +169,7 @@ export default function LandingPartnersPage() {
           </div>
 
           <div className="bg-primary-50 border border-primary-200 rounded-2xl p-5 text-sm text-primary-800">
-            <strong>Example:</strong> You sign up a poultry farm on the Pro Annual plan in Month 1. You earn <strong>$25.80 upfront</strong>. If they renew next year, you earn <strong>$17.20</strong> (20% of $86). If you sign up 25 farms in the quarter, all new sales earn an extra <strong>10%</strong>.
+            <strong>Example:</strong> You sign up a poultry farm on the Pro Annual plan in Month 1. You earn <strong>₦24,000 upfront</strong>. When they renew next year, you earn <strong>₦12,000</strong> (10% of ₦120,000). Sign up 25 farms in the quarter and all new sales earn an extra <strong>10%</strong>.
           </div>
         </div>
       </section>
