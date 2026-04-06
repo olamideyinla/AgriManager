@@ -423,51 +423,52 @@ export default function PayrollPage() {
   if (!organizationId) return null
 
   return (
-    <FeatureGate feature="payroll" softLock>
-      <div className="min-h-dvh bg-gray-50 flex flex-col safe-top safe-bottom">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 pt-4 pb-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <button onClick={() => navigate(-1)} className="touch-target text-gray-500">
-                <ArrowLeft size={22} />
-              </button>
-              <h1 className="text-lg font-bold text-gray-900">Payroll</h1>
-            </div>
-            <button
-              onClick={() => navigate('/payroll/settings')}
-              className="touch-target text-gray-500"
-            >
-              <Settings size={20} />
+    <div className="min-h-dvh bg-gray-50 flex flex-col safe-top safe-bottom">
+      {/* Header — always accessible so Settings can always be reached */}
+      <div className="bg-white border-b border-gray-200 px-4 pt-4 pb-0">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate(-1)} className="touch-target text-gray-500">
+              <ArrowLeft size={22} />
             </button>
+            <h1 className="text-lg font-bold text-gray-900">Payroll</h1>
           </div>
-
-          {/* Tabs */}
-          <div className="flex -mx-4 px-4 overflow-x-auto gap-4 scrollbar-none">
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`pb-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  tab === t.id
-                    ? 'text-primary-600 border-primary-600'
-                    : 'text-gray-500 border-transparent'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => navigate('/payroll/settings')}
+            className="touch-target text-gray-500"
+            title="Payroll Settings"
+          >
+            <Settings size={20} />
+          </button>
         </div>
 
-        {/* Content */}
+        {/* Tabs */}
+        <div className="flex -mx-4 px-4 overflow-x-auto gap-4 scrollbar-none">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`pb-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                tab === t.id
+                  ? 'text-primary-600 border-primary-600'
+                  : 'text-gray-500 border-transparent'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content — gated behind Pro subscription */}
+      <FeatureGate feature="payroll" softLock>
         <div className="flex-1 overflow-y-auto">
           {tab === 'month'       && <ThisMonthTab organizationId={organizationId} fmt={fmt} />}
           {tab === 'history'     && <HistoryTab   organizationId={organizationId} fmt={fmt} />}
           {tab === 'remittances' && <RemittancesTab organizationId={organizationId} fmt={fmt} />}
           {tab === 'workers'     && <WorkersTab    organizationId={organizationId} />}
         </div>
-      </div>
-    </FeatureGate>
+      </FeatureGate>
+    </div>
   )
 }
