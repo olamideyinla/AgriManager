@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   RefreshCw, LogOut, Users, CheckCircle, Clock, XCircle,
   ChevronRight,
@@ -63,11 +63,13 @@ function timeAgo(iso: string) {
 export default function AdminPartnersPage() {
   const navigate = useNavigate()
   const signOut  = useAuthStore(s => s.signOut)
+  const [searchParams] = useSearchParams()
 
   const [partners, setPartners]   = useState<PartnerRow[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
-  const [filter, setFilter]       = useState<PartnerStatus | 'all' | 'super'>('all')
+  const initialFilter = (searchParams.get('filter') as PartnerStatus | 'all' | 'super') ?? 'all'
+  const [filter, setFilter]       = useState<PartnerStatus | 'all' | 'super'>(initialFilter)
   const [refreshKey, setRefreshKey] = useState(0)
   const [updating, setUpdating]   = useState<string | null>(null)
 

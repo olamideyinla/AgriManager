@@ -245,6 +245,40 @@ export default function AdminContactsPage() {
           ))}
         </div>
 
+        {/* Quick links */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate('/admin/partners?filter=super')}
+            className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex items-center justify-between hover:bg-purple-100 transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⭐</span>
+              <div>
+                <p className="font-semibold text-purple-900 text-sm">Super Partners</p>
+                <p className="text-xs text-purple-600">Hierarchy &amp; override commissions</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-3 py-1.5 rounded-lg">
+              Manage →
+            </span>
+          </button>
+          <button
+            onClick={() => navigate('/admin/partners?filter=pending')}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between hover:bg-amber-100 transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📋</span>
+              <div>
+                <p className="font-semibold text-amber-900 text-sm">Pending Applications</p>
+                <p className="text-xs text-amber-600">Review &amp; approve new partners</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-lg">
+              Review →
+            </span>
+          </button>
+        </div>
+
         {/* Search */}
         <div className="relative">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
