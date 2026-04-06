@@ -67,9 +67,10 @@ jobs:
       - name: Create GitHub Release
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tag = context.ref.replace('refs/tags/', '')
-            github.rest.repos.createRelease({
+            await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: tag,
@@ -81,8 +82,8 @@ jobs:
 
       - name: Smoke test production URL
         run: |
-          sleep 10
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.deploy.outputs.deployment_url }}")
+          sleep 15
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://www.agrimanagerx.com")
           if [ "$STATUS" != "200" ]; then
             echo "Smoke test failed: HTTP $STATUS"
             exit 1
