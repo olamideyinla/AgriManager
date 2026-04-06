@@ -4,7 +4,7 @@ import { usePartnerStore } from '../../../stores/partner-store'
 import { partnerSupabase } from '../../../core/config/supabase-partner'
 import type { PartnerReferral } from '../../../shared/types/partner'
 
-const BASE_URL = 'https://agrimanagerx.com'
+const BASE_URL = 'https://www.agrimanagerx.com'
 
 const STATUS_COLORS: Record<string, string> = {
   signup:    'bg-blue-100 text-blue-700',
