@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Download, Upload, CheckCircle2, AlertCircle, AlertTriangle,
@@ -236,6 +236,11 @@ export default function SetupImportWizard({ onSkip, fromOnboarding = false }: Se
   const [importStep, setImportStep] = useState('')
   const [importStepIdx, setImportStepIdx] = useState(0)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (validationTimerRef.current !== null) clearTimeout(validationTimerRef.current)
+  }, [])
 
   // ── Redirect non-owners ────────────────────────────────────────────────────
 
@@ -276,7 +281,8 @@ export default function SetupImportWizard({ onSkip, fromOnboarding = false }: Se
       return prev
     })
     // Slight delay to let state settle
-    setTimeout(() => runRefValidation(updatedFiles), 100)
+    if (validationTimerRef.current !== null) clearTimeout(validationTimerRef.current)
+    validationTimerRef.current = setTimeout(() => runRefValidation(updatedFiles), 100)
   }, [])
 
   const handleClear = useCallback((templateId: string) => {

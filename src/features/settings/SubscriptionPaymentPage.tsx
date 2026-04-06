@@ -52,7 +52,9 @@ function loadPaystackScript(): Promise<void> {
 }
 
 function generateRef(orgId: string): string {
-  return `amx-${orgId.slice(0, 8)}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const bytes = crypto.getRandomValues(new Uint8Array(4))
+  const suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, 5)
+  return `amx-${orgId.slice(0, 8)}-${Date.now()}-${suffix}`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
