@@ -18,23 +18,6 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";    -- crypt() helpers
 -- SECTION 1 — HELPER FUNCTIONS
 -- ============================================================
 
--- Returns the organization_id of the currently authenticated user.
--- Placed in the auth schema so it can be referenced before public
--- functions are created; 002_rls_policies.sql exposes an identical
--- copy in the public schema for convenience.
-CREATE OR REPLACE FUNCTION auth.get_user_org_id()
-RETURNS UUID
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-AS $$
-  SELECT organization_id
-  FROM public.app_users
-  WHERE id = auth.uid()
-    AND is_active = TRUE
-  LIMIT 1;
-$$;
-
 -- Sets updated_at = now() on every UPDATE.
 CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS TRIGGER
