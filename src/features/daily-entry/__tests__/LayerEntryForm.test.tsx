@@ -91,7 +91,7 @@ describe('LayerEntryForm', () => {
     })
 
     // NumberInput has no htmlFor — locate via parent element
-    const eggInput = getInputByLabel('Individual Eggs')
+    const eggInput = getInputByLabel('Morning · Individual Eggs')
     await user.clear(eggInput)
     await user.type(eggInput, '4500')
 
@@ -118,7 +118,7 @@ describe('LayerEntryForm', () => {
     await waitFor(() => screen.getByText(/Egg Collection/i))
 
     // 5000 eggs / 5000 hens = 100%
-    const eggInput = getInputByLabel('Individual Eggs')
+    const eggInput = getInputByLabel('Morning · Individual Eggs')
     await user.clear(eggInput)
     await user.type(eggInput, '5000')
 
@@ -137,9 +137,10 @@ describe('LayerEntryForm', () => {
 
     renderForm()
 
+    // Form splits totalEggs 60/40 morning/evening: Math.round(3800 * 0.6) = 2280
     await waitFor(() => {
-      const eggInput = getInputByLabel('Individual Eggs')
-      expect(eggInput.value).toBe('3800')
+      const eggInput = getInputByLabel('Morning · Individual Eggs')
+      expect(eggInput.value).toBe('2280')
     }, { timeout: 3000 })
   })
 
@@ -167,7 +168,7 @@ describe('LayerEntryForm', () => {
 
     await waitFor(() => screen.getByText(/Egg Collection/i))
 
-    const eggInput = getInputByLabel('Individual Eggs')
+    const eggInput = getInputByLabel('Morning · Individual Eggs')
     await user.type(eggInput, '3000')
 
     // Advance 31 seconds to trigger the auto-save interval
@@ -179,6 +180,6 @@ describe('LayerEntryForm', () => {
     const stored = localStorage.getItem(draftKey)
     expect(stored).not.toBeNull()
     const draft = JSON.parse(stored!)
-    expect(draft.data.eggInput).toBe('3000')
+    expect(draft.data.eggMorning).toBe('3000')
   })
 })

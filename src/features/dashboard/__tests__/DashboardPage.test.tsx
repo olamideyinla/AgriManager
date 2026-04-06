@@ -159,7 +159,7 @@ describe('DashboardPage', () => {
 
   it('shows empty state when no active enterprises', async () => {
     const { user } = await seedOrgHierarchy()
-    useAuthStore.setState({ user: { id: user.id } as any, userId: user.id } as any)
+    useAuthStore.setState({ user: { id: user.id } as any, userId: user.id, appUser: user } as any)
 
     renderDashboard()
 

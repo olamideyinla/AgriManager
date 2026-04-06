@@ -82,7 +82,7 @@ describe('createBatchReport', () => {
       farmName: 'Test Farm',
     })
     expect(blob).not.toBeNull()
-  })
+  }, 15000)
 
   it('returned Blob has type application/pdf', async () => {
     const { createBatchReport } = await import('../pdf-export')

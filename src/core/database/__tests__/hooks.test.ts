@@ -24,9 +24,8 @@ vi.mock('../../../core/config/supabase', () => ({
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function setUserId(id: string | undefined) {
-  // The hooks access s.userId which is not in the typed interface but
-  // Zustand allows setting any key via setState
-  useAuthStore.setState({ userId: id } as any)
+  // useActiveEnterprises reads s.user?.id; useTodayEntryStatus reads s.userId
+  useAuthStore.setState({ user: id ? { id } as any : null, userId: id } as any)
 }
 
 // ── useActiveEnterprises ──────────────────────────────────────────────────────
