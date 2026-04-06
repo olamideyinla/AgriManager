@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Copy, CheckCircle, MessageSquare, Smartphone, BookOpen, Link } from 'lucide-react'
 import { usePartnerStore } from '../../../stores/partner-store'
 
-const BASE_URL = 'https://agrimanagerx.com'
+const BASE_URL = 'https://www.agrimanagerx.com'
 
 const WHATSAPP_SCRIPT = `Hi [Farmer's name]!
 
@@ -86,14 +86,19 @@ export default function PartnerToolkitPage() {
           <Link size={15} /> Your Links
         </p>
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-primary-600 w-20 flex-shrink-0 font-medium">Referral:</span>
-            <span className="text-xs font-mono text-primary-900 bg-white px-2 py-1 rounded border border-primary-200 flex-1 truncate">
-              {referralLink}
-            </span>
+          <div className="flex items-start gap-2">
+            <span className="text-xs text-primary-600 w-24 flex-shrink-0 font-medium pt-1">Trial Link:</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-mono text-primary-900 bg-white px-2 py-1 rounded border border-primary-200 block truncate">
+                {referralLink}
+              </span>
+              <p className="text-xs text-primary-500 mt-1">
+                ✓ Farmers who sign up with this link automatically get <strong>30 days of Pro free</strong> — then downgrade to free if they do not subscribe.
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-primary-600 w-20 flex-shrink-0 font-medium">App:</span>
+            <span className="text-xs text-primary-600 w-24 flex-shrink-0 font-medium">App:</span>
             <span className="text-xs font-mono text-primary-900 bg-white px-2 py-1 rounded border border-primary-200 flex-1 truncate">
               {BASE_URL}
             </span>
@@ -137,7 +142,7 @@ export default function PartnerToolkitPage() {
             },
             {
               title: 'Trial Offer',
-              body: 'Every farmer who signs up gets 30 days of free Pro. Lead with this — remove the risk, then follow up.',
+              body: 'Every farmer who signs up with your link automatically gets 30 days of Pro free — no credit card, no action needed. After 30 days they drop to the free tier unless they subscribe. Lead with this to remove the risk, then follow up around Day 14 while they are still in trial.',
             },
           ].map((tip, i) => (
             <div key={i}>
