@@ -217,15 +217,10 @@ export default function AdminContactsPage() {
 
         {/* Tab nav */}
         <div className="max-w-3xl mx-auto flex gap-0 -mb-px overflow-x-auto scrollbar-hide">
-          <button onClick={() => navigate('/admin/users')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">
-            Users
-          </button>
-          <div className="px-4 py-2.5 text-sm font-semibold border-b-2 border-white text-white whitespace-nowrap">
-            Contacts
-          </div>
-          <button onClick={() => navigate('/admin/partners')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">
-            Partners
-          </button>
+          <button onClick={() => navigate('/admin/users')}       className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Users</button>
+          <div className="px-4 py-2.5 text-sm font-semibold border-b-2 border-white text-white whitespace-nowrap">Contacts</div>
+          <button onClick={() => navigate('/admin/partners')}    className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Partners</button>
+          <button onClick={() => navigate('/admin/performance')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Performance</button>
         </div>
       </header>
 
@@ -275,6 +270,21 @@ export default function AdminContactsPage() {
             </div>
             <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-lg">
               Review →
+            </span>
+          </button>
+          <button
+            onClick={() => navigate('/admin/performance')}
+            className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center justify-between hover:bg-blue-100 transition-colors text-left sm:col-span-2"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📊</span>
+              <div>
+                <p className="font-semibold text-blue-900 text-sm">Partner Performance</p>
+                <p className="text-xs text-blue-600">Financial &amp; recruitment leaderboard</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1.5 rounded-lg">
+              View →
             </span>
           </button>
         </div>

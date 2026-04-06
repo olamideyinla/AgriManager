@@ -5,10 +5,11 @@ import { ProtectedRoute, GuestRoute, AdminRoute } from '../shared/components/Pro
 import { PartnerRoute } from '../shared/components/PartnerRoute'
 
 // Admin pages
-const AdminContactsPage     = lazy(() => import('../features/admin/AdminContactsPage'))
-const AdminUsersPage        = lazy(() => import('../features/admin/AdminUsersPage'))
-const AdminPartnersPage     = lazy(() => import('../features/admin/AdminPartnersPage'))
-const AdminPartnerDetailPage= lazy(() => import('../features/admin/AdminPartnerDetailPage'))
+const AdminContactsPage           = lazy(() => import('../features/admin/AdminContactsPage'))
+const AdminUsersPage              = lazy(() => import('../features/admin/AdminUsersPage'))
+const AdminPartnersPage           = lazy(() => import('../features/admin/AdminPartnersPage'))
+const AdminPartnerDetailPage      = lazy(() => import('../features/admin/AdminPartnerDetailPage'))
+const AdminPartnerPerformancePage = lazy(() => import('../features/admin/AdminPartnerPerformancePage'))
 
 // Partner pages (public + portal)
 const LandingPartnersPage   = lazy(() => import('../features/partners/LandingPartnersPage'))
@@ -147,10 +148,11 @@ export function AppRoutes() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Admin */}
-          <Route path="/admin"                element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
-          <Route path="/admin/users"          element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-          <Route path="/admin/partners"       element={<AdminRoute><AdminPartnersPage /></AdminRoute>} />
-          <Route path="/admin/partners/:id"   element={<AdminRoute><AdminPartnerDetailPage /></AdminRoute>} />
+          <Route path="/admin"                    element={<AdminRoute><AdminContactsPage /></AdminRoute>} />
+          <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/partners"           element={<AdminRoute><AdminPartnersPage /></AdminRoute>} />
+          <Route path="/admin/partners/:id"       element={<AdminRoute><AdminPartnerDetailPage /></AdminRoute>} />
+          <Route path="/admin/performance"        element={<AdminRoute><AdminPartnerPerformancePage /></AdminRoute>} />
 
           {/* Landing & public pages */}
           <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />

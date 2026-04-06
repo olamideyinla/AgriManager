@@ -218,12 +218,9 @@ export default function AdminUsersPage() {
           <div className="px-4 py-2.5 text-sm font-semibold border-b-2 border-white text-white whitespace-nowrap">
             Users
           </div>
-          <button onClick={() => navigate('/admin')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">
-            Contacts
-          </button>
-          <button onClick={() => navigate('/admin/partners')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">
-            Partners
-          </button>
+          <button onClick={() => navigate('/admin')}             className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Contacts</button>
+          <button onClick={() => navigate('/admin/partners')}    className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Partners</button>
+          <button onClick={() => navigate('/admin/performance')} className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-white/60 hover:text-white/80 whitespace-nowrap">Performance</button>
         </div>
       </header>
 
