@@ -59,7 +59,7 @@ export default function LandingPartnersPage() {
 
   return (
     <div className="bg-white">
-      <LandingNav />
+      <LandingNav ctaTo="/partners/apply" />
 
       {/* ── Hero ── */}
       <section className="pt-28 pb-20 px-4 bg-gradient-to-br from-primary-700 to-primary-900 text-white text-center">

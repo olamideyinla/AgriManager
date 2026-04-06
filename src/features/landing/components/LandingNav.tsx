@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export function LandingNav() {
+export function LandingNav({ ctaTo }: { ctaTo?: string } = {}) {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const ctaDest = ctaTo ?? '/auth/signup'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -40,7 +41,7 @@ export function LandingNav() {
             Sign In
           </button>
           <button
-            onClick={() => navigate('/auth/signup')}
+            onClick={() => navigate(ctaDest)}
             className="bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
           >
             Get Started
@@ -74,7 +75,7 @@ export function LandingNav() {
           <a href="#pricing" onClick={() => setMenuOpen(false)} className="text-gray-700 font-medium">Pricing</a>
           <a href="#how-it-works" onClick={() => setMenuOpen(false)} className="text-gray-700 font-medium">How It Works</a>
           <button
-            onClick={() => { setMenuOpen(false); navigate('/auth/signup') }}
+            onClick={() => { setMenuOpen(false); navigate(ctaDest) }}
             className="bg-primary-600 text-white font-semibold py-2.5 rounded-lg"
           >
             Get Started Free
