@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, RefreshCw, CheckCircle, DollarSign, Save, Loader2 } from 'lucide-react'
+import { ChevronLeft, RefreshCw, CheckCircle, DollarSign, Save, Loader2, Star, Link2 } from 'lucide-react'
 import { supabase } from '../../core/config/supabase'
 import type { PartnerCommission, PartnerPayout, PartnerReferral, ReferralStatus, PartnerStatus } from '../../shared/types/partner'
 
@@ -19,6 +19,10 @@ interface PartnerRow {
   payment_method: string | null
   payment_details: string | null
   created_at: string
+  partner_type: string
+  parent_partner_id: string | null
+  recruitment_code: string | null
+  recruited_by_code: string | null
 }
 
 const STATUS_COLORS: Record<PartnerStatus, string> = {
@@ -53,7 +57,11 @@ export default function AdminPartnerDetailPage() {
   const [commissions, setCommissions] = useState<PartnerCommission[]>([])
   const [payouts,     setPayouts]     = useState<PartnerPayout[]>([])
   const [loading,     setLoading]     = useState(true)
-  const [tab,         setTab]         = useState<'referrals' | 'commissions' | 'payouts'>('referrals')
+  const [tab,         setTab]         = useState<'referrals' | 'commissions' | 'payouts' | 'network'>('referrals')
+  const [promoting,   setPromoting]   = useState(false)
+  const [linking,     setLinking]     = useState(false)
+  const [actionMsg,   setActionMsg]   = useState<string | null>(null)
+  const [subPartners, setSubPartners] = useState<PartnerRow[]>([])
   const [notes,       setNotes]       = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
   const [updating,    setUpdating]    = useState<string | null>(null)
@@ -80,6 +88,72 @@ export default function AdminPartnerDetailPage() {
       setLoading(false)
     })
   }, [id, refreshKey])
+
+  // Fetch sub-partners when partner_type = 'super'
+  useEffect(() => {
+    if (!partner || partner.partner_type !== 'super') return
+    supabase
+      .from('partners')
+      .select('*')
+      .eq('parent_partner_id', partner.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setSubPartners((data as PartnerRow[]) ?? []))
+  }, [partner])
+
+  const promoteToSuper = async () => {
+    if (!partner) return
+    setPromoting(true)
+    setActionMsg(null)
+    const { error } = await supabase
+      .from('partners')
+      .update({ partner_type: 'super' })
+      .eq('id', partner.id)
+    if (error) {
+      setActionMsg(`Error: ${error.message}`)
+    } else {
+      setActionMsg('Promoted to Super Partner. Recruitment code generated.')
+      setRefreshKey(k => k + 1)
+    }
+    setPromoting(false)
+  }
+
+  const resolveAndSetParent = async () => {
+    if (!partner?.recruited_by_code) return
+    setLinking(true)
+    setActionMsg(null)
+    // Look up by recruitment_code first, then referral_code
+    let recruiterId: string | null = null
+    const { data: byRecruit } = await supabase
+      .from('partners')
+      .select('id')
+      .eq('recruitment_code', partner.recruited_by_code)
+      .maybeSingle()
+    if (byRecruit) {
+      recruiterId = (byRecruit as { id: string }).id
+    } else {
+      const { data: byRef } = await supabase
+        .from('partners')
+        .select('id')
+        .eq('referral_code', partner.recruited_by_code)
+        .maybeSingle()
+      if (byRef) recruiterId = (byRef as { id: string }).id
+    }
+    if (!recruiterId) {
+      setActionMsg(`No partner found with code "${partner.recruited_by_code}"`)
+    } else {
+      const { error } = await supabase
+        .from('partners')
+        .update({ parent_partner_id: recruiterId })
+        .eq('id', partner.id)
+      if (error) {
+        setActionMsg(`Error: ${error.message}`)
+      } else {
+        setActionMsg('Linked to recruiter successfully.')
+        setRefreshKey(k => k + 1)
+      }
+    }
+    setLinking(false)
+  }
 
   const saveNotes = async () => {
     if (!partner) return
@@ -168,12 +242,15 @@ export default function AdminPartnerDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-3xl mx-auto flex -mb-px mt-2">
-          {(['referrals', 'commissions', 'payouts'] as const).map(t => (
+        <div className="max-w-3xl mx-auto flex -mb-px mt-2 overflow-x-auto scrollbar-hide">
+          {([
+            'referrals', 'commissions', 'payouts',
+            ...(partner.partner_type === 'super' ? ['network'] : []),
+          ] as const).map(t => (
             <button
               key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors ${
+              onClick={() => setTab(t as typeof tab)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize transition-colors whitespace-nowrap ${
                 tab === t ? 'border-white text-white' : 'border-transparent text-white/60 hover:text-white/80'
               }`}
             >
@@ -187,18 +264,55 @@ export default function AdminPartnerDetailPage() {
         {/* Profile card */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm text-sm space-y-2">
           {[
-            { label: 'Email',    value: partner.email },
-            { label: 'Phone',    value: partner.phone ?? '—' },
-            { label: 'Ref Code', value: partner.referral_code ?? 'Not generated yet' },
-            { label: 'Tier',     value: partner.tier },
-            { label: 'Joined',   value: fmt(partner.created_at) },
+            { label: 'Email',        value: partner.email },
+            { label: 'Phone',        value: partner.phone ?? '—' },
+            { label: 'Ref Code',     value: partner.referral_code ?? 'Not generated yet' },
+            { label: 'Tier',         value: partner.tier },
+            { label: 'Joined',       value: fmt(partner.created_at) },
+            { label: 'Type',         value: partner.partner_type === 'super' ? '★ Super Partner' : 'Standard' },
+            { label: 'Recruit Code', value: partner.recruitment_code ?? '—' },
+            { label: 'Recruited By', value: partner.recruited_by_code ?? '—' },
           ].map(row => (
             <div key={row.label} className="flex items-center gap-2">
-              <span className="text-gray-400 w-20 flex-shrink-0 text-xs">{row.label}</span>
-              <span className="text-gray-800 font-medium text-xs truncate">{row.value}</span>
+              <span className="text-gray-400 w-24 flex-shrink-0 text-xs">{row.label}</span>
+              <span className={`font-medium text-xs truncate ${row.label === 'Type' && partner.partner_type === 'super' ? 'text-purple-700' : 'text-gray-800'}`}>
+                {row.value}
+              </span>
             </div>
           ))}
         </div>
+
+        {/* Actions */}
+        {(partner.status === 'approved' && partner.partner_type === 'standard') || (partner.recruited_by_code && !partner.parent_partner_id) ? (
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-2">
+            <p className="text-xs font-semibold text-gray-700 mb-3">Partner Actions</p>
+            {partner.status === 'approved' && partner.partner_type === 'standard' && (
+              <button
+                onClick={() => void promoteToSuper()}
+                disabled={promoting}
+                className="flex items-center gap-2 text-sm font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-60"
+              >
+                {promoting ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+                Promote to Super Partner
+              </button>
+            )}
+            {partner.recruited_by_code && !partner.parent_partner_id && (
+              <button
+                onClick={() => void resolveAndSetParent()}
+                disabled={linking}
+                className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-60"
+              >
+                {linking ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                Link to recruiter: {partner.recruited_by_code}
+              </button>
+            )}
+            {actionMsg && (
+              <p className={`text-xs mt-1 ${actionMsg.startsWith('Error') || actionMsg.startsWith('No partner') ? 'text-red-600' : 'text-green-700'}`}>
+                {actionMsg}
+              </p>
+            )}
+          </div>
+        ) : null}
 
         {/* Notes */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
@@ -293,6 +407,39 @@ export default function AdminPartnerDetailPage() {
                         </button>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Network tab ── */}
+        {tab === 'network' && (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900 text-sm">Sub-Partners ({subPartners.length})</h2>
+            </div>
+            {subPartners.length === 0 ? (
+              <div className="py-10 text-center text-sm text-gray-500">No sub-partners recruited yet.</div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {subPartners.map(s => (
+                  <div
+                    key={s.id}
+                    className="px-4 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/admin/partners/${s.id}`)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                      {s.full_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{s.full_name}</p>
+                      <p className="text-xs text-gray-400">{s.country}{s.territory ? ` · ${s.territory}` : ''} · {fmt(s.created_at)}</p>
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[s.status]}`}>
+                      {s.status}
+                    </span>
                   </div>
                 ))}
               </div>

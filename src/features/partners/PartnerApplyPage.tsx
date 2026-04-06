@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -130,6 +130,11 @@ function Field({ label, hint, error, children }: {
 export default function PartnerApplyPage() {
   const navigate = useNavigate()
 
+  useEffect(() => {
+    const via = new URLSearchParams(window.location.search).get('via')
+    if (via) localStorage.setItem('agri-recruitment-code', via)
+  }, [])
+
   const [step, setStep] = useState(1)
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null)
   const [step2Data, setStep2Data] = useState<Step2Data | null>(null)
@@ -166,20 +171,24 @@ export default function PartnerApplyPage() {
         step2Data.heardFrom ? `Heard from: ${step2Data.heardFrom}` : '',
       ].filter(Boolean).join('\n')
 
+      const recruitedByCode = localStorage.getItem('agri-recruitment-code')
+
       const { error: insertErr } = await partnerSupabase.from('partners').insert({
-        user_id:   authData.user.id,
-        full_name: step1Data.fullName,
-        email:     step1Data.email,
-        phone:     step1Data.phone,
-        country:   step1Data.country,
-        territory: step1Data.territory ?? null,
+        user_id:            authData.user.id,
+        full_name:          step1Data.fullName,
+        email:              step1Data.email,
+        phone:              step1Data.phone,
+        country:            step1Data.country,
+        territory:          step1Data.territory ?? null,
         notes,
-        status: 'pending',
-        tier:   'standard',
+        status:             'pending',
+        tier:               'standard',
+        recruited_by_code:  recruitedByCode ?? null,
       })
 
       if (insertErr) { setServerError(insertErr.message); return }
 
+      localStorage.removeItem('agri-recruitment-code')
       await partnerSupabase.auth.signOut()
       setSubmitted(true)
     } catch (e: unknown) {

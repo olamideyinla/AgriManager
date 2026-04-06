@@ -6,28 +6,6 @@ import type { PartnerCommission, PartnerPayout } from '../../../shared/types/par
 
 const MIN_PAYOUT = 20
 
-interface MonthRow {
-  period: string
-  referrals: number
-  commissions: number
-  amount: number
-  status: string
-}
-
-function groupByPeriod(commissions: PartnerCommission[]): MonthRow[] {
-  const map = new Map<string, MonthRow>()
-  for (const c of commissions) {
-    const existing = map.get(c.period) ?? { period: c.period, referrals: 0, commissions: 0, amount: 0, status: c.status }
-    existing.commissions += 1
-    existing.amount += c.amount
-    // escalate status: pending < approved < paid
-    const order = ['pending', 'approved', 'paid']
-    if (order.indexOf(c.status) > order.indexOf(existing.status)) existing.status = c.status
-    map.set(c.period, existing)
-  }
-  return Array.from(map.values()).sort((a, b) => b.period.localeCompare(a.period))
-}
-
 const STATUS_COLORS: Record<string, string> = {
   pending:  'bg-amber-100 text-amber-700',
   approved: 'bg-blue-100 text-blue-700',
@@ -55,14 +33,21 @@ export default function PartnerEarningsPage() {
     })
   }, [partner])
 
+  const direct    = commissions.filter(c => c.commissionType !== 'override')
+  const overrides = commissions.filter(c => c.commissionType === 'override')
+
   const totals = {
-    pending:  commissions.filter(c => c.status === 'pending').reduce((s, c) => s + c.amount, 0),
-    approved: commissions.filter(c => c.status === 'approved').reduce((s, c) => s + c.amount, 0),
-    paid:     commissions.filter(c => c.status === 'paid').reduce((s, c) => s + c.amount, 0),
+    pending:         direct.filter(c => c.status === 'pending').reduce((s, c) => s + c.amount, 0),
+    approved:        commissions.filter(c => c.status === 'approved').reduce((s, c) => s + c.amount, 0),
+    paid:            commissions.filter(c => c.status === 'paid').reduce((s, c) => s + c.amount, 0),
+    overridePending: overrides.filter(c => c.status === 'pending').reduce((s, c) => s + c.amount, 0),
   }
 
+  const isSuper = partner?.partnerType === 'super'
+
   const pendingIds = commissions.filter(c => c.status === 'pending').map(c => c.id)
-  const canRequest = totals.pending >= MIN_PAYOUT && pendingIds.length > 0
+  const pendingTotal = totals.pending + totals.overridePending
+  const canRequest = pendingTotal >= MIN_PAYOUT && pendingIds.length > 0
 
   const now       = new Date()
   const periodStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -74,7 +59,7 @@ export default function PartnerEarningsPage() {
     const { error } = await partnerSupabase.from('partner_payouts').insert({
       partner_id:     partner.id,
       period:         periodStr,
-      total_amount:   totals.pending,
+      total_amount:   pendingTotal,
       commission_ids: pendingIds,
       status:         'requested',
     })
@@ -86,8 +71,6 @@ export default function PartnerEarningsPage() {
     setRequesting(false)
   }
 
-  const rows = groupByPeriod(commissions)
-
   if (!partner) return null
 
   return (
@@ -98,11 +81,12 @@ export default function PartnerEarningsPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`grid gap-3 ${isSuper ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
         {[
           { label: 'Pending',  value: totals.pending,  color: 'text-amber-600' },
           { label: 'Approved', value: totals.approved, color: 'text-blue-600'  },
           { label: 'Paid',     value: totals.paid,     color: 'text-green-600' },
+          ...(isSuper ? [{ label: 'Override Pending', value: totals.overridePending, color: 'text-purple-600' }] : []),
         ].map(s => (
           <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm text-center">
             <p className={`text-lg font-bold ${s.color}`}>${s.value.toFixed(2)}</p>
@@ -118,8 +102,8 @@ export default function PartnerEarningsPage() {
             <p className="font-semibold text-gray-900 text-sm">Request Payout</p>
             <p className="text-xs text-gray-500">
               {canRequest
-                ? `$${totals.pending.toFixed(2)} available — minimum $${MIN_PAYOUT}`
-                : `Minimum $${MIN_PAYOUT} required (you have $${totals.pending.toFixed(2)})`}
+                ? `$${pendingTotal.toFixed(2)} available — minimum $${MIN_PAYOUT}`
+                : `Minimum $${MIN_PAYOUT} required (you have $${pendingTotal.toFixed(2)})`}
             </p>
           </div>
           <button
@@ -158,37 +142,24 @@ export default function PartnerEarningsPage() {
           </div>
         ) : (
           <div>
-            <div className="hidden sm:grid grid-cols-[100px_1fr_1fr_100px_80px] px-4 py-2.5 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
-              <span>Period</span>
-              <span className="text-center">Commissions</span>
-              <span className="text-right">Amount</span>
-              <span className="text-right">Status</span>
-            </div>
             <div className="divide-y divide-gray-50">
-              {rows.map(row => (
-                <div key={row.period} className="px-4 py-3.5">
-                  {/* Mobile */}
-                  <div className="sm:hidden flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">{row.period}</p>
-                      <p className="text-xs text-gray-500">{row.commissions} commission{row.commissions !== 1 ? 's' : ''}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">${row.amount.toFixed(2)}</p>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[row.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {row.status}
-                      </span>
-                    </div>
+              {commissions.map(c => (
+                <div key={c.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">
+                      ${c.amount.toFixed(2)}
+                      <span className="text-xs font-normal text-gray-400 ml-1">({(c.rate * 100).toFixed(0)}%)</span>
+                    </p>
+                    <p className="text-xs text-gray-400">{c.period}</p>
                   </div>
-                  {/* Desktop */}
-                  <div className="hidden sm:grid grid-cols-[100px_1fr_1fr_100px_80px] items-center">
-                    <span className="text-sm font-semibold text-gray-800">{row.period}</span>
-                    <span className="text-center text-sm text-gray-600">{row.commissions}</span>
-                    <span className="text-right text-sm font-bold text-gray-900">${row.amount.toFixed(2)}</span>
-                    <span className="text-right">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[row.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {row.status}
-                      </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {c.commissionType === 'override' ? (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">Override</span>
+                    ) : (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Direct</span>
+                    )}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[c.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {c.status}
                     </span>
                   </div>
                 </div>

@@ -28,6 +28,7 @@ interface PartnerRow {
   notes: string | null
   created_at: string
   updated_at: string
+  partner_type: string
 }
 
 const STATUS_COLORS: Record<PartnerStatus, string> = {
@@ -37,10 +38,11 @@ const STATUS_COLORS: Record<PartnerStatus, string> = {
   rejected:  'bg-red-100 text-red-700',
 }
 
-const STATUS_FILTERS: { label: string; value: PartnerStatus | 'all' }[] = [
+const STATUS_FILTERS: { label: string; value: PartnerStatus | 'all' | 'super' }[] = [
   { label: 'All',       value: 'all'       },
   { label: 'Pending',   value: 'pending'   },
   { label: 'Approved',  value: 'approved'  },
+  { label: 'Super',     value: 'super'     },
   { label: 'Suspended', value: 'suspended' },
   { label: 'Rejected',  value: 'rejected'  },
 ]
@@ -65,7 +67,7 @@ export default function AdminPartnersPage() {
   const [partners, setPartners]   = useState<PartnerRow[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
-  const [filter, setFilter]       = useState<PartnerStatus | 'all'>('all')
+  const [filter, setFilter]       = useState<PartnerStatus | 'all' | 'super'>('all')
   const [refreshKey, setRefreshKey] = useState(0)
   const [updating, setUpdating]   = useState<string | null>(null)
 
@@ -92,13 +94,16 @@ export default function AdminPartnersPage() {
     total:     partners.length,
     pending:   partners.filter(p => p.status === 'pending').length,
     approved:  partners.filter(p => p.status === 'approved').length,
+    super:     partners.filter(p => p.partner_type === 'super').length,
     silver:    partners.filter(p => p.tier === 'silver').length,
     gold:      partners.filter(p => p.tier === 'gold').length,
   }), [partners])
 
-  const displayed = useMemo(() => (
-    filter === 'all' ? partners : partners.filter(p => p.status === filter)
-  ), [partners, filter])
+  const displayed = useMemo(() => {
+    if (filter === 'all') return partners
+    if (filter === 'super') return partners.filter(p => p.partner_type === 'super')
+    return partners.filter(p => p.status === filter)
+  }, [partners, filter])
 
   const updateStatus = async (id: string, status: PartnerStatus) => {
     setUpdating(id)
@@ -148,11 +153,12 @@ export default function AdminPartnersPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {[
             { label: 'Total',    value: stats.total,    icon: <Users size={15} /> },
             { label: 'Pending',  value: stats.pending,  icon: <Clock size={15} /> },
             { label: 'Approved', value: stats.approved, icon: <CheckCircle size={15} /> },
+            { label: 'Super',    value: stats.super,    icon: <span className="text-xs">⭐</span> },
             { label: 'Silver',   value: stats.silver,   icon: <span className="text-xs">🥈</span> },
             { label: 'Gold',     value: stats.gold,     icon: <span className="text-xs">🥇</span> },
           ].map(s => (
@@ -229,6 +235,9 @@ export default function AdminPartnersPage() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {p.partner_type === 'super' && (
+                      <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">Super</span>
+                    )}
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[p.status]}`}>
                       {p.status}
                     </span>

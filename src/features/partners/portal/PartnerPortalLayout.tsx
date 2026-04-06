@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LogOut, LayoutDashboard, Users, DollarSign, Wrench } from 'lucide-react'
+import { LogOut, LayoutDashboard, Users, DollarSign, Wrench, Network } from 'lucide-react'
 import { usePartnerStore } from '../../../stores/partner-store'
 
 const TIER_LABELS: Record<string, string> = {
@@ -7,13 +7,6 @@ const TIER_LABELS: Record<string, string> = {
   silver:   '🥈 Silver',
   gold:     '🥇 Gold',
 }
-
-const NAV = [
-  { to: '/partners/portal',           label: 'Dashboard',  icon: <LayoutDashboard size={18} />, end: true },
-  { to: '/partners/portal/referrals', label: 'Referrals',  icon: <Users size={18} /> },
-  { to: '/partners/portal/earnings',  label: 'Earnings',   icon: <DollarSign size={18} /> },
-  { to: '/partners/portal/toolkit',   label: 'Toolkit',    icon: <Wrench size={18} /> },
-]
 
 export default function PartnerPortalLayout() {
   const navigate = useNavigate()
@@ -27,6 +20,16 @@ export default function PartnerPortalLayout() {
 
   const tierLabel = partner ? TIER_LABELS[partner.tier] : ''
 
+  const NAV = [
+    { to: '/partners/portal',           label: 'Dashboard',  icon: <LayoutDashboard size={18} />, end: true },
+    { to: '/partners/portal/referrals', label: 'Referrals',  icon: <Users size={18} /> },
+    { to: '/partners/portal/earnings',  label: 'Earnings',   icon: <DollarSign size={18} /> },
+    { to: '/partners/portal/toolkit',   label: 'Toolkit',    icon: <Wrench size={18} /> },
+    ...(partner?.partnerType === 'super'
+      ? [{ to: '/partners/portal/network', label: 'Network', icon: <Network size={18} />, end: false }]
+      : []),
+  ]
+
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col">
       {/* Top bar */}
@@ -38,6 +41,11 @@ export default function PartnerPortalLayout() {
             {tierLabel && (
               <span className="text-xs bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full font-bold flex-shrink-0">
                 {tierLabel}
+              </span>
+            )}
+            {partner?.partnerType === 'super' && (
+              <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold flex-shrink-0">
+                Super
               </span>
             )}
           </div>

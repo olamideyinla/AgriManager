@@ -19,6 +19,7 @@ const PartnerDashboardPage  = lazy(() => import('../features/partners/portal/Par
 const PartnerReferralsPage  = lazy(() => import('../features/partners/portal/PartnerReferralsPage'))
 const PartnerEarningsPage   = lazy(() => import('../features/partners/portal/PartnerEarningsPage'))
 const PartnerToolkitPage    = lazy(() => import('../features/partners/portal/PartnerToolkitPage'))
+const PartnerNetworkPage    = lazy(() => import('../features/partners/portal/PartnerNetworkPage'))
 
 // Landing pages (public)
 const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
@@ -168,6 +169,7 @@ export function AppRoutes() {
             <Route path="referrals"   element={<PartnerReferralsPage />} />
             <Route path="earnings"    element={<PartnerEarningsPage />} />
             <Route path="toolkit"     element={<PartnerToolkitPage />} />
+            <Route path="network"     element={<PartnerNetworkPage />} />
           </Route>
 
           {/* Auth routes — guest only */}

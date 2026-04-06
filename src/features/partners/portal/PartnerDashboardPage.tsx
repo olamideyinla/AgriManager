@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Copy, Share2, CheckCircle, TrendingUp, Users, DollarSign, Award } from 'lucide-react'
+import { Copy, Share2, CheckCircle, TrendingUp, Users, DollarSign, Award, Network } from 'lucide-react'
 import { usePartnerStore } from '../../../stores/partner-store'
 import { partnerSupabase } from '../../../core/config/supabase-partner'
 import type { PartnerReferral } from '../../../shared/types/partner'
@@ -27,17 +27,22 @@ interface Stats {
   totalReferred: number
   activePro: number
   thisMonthEarnings: number
+  subPartnerCount: number
 }
 
 export default function PartnerDashboardPage() {
   const partner  = usePartnerStore(s => s.partner)
   const [copied, setCopied]       = useState(false)
   const [referrals, setReferrals] = useState<PartnerReferral[]>([])
-  const [stats, setStats]         = useState<Stats>({ totalReferred: 0, activePro: 0, thisMonthEarnings: 0 })
+  const [stats, setStats]         = useState<Stats>({ totalReferred: 0, activePro: 0, thisMonthEarnings: 0, subPartnerCount: 0 })
   const [loading, setLoading]     = useState(true)
 
   const referralLink = partner?.referralCode
     ? `${BASE_URL}/auth/signup?ref=${partner.referralCode}`
+    : null
+
+  const recruitmentLink = partner?.recruitmentCode
+    ? `${BASE_URL}/partners/apply?via=${partner.recruitmentCode}`
     : null
 
   const waText = referralLink
@@ -46,11 +51,27 @@ export default function PartnerDashboardPage() {
       )
     : ''
 
+  const waRecruitmentText = recruitmentLink
+    ? encodeURIComponent(
+        `Join the AgriManagerX Partner Program and earn commissions by referring farmers. Apply here: ${recruitmentLink}`
+      )
+    : ''
+
+  const [copiedRecruit, setCopiedRecruit] = useState(false)
+
   const copyLink = () => {
     if (!referralLink) return
     navigator.clipboard.writeText(referralLink).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  const copyRecruitLink = () => {
+    if (!recruitmentLink) return
+    navigator.clipboard.writeText(recruitmentLink).then(() => {
+      setCopiedRecruit(true)
+      setTimeout(() => setCopiedRecruit(false), 2000)
     })
   }
 
@@ -62,7 +83,7 @@ export default function PartnerDashboardPage() {
       const now      = new Date()
       const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-      const [refRes, earningsRes] = await Promise.all([
+      const [refRes, earningsRes, subPartnersRes] = await Promise.all([
         partnerSupabase
           .from('partner_referrals')
           .select('*')
@@ -75,6 +96,12 @@ export default function PartnerDashboardPage() {
           .eq('partner_id', partner.id)
           .eq('period', monthStr)
           .neq('status', 'paid'),
+        partner.partnerType === 'super'
+          ? partnerSupabase
+              .from('partners')
+              .select('id', { count: 'exact', head: true })
+              .eq('parent_partner_id', partner.id)
+          : Promise.resolve({ count: 0 }),
       ])
 
       const refs = (refRes.data ?? []) as PartnerReferral[]
@@ -84,9 +111,10 @@ export default function PartnerDashboardPage() {
       const earnings    = (earningsRes.data ?? []).reduce((sum: number, c: Record<string, unknown>) => sum + Number(c.amount ?? 0), 0)
 
       setStats({
-        totalReferred:     refs.length,
+        totalReferred:    refs.length,
         activePro,
         thisMonthEarnings: earnings,
+        subPartnerCount:  (subPartnersRes as { count: number | null }).count ?? 0,
       })
       setLoading(false)
     }
@@ -134,6 +162,37 @@ export default function PartnerDashboardPage() {
         )}
       </div>
 
+      {/* Recruitment link card — super partners only */}
+      {partner.partnerType === 'super' && partner.recruitmentCode && (
+        <div className="bg-purple-700 text-white rounded-2xl p-5">
+          <p className="text-xs text-purple-300 font-semibold uppercase tracking-wide mb-1">Partner Recruitment Link</p>
+          <p className="font-mono text-sm bg-purple-800 rounded-lg px-3 py-2 mb-3 truncate">
+            {recruitmentLink}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={copyRecruitLink}
+              className="flex items-center gap-1.5 bg-white text-purple-700 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-purple-50 transition-colors flex-1 justify-center"
+            >
+              {copiedRecruit ? <CheckCircle size={15} /> : <Copy size={15} />}
+              {copiedRecruit ? 'Copied!' : 'Copy'}
+            </button>
+            <a
+              href={`https://wa.me/?text=${waRecruitmentText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-[#25D366] text-white font-semibold text-sm px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex-1 justify-center"
+            >
+              <Share2 size={15} />
+              WhatsApp
+            </a>
+          </div>
+          <p className="text-xs text-purple-300 mt-2">
+            Share this link to recruit sub-partners. You earn 10% of every commission they generate.
+          </p>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
@@ -142,6 +201,9 @@ export default function PartnerDashboardPage() {
           { label: 'This Month',         value: loading ? '—' : `$${stats.thisMonthEarnings.toFixed(2)}`, icon: <DollarSign size={16} />, color: 'text-amber-600' },
           { label: 'Tier',               value: loading ? '—' : (partner.tier === 'standard' ? 'Standard' : partner.tier === 'silver' ? '🥈 Silver' : '🥇 Gold'),
             icon: <Award size={16} />, color: 'text-primary-600' },
+          ...(partner.partnerType === 'super'
+            ? [{ label: 'Sub-Partners', value: loading ? '—' : stats.subPartnerCount, icon: <Network size={16} />, color: 'text-purple-600' }]
+            : []),
         ].map(s => (
           <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
             <div className={`${s.color} mb-1`}>{s.icon}</div>

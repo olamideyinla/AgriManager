@@ -22,6 +22,10 @@ export interface Partner {
   paymentDetails?: string | null
   createdAt: string
   updatedAt: string
+  partnerType: 'standard' | 'super'
+  parentPartnerId?: string | null
+  recruitmentCode?: string | null
+  recruitedByCode?: string | null
 }
 
 export interface PartnerReferral {
@@ -41,12 +45,13 @@ export interface PartnerCommission {
   partnerId: string
   referralId: string
   period: string        // e.g. '2026-04'
-  commissionType: 'initial' | 'renewal'
+  commissionType: 'initial' | 'renewal' | 'override'
   amount: number
   rate: number
   status: CommissionStatus
   paidAt?: string | null
   createdAt: string
+  sourceCommissionId?: string | null
 }
 
 export interface PartnerPayout {

@@ -31,10 +31,14 @@ function mapPartnerRow(row: Record<string, unknown>): Partner {
     status:         row.status as Partner['status'],
     tier:           (row.tier as Partner['tier']) ?? 'standard',
     notes:          row.notes as string | null,
-    paymentMethod:  row.payment_method as string | null,
-    paymentDetails: row.payment_details as string | null,
-    createdAt:      row.created_at as string,
-    updatedAt:      row.updated_at as string,
+    paymentMethod:   row.payment_method as string | null,
+    paymentDetails:  row.payment_details as string | null,
+    createdAt:       row.created_at as string,
+    updatedAt:       row.updated_at as string,
+    partnerType:     (row.partner_type as 'standard' | 'super') ?? 'standard',
+    parentPartnerId: row.parent_partner_id as string | null,
+    recruitmentCode: row.recruitment_code as string | null,
+    recruitedByCode: row.recruited_by_code as string | null,
   }
 }
 
