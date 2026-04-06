@@ -164,16 +164,17 @@ export default function AdminUsersPage() {
   }, [refreshKey])
 
   // Stats
-  const now = Date.now()
-  const weekAgo  = now - 7  * 24 * 60 * 60 * 1000
-  const monthAgo = now - 30 * 24 * 60 * 60 * 1000
-
-  const stats = useMemo(() => ({
-    total:    users.length,
-    newWeek:  users.filter(u => new Date(u.created_at).getTime() > weekAgo).length,
-    newMonth: users.filter(u => new Date(u.created_at).getTime() > monthAgo).length,
-    orgs:     new Set(users.map(u => u.organization_id)).size,
-  }), [users]) // eslint-disable-line react-hooks/exhaustive-deps
+  const stats = useMemo(() => {
+    const now = Date.now()
+    const weekAgo  = now - 7  * 24 * 60 * 60 * 1000
+    const monthAgo = now - 30 * 24 * 60 * 60 * 1000
+    return {
+      total:    users.length,
+      newWeek:  users.filter(u => new Date(u.created_at).getTime() > weekAgo).length,
+      newMonth: users.filter(u => new Date(u.created_at).getTime() > monthAgo).length,
+      orgs:     new Set(users.map(u => u.organization_id)).size,
+    }
+  }, [users])
 
   // Filtered list
   const filtered = useMemo(() => {

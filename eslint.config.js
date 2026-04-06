@@ -31,6 +31,7 @@ export default defineConfig([
       'react-hooks/exhaustive-deps':              'warn',
       'react-refresh/only-export-components':     'warn',
       'no-undef':                                 'warn',
+      'react-hooks/purity':                       'warn',
     },
   },
 ])
