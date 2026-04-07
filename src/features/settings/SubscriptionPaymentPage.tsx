@@ -9,30 +9,30 @@ import { useAuthStore } from '@/stores/auth-store'
 import { supabase } from '@/core/config/supabase'
 import { db } from '@/core/database/db'
 
-// ── Paystack types ────────────────────────────────────────────────────────────
+// ── Paystack v2 inline types ──────────────────────────────────────────────────
 
 declare global {
   interface Window {
-    PaystackPop: {
-      setup: (config: PaystackConfig) => { openIframe: () => void }
+    PaystackPop: new () => {
+      newTransaction: (config: PaystackV2Config) => void
     }
   }
 }
 
-interface PaystackConfig {
+interface PaystackV2Config {
   key: string
   email: string
-  amount: number // smallest currency unit (kobo / pesewa / cent)
-  currency: string
-  ref: string
+  amount: number          // smallest currency unit (kobo / pesewa / cent)
+  currency?: string
+  ref?: string
   metadata?: Record<string, unknown>
-  onClose: () => void
-  callback: (response: { reference: string }) => void
+  onSuccess: (transaction: { reference: string }) => void
+  onCancel: () => void
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Paystack natively supports these currency codes (2025)
+// Paystack natively supports these currency codes
 const PAYSTACK_SUPPORTED = new Set(['NGN', 'GHS', 'ZAR', 'USD', 'EUR', 'GBP', 'EGP', 'KES'])
 
 function loadPaystackScript(): Promise<void> {
@@ -40,12 +40,14 @@ function loadPaystackScript(): Promise<void> {
     if (window.PaystackPop) { resolve(); return }
     const existing = document.querySelector('script[src*="js.paystack.co"]')
     if (existing) {
+      // Script tag exists — wait for it if still loading
+      if (window.PaystackPop) { resolve(); return }
       existing.addEventListener('load', () => resolve())
-      existing.addEventListener('error', () => reject(new Error('Paystack script load error')))
+      existing.addEventListener('error', () => reject(new Error('Paystack script failed to load')))
       return
     }
     const script = document.createElement('script')
-    script.src = 'https://js.paystack.co/v1/inline.js'
+    script.src = 'https://js.paystack.co/v2/inline.js'
     script.async = true
     script.onload = () => resolve()
     script.onerror = () => reject(new Error('Could not load payment system'))
@@ -70,15 +72,15 @@ export default function SubscriptionPaymentPage() {
 
   const { appUser } = useAuthStore()
   const { setSubscription } = useSubscriptionStore()
-  const tierConfig  = TIERS[plan]
+  const tierConfig = TIERS[plan]
 
-  // Read org currency from Dexie — same approach as SubscriptionPage — so Nigerian
-  // users see ₦ prices even before they have a Supabase subscription row.
+  // Read org currency from Dexie so local pricing shows even before a Supabase
+  // subscription row exists (e.g. Nigerian users see ₦ not $).
   const org = useLiveQuery(
     () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
     [appUser?.organizationId]
   )
-  const localCurrency = getCurrencyConfigByCode(org?.currency ?? 'USD')
+  const localCurrency  = getCurrencyConfigByCode(org?.currency ?? 'USD')
   const useLocalCurrency = PAYSTACK_SUPPORTED.has(localCurrency.code)
   const chargeCurrency = useLocalCurrency ? localCurrency : CURRENCY_MAP['DEFAULT']!
 
@@ -89,9 +91,9 @@ export default function SubscriptionPaymentPage() {
         ? chargeCurrency.pro.annual
         : chargeCurrency.pro.monthly
 
-  const price = formatPrice(priceNum, chargeCurrency)
+  const price       = formatPrice(priceNum, chargeCurrency)
   const periodLabel = plan === 'x' ? 'per year' : period === 'annual' ? 'per year' : 'per month'
-  const isAnnual = plan === 'x' || period === 'annual'
+  const isAnnual    = plan === 'x' || period === 'annual'
 
   const [scriptReady, setScriptReady] = useState(false)
   const [paying, setPaying]           = useState(false)
@@ -114,23 +116,23 @@ export default function SubscriptionPaymentPage() {
       return
     }
 
-    // Paystack needs an email — derive from phone if not set
+    // Derive email — Paystack requires one; fall back to phone-based address
     const email = appUser.email
-      ?? `${(appUser.phone ?? '').replace(/\D/g, '')}@agrimanager.app`
+      ?? `${(appUser.phone ?? 'user').replace(/\D/g, '')}@agrimanager.app`
 
-    // Amount in smallest currency unit (kobo / pesewa / cent = × 100)
-    const amount = Math.round(priceNum * 100)
+    const amount = Math.round(priceNum * 100) // convert to kobo / pesewa / cent
 
     setPaying(true)
     setError(null)
 
     try {
-      const handler = window.PaystackPop.setup({
-        key: paystackKey,
+      const popup = new window.PaystackPop()
+      popup.newTransaction({
+        key:      paystackKey,
         email,
         amount,
         currency: chargeCurrency.code,
-        ref: generateRef(appUser.organizationId),
+        ref:      generateRef(appUser.organizationId),
         metadata: {
           organization_id: appUser.organizationId,
           plan,
@@ -140,50 +142,50 @@ export default function SubscriptionPaymentPage() {
             { display_name: 'Period', variable_name: 'period', value: isAnnual ? 'annual' : 'monthly' },
           ],
         },
-        onClose: () => setPaying(false),
-        callback: async (response) => {
-        try {
-          const now = new Date()
-          const expiresAt = new Date(now)
-          if (isAnnual) expiresAt.setFullYear(expiresAt.getFullYear() + 1)
-          else expiresAt.setMonth(expiresAt.getMonth() + 1)
-          const expiresIso = expiresAt.toISOString()
 
-          // Upsert subscription record in Supabase
-          await supabase.from('subscriptions').upsert(
-            {
-              organization_id:     appUser.organizationId,
-              tier:                plan,
-              billing_period:      isAnnual ? 'annual' : 'monthly',
-              expires_at:          expiresIso,
-              status:              'active',
-              country_code:        org?.currency ?? chargeCurrency.code,
-              paystack_reference:  response.reference,
-              updated_at:          now.toISOString(),
-            },
-            { onConflict: 'organization_id' },
-          )
-
-          // Update local store immediately (so UI reflects upgrade at once)
-          setSubscription(plan, isAnnual ? 'annual' : 'monthly', expiresIso)
-
-          setPaid(true)
-        } catch {
-          setError(
-            'Payment received but we could not activate your plan. Please contact support with reference: ' +
-            response.reference,
-          )
-        } finally {
+        onCancel: () => {
           setPaying(false)
-        }
-      },
-    })
-      handler.openIframe()
+        },
+
+        onSuccess: async (transaction) => {
+          try {
+            const now      = new Date()
+            const expiresAt = new Date(now)
+            if (isAnnual) expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+            else          expiresAt.setMonth(expiresAt.getMonth() + 1)
+            const expiresIso = expiresAt.toISOString()
+
+            await supabase.from('subscriptions').upsert(
+              {
+                organization_id:    appUser.organizationId,
+                tier:               plan,
+                billing_period:     isAnnual ? 'annual' : 'monthly',
+                expires_at:         expiresIso,
+                status:             'active',
+                country_code:       org?.currency ?? chargeCurrency.code,
+                paystack_reference: transaction.reference,
+                updated_at:         now.toISOString(),
+              },
+              { onConflict: 'organization_id' },
+            )
+
+            setSubscription(plan, isAnnual ? 'annual' : 'monthly', expiresIso)
+            setPaid(true)
+          } catch {
+            setError(
+              'Payment received but we could not activate your plan. ' +
+              'Please contact support with reference: ' + transaction.reference,
+            )
+          } finally {
+            setPaying(false)
+          }
+        },
+      })
     } catch (e: unknown) {
       setPaying(false)
       setError(
         'Could not open payment window. ' +
-        ((e instanceof Error) ? e.message : 'Please try again or contact support.')
+        ((e instanceof Error) ? e.message : 'Please try again or contact support.'),
       )
     }
   }
