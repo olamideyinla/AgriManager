@@ -104,9 +104,15 @@ export default function SubscriptionPaymentPage() {
       .catch(() => setError('Could not load payment system. Check your internet connection and try again.'))
   }, [])
 
+  const paystackKey = (import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string | undefined) ?? ''
+
   const handlePay = () => {
     if (!scriptReady || !window.PaystackPop) return
     if (!appUser) { setError('You must be signed in to upgrade.'); return }
+    if (!paystackKey) {
+      setError('Payment system is not configured. Please contact support.')
+      return
+    }
 
     // Paystack needs an email — derive from phone if not set
     const email = appUser.email
@@ -118,23 +124,24 @@ export default function SubscriptionPaymentPage() {
     setPaying(true)
     setError(null)
 
-    const handler = window.PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string ?? '',
-      email,
-      amount,
-      currency: chargeCurrency.code,
-      ref: generateRef(appUser.organizationId),
-      metadata: {
-        organization_id: appUser.organizationId,
-        plan,
-        period: isAnnual ? 'annual' : 'monthly',
-        custom_fields: [
-          { display_name: 'Plan',   variable_name: 'plan',   value: plan },
-          { display_name: 'Period', variable_name: 'period', value: isAnnual ? 'annual' : 'monthly' },
-        ],
-      },
-      onClose: () => setPaying(false),
-      callback: async (response) => {
+    try {
+      const handler = window.PaystackPop.setup({
+        key: paystackKey,
+        email,
+        amount,
+        currency: chargeCurrency.code,
+        ref: generateRef(appUser.organizationId),
+        metadata: {
+          organization_id: appUser.organizationId,
+          plan,
+          period: isAnnual ? 'annual' : 'monthly',
+          custom_fields: [
+            { display_name: 'Plan',   variable_name: 'plan',   value: plan },
+            { display_name: 'Period', variable_name: 'period', value: isAnnual ? 'annual' : 'monthly' },
+          ],
+        },
+        onClose: () => setPaying(false),
+        callback: async (response) => {
         try {
           const now = new Date()
           const expiresAt = new Date(now)
@@ -171,7 +178,14 @@ export default function SubscriptionPaymentPage() {
         }
       },
     })
-    handler.openIframe()
+      handler.openIframe()
+    } catch (e: unknown) {
+      setPaying(false)
+      setError(
+        'Could not open payment window. ' +
+        ((e instanceof Error) ? e.message : 'Please try again or contact support.')
+      )
+    }
   }
 
   // ── Success state ─────────────────────────────────────────────────────────
