@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, CheckCircle, Loader2, Shield } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
-import { getCurrencyConfig, formatPrice, CURRENCY_MAP } from '@/core/config/currencies'
+import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP } from '@/core/config/currencies'
 import { TIERS } from '@/core/config/tiers'
 import { useAuthStore } from '@/stores/auth-store'
 import { supabase } from '@/core/config/supabase'
+import { db } from '@/core/database/db'
 
 // ── Paystack types ────────────────────────────────────────────────────────────
 
@@ -67,11 +69,16 @@ export default function SubscriptionPaymentPage() {
   const period = (searchParams.get('period') ?? 'monthly') as 'monthly' | 'annual'
 
   const { appUser } = useAuthStore()
-  const { countryCode, setSubscription } = useSubscriptionStore()
+  const { setSubscription } = useSubscriptionStore()
   const tierConfig  = TIERS[plan]
 
-  // Determine which currency to charge in
-  const localCurrency = getCurrencyConfig(countryCode)
+  // Read org currency from Dexie — same approach as SubscriptionPage — so Nigerian
+  // users see ₦ prices even before they have a Supabase subscription row.
+  const org = useLiveQuery(
+    () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
+    [appUser?.organizationId]
+  )
+  const localCurrency = getCurrencyConfigByCode(org?.currency ?? 'USD')
   const useLocalCurrency = PAYSTACK_SUPPORTED.has(localCurrency.code)
   const chargeCurrency = useLocalCurrency ? localCurrency : CURRENCY_MAP['DEFAULT']!
 
@@ -143,7 +150,7 @@ export default function SubscriptionPaymentPage() {
               billing_period:      isAnnual ? 'annual' : 'monthly',
               expires_at:          expiresIso,
               status:              'active',
-              country_code:        countryCode,
+              country_code:        org?.currency ?? chargeCurrency.code,
               paystack_reference:  response.reference,
               updated_at:          now.toISOString(),
             },
