@@ -11,6 +11,7 @@ import { YesterdayRef } from '../../shared/components/entry/YesterdayRef'
 import { RunningTotal } from '../../shared/components/entry/RunningTotal'
 import { SaveButton } from '../../shared/components/entry/SaveButton'
 import { SectionCollapsible } from '../../shared/components/entry/SectionCollapsible'
+import { FeatureGate } from '../../shared/components/FeatureGate'
 import { syncLayerInventory } from '../../core/services/inventory-integration'
 import type { EntryFormProps } from './EntryFormDispatcher'
 import type { LayerDailyRecord } from '../../shared/types'
@@ -29,6 +30,9 @@ interface FormValues {
   waterConsumedLiters: string
   temperatureHigh: string
   temperatureLow: string
+  eggGradeA: string
+  eggGradeB: string
+  eggGradeC: string
   notes: string
 }
 
@@ -82,6 +86,9 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
       waterConsumedLiters: '',
       temperatureHigh: '',
       temperatureLow: '',
+      eggGradeA: '',
+      eggGradeB: '',
+      eggGradeC: '',
       notes: '',
     },
   })
@@ -133,6 +140,9 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
         waterConsumedLiters: String(existingRecord.waterConsumedLiters ?? ''),
         temperatureHigh:    String(existingRecord.temperatureHigh ?? ''),
         temperatureLow:     String(existingRecord.temperatureLow ?? ''),
+        eggGradeA:          String(existingRecord.eggGradeA ?? ''),
+        eggGradeB:          String(existingRecord.eggGradeB ?? ''),
+        eggGradeC:          String(existingRecord.eggGradeC ?? ''),
         notes:              existingRecord.notes ?? '',
       })
     } else {
@@ -183,6 +193,9 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
         waterConsumedLiters:  parseFloat(values.waterConsumedLiters) || undefined,
         temperatureHigh:      parseFloat(values.temperatureHigh) || undefined,
         temperatureLow:       parseFloat(values.temperatureLow) || undefined,
+        eggGradeA:            parseFloat(values.eggGradeA) || undefined,
+        eggGradeB:            parseFloat(values.eggGradeB) || undefined,
+        eggGradeC:            parseFloat(values.eggGradeC) || undefined,
         notes:                values.notes || undefined,
         syncStatus:           'pending',
         createdAt:            existingRecord?.createdAt ?? now,
@@ -350,6 +363,32 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
           />
         </div>
       </SectionCollapsible>
+
+      {/* Egg Grading (Pro) */}
+      <FeatureGate feature="egg_grading" fallback={null}>
+        <SectionCollapsible title="Egg Grading">
+          <div className="grid grid-cols-3 gap-3">
+            <NumberInput
+              label="Grade A"
+              value={watch('eggGradeA')}
+              onChange={(v) => setValue('eggGradeA', v)}
+              min="0"
+            />
+            <NumberInput
+              label="Grade B"
+              value={watch('eggGradeB')}
+              onChange={(v) => setValue('eggGradeB', v)}
+              min="0"
+            />
+            <NumberInput
+              label="Grade C"
+              value={watch('eggGradeC')}
+              onChange={(v) => setValue('eggGradeC', v)}
+              min="0"
+            />
+          </div>
+        </SectionCollapsible>
+      </FeatureGate>
 
       {/* Collapsible: Notes */}
       <SectionCollapsible title="Notes">

@@ -126,6 +126,15 @@ const WorkerPayrollSetup   = lazy(() => import('../features/payroll/WorkerPayrol
 const RunPayrollFlow       = lazy(() => import('../features/payroll/RunPayrollFlow'))
 const PayslipDetailPage    = lazy(() => import('../features/payroll/PayslipDetailPage'))
 
+// Enterprise record forms
+const BatchCloseoutForm   = lazy(() => import('../features/enterprises/records/BatchCloseoutForm'))
+const ThinningRecordForm  = lazy(() => import('../features/enterprises/records/ThinningRecordForm'))
+const PlacementRecordForm = lazy(() => import('../features/enterprises/records/PlacementRecordForm'))
+const FishStockingForm    = lazy(() => import('../features/enterprises/records/FishStockingForm'))
+const LitterConditionForm = lazy(() => import('../features/enterprises/records/LitterConditionForm'))
+const SoilTestForm        = lazy(() => import('../features/enterprises/records/SoilTestForm'))
+const PostHarvestForm     = lazy(() => import('../features/enterprises/records/PostHarvestForm'))
+
 // Decision support tools
 const DecisionToolsPage    = lazy(() => import('../features/decision-support/DecisionToolsPage'))
 const BroilerSellCalculator= lazy(() => import('../features/decision-support/BroilerSellCalculator'))
@@ -207,6 +216,15 @@ export function AppRoutes() {
           {/* Enterprises — outside shell */}
           <Route path="/enterprises" element={<ProtectedRoute><EnterprisesPage /></ProtectedRoute>} />
           <Route path="/enterprises/:id" element={<ProtectedRoute><EnterpriseDetailPage /></ProtectedRoute>} />
+
+          {/* Enterprise record forms — outside shell (specific before :id) */}
+          <Route path="/enterprises/:id/records/closeout"      element={<ProtectedRoute><BatchCloseoutForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/thinning"      element={<ProtectedRoute><ThinningRecordForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/placement"     element={<ProtectedRoute><PlacementRecordForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/fish-stocking" element={<ProtectedRoute><FishStockingForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/litter"        element={<ProtectedRoute><LitterConditionForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/soil-test"     element={<ProtectedRoute><SoilTestForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/records/post-harvest"  element={<ProtectedRoute><PostHarvestForm /></ProtectedRoute>} />
 
           {/* Financials — outside shell (specific before dynamic) */}
           <Route path="/financials" element={<ProtectedRoute><FinancialsPage /></ProtectedRoute>} />

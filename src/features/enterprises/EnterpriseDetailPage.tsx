@@ -11,6 +11,7 @@ import { EnterpriseRecords } from './tabs/EnterpriseRecords'
 import { EnterpriseAnalysis } from './tabs/EnterpriseAnalysis'
 import { EnterpriseFinancials } from './tabs/EnterpriseFinancials'
 import { EnterpriseHealthTab } from './tabs/EnterpriseHealthTab'
+import { RecordHistoryTab } from './records/RecordHistoryTab'
 import { FeatureGate } from '@/shared/components/FeatureGate'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
 
@@ -45,7 +46,7 @@ const STATUS_STYLE = {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS = ['Overview', 'Records', 'Analysis', 'Financial', 'Health'] as const
+const TABS = ['Overview', 'Records', 'Analysis', 'Financial', 'Health', 'History'] as const
 type TabId = typeof TABS[number]
 
 // ── Overview dispatcher ───────────────────────────────────────────────────────
@@ -164,6 +165,11 @@ export default function EnterpriseDetailPage() {
         )}
         {activeTab === 'Financial' && <EnterpriseFinancials enterprise={enterprise} />}
         {activeTab === 'Health'    && <EnterpriseHealthTab enterprise={enterprise} />}
+        {activeTab === 'History'   && (
+          <FeatureGate feature="batch_closeout" softLock>
+            <RecordHistoryTab enterprise={enterprise} />
+          </FeatureGate>
+        )}
       </div>
     </div>
   )

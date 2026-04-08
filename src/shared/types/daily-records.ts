@@ -18,6 +18,10 @@ export interface LayerDailyRecord extends BaseDailyRecord {
   waterConsumedLiters?: number
   temperatureHigh?: number
   temperatureLow?: number
+  // Egg grading (Pro feature — optional)
+  eggGradeA?: number
+  eggGradeB?: number
+  eggGradeC?: number
 }
 
 export interface BroilerDailyRecord extends BaseDailyRecord {

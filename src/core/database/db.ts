@@ -12,6 +12,8 @@ import type {
   Invoice, InvoiceItem, InvoicePayment,
   Receipt, ReceiptItem, InvoiceSettings,
   PayrollSettings, WorkerPayrollProfile, PayrollRun, PayslipRecord, RemittanceObligation,
+  BatchCloseout, ThinningRecord, PlacementRecord, FishStockingRecord,
+  LitterConditionLog, SoilTestRecord, PostHarvestRecord,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -78,6 +80,13 @@ export class AgriDatabase extends Dexie {
   payrollRuns!: EntityTable<PayrollRun, 'id'>
   payslipRecords!: EntityTable<PayslipRecord, 'id'>
   remittanceObligations!: EntityTable<RemittanceObligation, 'id'>
+  batchCloseouts!: EntityTable<BatchCloseout, 'id'>
+  thinningRecords!: EntityTable<ThinningRecord, 'id'>
+  placementRecords!: EntityTable<PlacementRecord, 'id'>
+  fishStockingRecords!: EntityTable<FishStockingRecord, 'id'>
+  litterConditionLogs!: EntityTable<LitterConditionLog, 'id'>
+  soilTestRecords!: EntityTable<SoilTestRecord, 'id'>
+  postHarvestRecords!: EntityTable<PostHarvestRecord, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -192,6 +201,24 @@ export class AgriDatabase extends Dexie {
         '&id, payrollRunId, workerId, period, [payrollRunId], [workerId+period]',
       remittanceObligations:
         '&id, organizationId, period, status, deductionType, [organizationId+period]',
+    })
+
+    // v11 — adds Phase 1 farm event record tables
+    this.version(11).stores({
+      batchCloseouts:
+        '&id, enterpriseInstanceId, closeoutDate, [enterpriseInstanceId+closeoutDate]',
+      thinningRecords:
+        '&id, enterpriseInstanceId, date, [enterpriseInstanceId+date]',
+      placementRecords:
+        '&id, enterpriseInstanceId, placementDate, [enterpriseInstanceId+placementDate]',
+      fishStockingRecords:
+        '&id, enterpriseInstanceId, stockingDate, [enterpriseInstanceId+stockingDate]',
+      litterConditionLogs:
+        '&id, enterpriseInstanceId, date, [enterpriseInstanceId+date]',
+      soilTestRecords:
+        '&id, enterpriseInstanceId, testDate, [enterpriseInstanceId+testDate]',
+      postHarvestRecords:
+        '&id, enterpriseInstanceId, date, [enterpriseInstanceId+date]',
     })
   }
 }

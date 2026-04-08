@@ -36,7 +36,7 @@ export const TIERS: Record<TierSlug, TierConfig> = {
     monthlyUsd: 10,
     annualUsd: 100,
     limits: { maxEnterprises: 10, maxLocations: 3, maxUsers: 10, maxInventoryItems: -1, maxAnimals: 200, dataRetentionYears: 3 },
-    features: ['invoicing','payroll','exportable_reports','accounts_receivable','recurring_transactions','batch_comparison','dashboard_trends','budget_targets','health_event_completion','decision_tools','full_alerts','labor_tracking','worker_task_reminders','animal_registry','loan_readiness','custom_breeds','custom_units','dashboard_customization','data_import','printable_sheets','whatsapp_sharing','weather_integration','multi_user','inventory_analytics'],
+    features: ['invoicing','payroll','exportable_reports','accounts_receivable','recurring_transactions','batch_comparison','dashboard_trends','budget_targets','health_event_completion','decision_tools','full_alerts','labor_tracking','worker_task_reminders','animal_registry','loan_readiness','custom_breeds','custom_units','dashboard_customization','data_import','printable_sheets','whatsapp_sharing','weather_integration','multi_user','inventory_analytics','egg_grading','batch_closeout','thinning_records','placement_records','fish_stocking','litter_management','soil_testing','post_harvest_records'],
   },
   x: {
     slug: 'x',
