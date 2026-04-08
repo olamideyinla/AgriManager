@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Crown, Zap, Star } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { TIERS, type TierSlug } from '@/core/config/tiers'
-import { getCurrencyConfigByCode, formatPrice } from '@/core/config/currencies'
+import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone } from '@/core/config/currencies'
 import { useAuthStore } from '@/stores/auth-store'
 import { db } from '@/core/database/db'
 import { format } from 'date-fns'
@@ -78,7 +78,13 @@ export default function SubscriptionPage() {
     () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
     [appUser?.organizationId]
   )
-  const currency = getCurrencyConfigByCode(org?.currency ?? 'USD')
+  // Prefer org.currency if non-USD; fall back to phone-prefix inference for
+  // accounts created before local pricing was introduced (org.currency = 'USD').
+  const currency = (() => {
+    if (org?.currency && org.currency !== 'USD') return getCurrencyConfigByCode(org.currency)
+    const country = getCountryFromPhone(appUser?.phone)
+    return (country ? CURRENCY_MAP[country] : null) ?? CURRENCY_MAP['DEFAULT']!
+  })()
 
   const freeDisplay  = 'Free'
   const proMonthly = formatPrice(currency.pro.monthly, currency)

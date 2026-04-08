@@ -217,6 +217,29 @@ export function getCurrencyConfigByCode(currencyCode: string): CurrencyConfig {
   return country ? CURRENCY_MAP[country]! : CURRENCY_MAP['DEFAULT']!
 }
 
+/** Phone country dial-code prefixes → country key in CURRENCY_MAP.
+ *  Entries are sorted longest-first so greedy matching always finds the
+ *  most-specific prefix (e.g. +234 before +23). */
+const PHONE_PREFIX_MAP: ReadonlyArray<[string, string]> = [
+  ['+880', 'BD'], ['+255', 'TZ'], ['+256', 'UG'], ['+250', 'RW'],
+  ['+260', 'ZM'], ['+265', 'MW'], ['+237', 'CM'], ['+221', 'SN'],
+  ['+225', 'CI'], ['+234', 'NG'], ['+233', 'GH'], ['+254', 'KE'],
+  ['+251', 'ET'], ['+27',  'ZA'], ['+20',  'EG'], ['+91',  'IN'],
+  ['+92',  'PK'], ['+63',  'PH'], ['+62',  'ID'], ['+84',  'VN'],
+  ['+55',  'BR'], ['+52',  'MX'], ['+57',  'CO'],
+].sort((a, b) => b[0].length - a[0].length)
+
+/** Infer a CURRENCY_MAP country key from a phone number (e.g. '+2348012…' → 'NG').
+ *  Returns null if the number is absent or the prefix is not in our map. */
+export function getCountryFromPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null
+  const norm = phone.startsWith('+') ? phone : `+${phone.replace(/\D/g, '')}`
+  for (const [prefix, country] of PHONE_PREFIX_MAP) {
+    if (norm.startsWith(prefix)) return country
+  }
+  return null
+}
+
 export function formatPrice(amount: number, config: CurrencyConfig): string {
   const parts = amount.toFixed(config.decimals).split('.')
   const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, config.thousandsSeparator)
