@@ -15,8 +15,13 @@ import { EnterpriseAnalysis } from './tabs/EnterpriseAnalysis'
 import { EnterpriseFinancials } from './tabs/EnterpriseFinancials'
 import { EnterpriseHealthTab } from './tabs/EnterpriseHealthTab'
 import { RecordHistoryTab } from './records/RecordHistoryTab'
+import { ReproductionTab } from './reproduction/ReproductionTab'
 import { FeatureGate } from '@/shared/components/FeatureGate'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
+
+const BREEDING_TYPES: EnterpriseType[] = [
+  'pigs_breeding', 'cattle_dairy', 'cattle_beef', 'rabbit',
+]
 
 // ── Type labels & badges ──────────────────────────────────────────────────────
 
@@ -49,8 +54,9 @@ const STATUS_STYLE = {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS = ['Overview', 'Records', 'Analysis', 'Financial', 'Health', 'History'] as const
-type TabId = typeof TABS[number]
+const BASE_TABS = ['Overview', 'Records', 'Analysis', 'Financial', 'Health', 'History'] as const
+const ALL_TABS  = [...BASE_TABS, 'Repro'] as const
+type TabId = typeof ALL_TABS[number]
 
 // ── Overview dispatcher ───────────────────────────────────────────────────────
 
@@ -116,6 +122,8 @@ export default function EnterpriseDetailPage() {
   }
 
   const age = durationLabel(enterprise.startDate, enterprise.actualEndDate)
+  const hasReproTab = BREEDING_TYPES.includes(enterprise.enterpriseType)
+  const tabs = hasReproTab ? ALL_TABS : BASE_TABS
 
   return (
     <div className="h-dvh flex flex-col bg-gray-50">
@@ -144,8 +152,8 @@ export default function EnterpriseDetailPage() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex border-b border-primary-500 -mx-4 px-4 gap-1">
-          {TABS.map(tab => (
+        <div className="flex border-b border-primary-500 -mx-4 px-4 gap-1 overflow-x-auto no-scrollbar">
+          {tabs.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -177,6 +185,7 @@ export default function EnterpriseDetailPage() {
             <RecordHistoryTab enterprise={enterprise} />
           </FeatureGate>
         )}
+        {activeTab === 'Repro'     && <ReproductionTab enterprise={enterprise} />}
       </div>
     </div>
   )

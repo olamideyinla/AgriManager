@@ -101,6 +101,14 @@ const REPORT_CARDS: ReportCard[] = [
     icon: <Activity className='w-5 h-5 text-primary-600' />,
     route: '/reports/production-efficiency',
   },
+  {
+    id: 'batch_comparison',
+    category: 'enterprise',
+    title: 'Batch Comparison',
+    description: 'Compare historical batch closeouts by FCR, mortality, and profit',
+    icon: <BarChart3 className='w-5 h-5 text-primary-600' />,
+    route: '/reports/batch-comparison',
+  },
 ]
 
 const CATEGORY_LABELS: Record<ReportCategory, string> = {

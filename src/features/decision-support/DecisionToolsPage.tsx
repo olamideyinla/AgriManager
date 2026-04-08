@@ -66,6 +66,15 @@ const TOOLS = [
     color: 'bg-lime-50 border-lime-200',
     accent: 'text-lime-700',
   },
+  {
+    to: '/decision/market-prices',
+    emoji: '📈',
+    title: 'Market Prices',
+    subtitle: 'Commodity price tracker',
+    desc: 'Record and track market prices for your products — see trends and compare over time.',
+    color: 'bg-sky-50 border-sky-200',
+    accent: 'text-sky-700',
+  },
 ]
 
 export default function DecisionToolsPage() {

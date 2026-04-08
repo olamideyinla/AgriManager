@@ -168,6 +168,12 @@ const PurchaseOrderDetailPage  = lazy(() => import('../features/procurement/Purc
 const FinancialBudgetPage      = lazy(() => import('../features/financials/FinancialBudgetPage'))
 const ProductionEfficiencyPage = lazy(() => import('../features/reports/ProductionEfficiencyPage'))
 
+// Phase 5 — Reproductive Events + Withdrawal Tracker + Batch Comparison + Market Prices
+const RecordReproductiveEventForm = lazy(() => import('../features/enterprises/reproduction/RecordReproductiveEventForm'))
+const WithdrawalTrackerPage       = lazy(() => import('../features/health/WithdrawalTrackerPage'))
+const BatchComparisonPage         = lazy(() => import('../features/reports/BatchComparisonPage'))
+const MarketPricePage             = lazy(() => import('../features/decision-support/MarketPricePage'))
+
 function LoadingScreen() {
   return (
     <div className="flex h-dvh items-center justify-center bg-primary-500">
@@ -361,6 +367,13 @@ export function AppRoutes() {
 
           {/* Financial budget — outside shell */}
           <Route path="/financials/budget" element={<ProtectedRoute><FinancialBudgetPage /></ProtectedRoute>} />
+
+          {/* Phase 5 — Reproductive events + withdrawal tracker + batch comparison + market prices */}
+          <Route path="/enterprises/:id/reproduction/new" element={<ProtectedRoute><RecordReproductiveEventForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/withdrawal"       element={<ProtectedRoute><WithdrawalTrackerPage /></ProtectedRoute>} />
+          <Route path="/health/withdrawal"                element={<ProtectedRoute><WithdrawalTrackerPage /></ProtectedRoute>} />
+          <Route path="/reports/batch-comparison"         element={<ProtectedRoute><BatchComparisonPage /></ProtectedRoute>} />
+          <Route path="/decision/market-prices"           element={<ProtectedRoute><MarketPricePage /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

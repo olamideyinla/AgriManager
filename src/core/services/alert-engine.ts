@@ -18,6 +18,7 @@ export class AlertEngine {
       this._checkFinancialAlerts(orgId),
       this._checkOperationalAlerts(orgId),
       this._checkHealthAlerts(orgId),
+      this._checkWithdrawalAlerts(orgId),
       checkBudgetAlerts(orgId, this._maybeCreate.bind(this)),
     ])
   }
@@ -320,6 +321,51 @@ export class AlertEngine {
           actionRoute: '/health',
           actionLabel: 'View Schedule',
           dedupHours: 12,
+        })
+      }
+    }
+  }
+
+  private async _checkWithdrawalAlerts(orgId: string): Promise<void> {
+    const today = new Date().toISOString().slice(0, 10)
+    const enterprises = await this._activeEnterprises(orgId)
+    const enterpriseIds = enterprises.map(e => e.id)
+    if (enterpriseIds.length === 0) return
+
+    const enterpriseMap = new Map(enterprises.map(e => [e.id, e.name]))
+
+    const records = await db.withdrawalRecords
+      .where('enterpriseInstanceId').anyOf(enterpriseIds)
+      .filter(r => r.withdrawalEndDate >= today)
+      .toArray()
+
+    for (const record of records) {
+      const daysLeft = Math.ceil(
+        (new Date(record.withdrawalEndDate).getTime() - Date.now()) / 86_400_000
+      )
+      const entName = enterpriseMap.get(record.enterpriseInstanceId) ?? 'Enterprise'
+      const affects: string[] = []
+      if (record.affectsMeat) affects.push('meat')
+      if (record.affectsEggs) affects.push('eggs')
+      if (record.affectsMilk) affects.push('milk')
+
+      if (daysLeft <= 2) {
+        await this._maybeCreate({
+          ruleId: `withdrawal-critical-${record.id}`,
+          severity: 'high',
+          message: `${entName}: ${record.medicationName} withdrawal ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — no ${affects.join('/')} until then`,
+          enterpriseId: record.enterpriseInstanceId,
+          actionRoute: `/enterprises/${record.enterpriseInstanceId}`,
+          actionLabel: 'View Enterprise',
+          dedupHours: 12,
+        })
+      } else if (daysLeft <= 7) {
+        await this._maybeCreate({
+          ruleId: `withdrawal-soon-${record.id}`,
+          severity: 'medium',
+          message: `${entName}: ${record.medicationName} withdrawal ends in ${daysLeft} days`,
+          enterpriseId: record.enterpriseInstanceId,
+          dedupHours: 24,
         })
       }
     }

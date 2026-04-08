@@ -45,6 +45,9 @@ export const SYNC_ORDER = [
   'purchaseOrders',
   'purchaseOrderItems',
   'financialBudgets',
+  'reproductiveEvents',
+  'withdrawalRecords',
+  'marketPrices',
 ] as const
 
 export type SyncTableName = typeof SYNC_ORDER[number]
@@ -94,6 +97,9 @@ export const TABLE_SUPABASE_NAME: Record<SyncTableName, string> = {
   purchaseOrders: 'purchase_orders',
   purchaseOrderItems: 'purchase_order_items',
   financialBudgets: 'financial_budgets',
+  reproductiveEvents: 'reproductive_events',
+  withdrawalRecords: 'withdrawal_records',
+  marketPrices: 'market_prices',
 }
 
 /**

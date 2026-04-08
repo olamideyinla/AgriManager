@@ -17,6 +17,7 @@ import type {
   AnimalRecord, AnimalWeightEntry, AnimalEvent, EnterpriseBudget,
   RecurringTransaction,
   PurchaseOrder, PurchaseOrderItem, FinancialBudget,
+  ReproductiveEvent, WithdrawalRecord, MarketPrice,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -98,6 +99,9 @@ export class AgriDatabase extends Dexie {
   purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
   purchaseOrderItems!: EntityTable<PurchaseOrderItem, 'id'>
   financialBudgets!: EntityTable<FinancialBudget, 'id'>
+  reproductiveEvents!: EntityTable<ReproductiveEvent, 'id'>
+  withdrawalRecords!: EntityTable<WithdrawalRecord, 'id'>
+  marketPrices!: EntityTable<MarketPrice, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -258,6 +262,16 @@ export class AgriDatabase extends Dexie {
         '&id, purchaseOrderId, inventoryItemId',
       financialBudgets:
         '&id, organizationId, month, category, [organizationId+month]',
+    })
+
+    // v15 — adds reproductive events, withdrawal records, market prices
+    this.version(15).stores({
+      reproductiveEvents:
+        '&id, enterpriseInstanceId, animalId, eventType, eventDate, [enterpriseInstanceId+eventType], syncStatus',
+      withdrawalRecords:
+        '&id, enterpriseInstanceId, withdrawalEndDate, [enterpriseInstanceId+withdrawalEndDate]',
+      marketPrices:
+        '&id, organizationId, commodity, priceDate, [organizationId+commodity]',
     })
   }
 }
