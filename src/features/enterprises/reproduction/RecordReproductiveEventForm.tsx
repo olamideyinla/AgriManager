@@ -8,7 +8,7 @@ import { useUIStore } from '../../../stores/ui-store'
 import { db } from '../../../core/database/db'
 import { NumberInput } from '../../../shared/components/entry/NumberInput'
 import { SaveButton } from '../../../shared/components/entry/SaveButton'
-import type { ReproductiveEventType, WithdrawalRecord } from '../../../shared/types'
+import type { ReproductiveEventType } from '../../../shared/types'
 
 const EVENT_TYPES: { value: ReproductiveEventType; label: string }[] = [
   { value: 'heat_observed',            label: '🔥 Heat Observed' },

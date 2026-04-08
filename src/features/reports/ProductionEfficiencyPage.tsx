@@ -7,6 +7,26 @@ import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
 import type { EnterpriseType } from '../../shared/types'
 
+// ── Sortable table header cell ────────────────────────────────────────────────
+
+function ThCol({
+  label, k, sortKey, onSort,
+}: {
+  label: string
+  k: string
+  sortKey: string
+  onSort: (k: string) => void
+}) {
+  return (
+    <button
+      onClick={() => onSort(k)}
+      className={`flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${sortKey === k ? 'text-primary-600' : 'text-gray-400'}`}
+    >
+      {label} <ArrowUpDown size={9} />
+    </button>
+  )
+}
+
 // ── Benchmarks ────────────────────────────────────────────────────────────────
 
 const FCR_GOOD  = 2.0
@@ -254,15 +274,6 @@ export default function ProductionEfficiencyPage() {
     navigator.clipboard.writeText(`${header}\n${data}`)
   }
 
-  const ThCol = ({ label, k }: { label: string; k: SortKey }) => (
-    <button
-      onClick={() => handleSort(k)}
-      className={`flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${sortKey === k ? 'text-primary-600' : 'text-gray-400'}`}
-    >
-      {label} <ArrowUpDown size={9} />
-    </button>
-  )
-
   return (
     <div className="min-h-dvh bg-gray-50 pb-10 fade-in">
       {/* Header */}
@@ -307,12 +318,12 @@ export default function ProductionEfficiencyPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="px-3 py-2"><ThCol label="Enterprise" k="name" /></th>
-                    <th className="px-3 py-2"><ThCol label="Days" k="days" /></th>
-                    <th className="px-3 py-2"><ThCol label="FCR" k="fcr" /></th>
-                    <th className="px-3 py-2"><ThCol label="Mort%" k="mortalityPct" /></th>
-                    <th className="px-3 py-2"><ThCol label="Cost/Unit" k="costPerUnit" /></th>
-                    <th className="px-3 py-2"><ThCol label="Status" k="status" /></th>
+                    <th className="px-3 py-2"><ThCol label="Enterprise" k="name" sortKey={sortKey} onSort={handleSort} /></th>
+                    <th className="px-3 py-2"><ThCol label="Days" k="days" sortKey={sortKey} onSort={handleSort} /></th>
+                    <th className="px-3 py-2"><ThCol label="FCR" k="fcr" sortKey={sortKey} onSort={handleSort} /></th>
+                    <th className="px-3 py-2"><ThCol label="Mort%" k="mortalityPct" sortKey={sortKey} onSort={handleSort} /></th>
+                    <th className="px-3 py-2"><ThCol label="Cost/Unit" k="costPerUnit" sortKey={sortKey} onSort={handleSort} /></th>
+                    <th className="px-3 py-2"><ThCol label="Status" k="status" sortKey={sortKey} onSort={handleSort} /></th>
                   </tr>
                 </thead>
                 <tbody>

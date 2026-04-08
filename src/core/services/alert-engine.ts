@@ -381,6 +381,7 @@ export class AlertEngine {
     let q = db.enterpriseInstances
       .where('infrastructureId').anyOf(infraIds)
       .filter(e => e.status === 'active')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (type) q = q.filter(e => e.enterpriseType === type as any)
     return q.toArray()
   }

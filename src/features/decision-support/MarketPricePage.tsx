@@ -126,7 +126,7 @@ function AddPriceForm({
 
   const today = new Date().toISOString().slice(0, 10)
 
-  const { register, handleSubmit, watch, setValue, formState: { isValid } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
       commodity:    prefillCommodity ?? '',
       pricePerUnit: '',

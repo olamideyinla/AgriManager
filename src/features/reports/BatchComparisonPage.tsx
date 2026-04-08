@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
-import type { BatchCloseout, EnterpriseInstance } from '../../shared/types'
+import type { BatchCloseout } from '../../shared/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

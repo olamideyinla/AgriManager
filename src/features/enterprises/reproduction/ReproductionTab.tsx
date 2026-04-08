@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Baby, Heart, Stethoscope, ChevronRight } from 'lucide-react'
+import { Plus, Baby } from 'lucide-react'
 import { format } from 'date-fns'
 import { useReproductiveEvents } from '../../../core/database/hooks/use-reproductive-events'
 import type { EnterpriseInstance, ReproductiveEvent, ReproductiveEventType } from '../../../shared/types'
@@ -25,10 +25,8 @@ const EVENT_CONFIG: Record<ReproductiveEventType, { label: string; emoji: string
 
 function ReproSummary({ events }: { events: ReproductiveEvent[] }) {
   const births = events.filter(e => ['farrowing', 'calving', 'kindling'].includes(e.eventType))
-  const totalBorn = births.reduce((s, e) => s + (e.litterSize ?? 0), 0)
   const totalAlive = births.reduce((s, e) => s + (e.litterSizeAlive ?? e.litterSize ?? 0), 0)
   const services = events.filter(e => ['service_natural', 'service_ai'].includes(e.eventType)).length
-  const pregnancies = events.filter(e => e.eventType === 'pregnancy_check_positive').length
 
   return (
     <div className="grid grid-cols-3 gap-2 mx-4 mb-3">
