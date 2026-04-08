@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format, parseISO, subMonths } from 'date-fns'
-import { Plus, ExternalLink, ArrowLeft, RefreshCw, PieChart } from 'lucide-react'
+import { Plus, ExternalLink, ArrowLeft, RefreshCw, Wallet } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -401,7 +401,7 @@ export default function FinancialsPage() {
               onClick={() => navigate('/financials/budget')}
               className="flex items-center gap-1 text-xs text-primary-600 font-medium border border-primary-200 rounded-lg px-2.5 py-1.5 active:scale-95 transition-transform"
             >
-              <PieChart size={13} /> Budget
+              <Wallet size={13} /> Budget
             </button>
             <button
               onClick={() => navigate('/financials/recurring')}
