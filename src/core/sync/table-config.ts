@@ -41,6 +41,10 @@ export const SYNC_ORDER = [
   'animalWeightEntries',
   'animalEvents',
   'enterpriseBudgets',
+  'recurringTransactions',
+  'purchaseOrders',
+  'purchaseOrderItems',
+  'financialBudgets',
 ] as const
 
 export type SyncTableName = typeof SYNC_ORDER[number]
@@ -86,6 +90,10 @@ export const TABLE_SUPABASE_NAME: Record<SyncTableName, string> = {
   animalWeightEntries: 'animal_weight_entries',
   animalEvents: 'animal_events',
   enterpriseBudgets: 'enterprise_budgets',
+  recurringTransactions: 'recurring_transactions',
+  purchaseOrders: 'purchase_orders',
+  purchaseOrderItems: 'purchase_order_items',
+  financialBudgets: 'financial_budgets',
 }
 
 /**

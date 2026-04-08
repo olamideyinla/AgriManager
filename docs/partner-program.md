@@ -174,7 +174,7 @@ No. If you can use WhatsApp, you can demonstrate AgriManagerX. We will walk you 
 If they re-subscribe within 6 months, you still earn the commission. After 6 months, the referral is released and may be claimed by another partner.
 
 **Q: Can I recruit sub-partners under me?**
-Not at this time. All partners operate at the same tier. We may introduce a team model in the future for Gold Partners.
+Yes — through the **Super Partner Program**. High-performing Partners can apply for promotion to Super Partner status, which grants a unique recruitment link and a 10% override commission on every commission earned by Partners in your network. See the Super Partner Program document for details.
 
 **Q: What if a farmer contacts AgriManagerX directly after I introduced them?**
 As long as they signed up using your referral link at any point, or you registered them in your partner dashboard before they subscribed, the commission is yours.

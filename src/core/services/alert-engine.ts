@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../database/db'
 import { AlertRuleId, AlertThresholds } from '../config/constants'
 import { henDayProductionPct, ross308WeightForDay } from './kpi-calculator'
+import { checkBudgetAlerts } from './budget-alert-checker'
 import type { Alert, AlertSeverity } from '../../shared/types'
 
 export class AlertEngine {
@@ -17,6 +18,7 @@ export class AlertEngine {
       this._checkFinancialAlerts(orgId),
       this._checkOperationalAlerts(orgId),
       this._checkHealthAlerts(orgId),
+      checkBudgetAlerts(orgId, this._maybeCreate.bind(this)),
     ])
   }
 

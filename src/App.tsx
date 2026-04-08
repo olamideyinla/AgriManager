@@ -6,6 +6,7 @@ import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ToastContainer'
 import { UpdateBanner } from './shared/components/UpdateBanner'
 import { checkSubscriptionStatus } from './core/services/subscription-checker'
+import { postDueRecurringTransactions } from './core/services/recurring-poster'
 
 export default function App() {
   const initialize     = useAuthStore(s => s.initialize)
@@ -25,6 +26,13 @@ export default function App() {
       checkSubscriptionStatus(appUser.organizationId)
     }
   }, [isAuthenticated, appUser?.organizationId])
+
+  // Post any due recurring transactions on app load
+  useEffect(() => {
+    if (appUser?.organizationId) {
+      postDueRecurringTransactions(appUser.organizationId).catch(console.error)
+    }
+  }, [appUser?.organizationId])
 
   // Track online/offline state
   useEffect(() => {

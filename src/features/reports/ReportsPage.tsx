@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
-  FileText, BarChart3, TrendingUp, Package, DollarSign, ClipboardList, ChevronRight, RefreshCw, Users2,
+  FileText, BarChart3, TrendingUp, Package, DollarSign, ClipboardList, ChevronRight, RefreshCw, Users2, Award, Activity,
 } from 'lucide-react'
 import { db } from '../../core/database/db'
 import { useAuthStore } from '../../stores/auth-store'
@@ -25,6 +25,7 @@ const ICONS: Record<string, React.ReactNode> = {
   inventory_status: <Package className='w-5 h-5 text-primary-600' />,
   mortality_analysis: <FileText className='w-5 h-5 text-primary-600' />,
   labor_cost: <Users2 className='w-5 h-5 text-primary-600' />,
+  loan_readiness: <Award className='w-5 h-5 text-primary-600' />,
 }
 
 const REPORT_CARDS: ReportCard[] = [
@@ -61,6 +62,14 @@ const REPORT_CARDS: ReportCard[] = [
     route: '/reports/config/cash_flow',
   },
   {
+    id: 'loan_readiness',
+    category: 'financial',
+    title: 'Loan Readiness',
+    description: 'Creditworthiness score across 6 dimensions from your data',
+    icon: ICONS['loan_readiness'],
+    route: '/reports/loan-readiness',
+  },
+  {
     id: 'inventory_status',
     category: 'operational',
     title: 'Inventory Status',
@@ -83,6 +92,14 @@ const REPORT_CARDS: ReportCard[] = [
     description: 'Permanent & casual labor breakdown by worker and enterprise',
     icon: ICONS['labor_cost'],
     route: '/reports/config/labor_cost',
+  },
+  {
+    id: 'production_efficiency',
+    category: 'operational',
+    title: 'Production Efficiency',
+    description: 'FCR, cost/unit, and mortality across all enterprises',
+    icon: <Activity className='w-5 h-5 text-primary-600' />,
+    route: '/reports/production-efficiency',
   },
 ]
 

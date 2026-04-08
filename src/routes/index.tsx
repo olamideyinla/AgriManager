@@ -154,6 +154,20 @@ const AddWeightEntryForm    = lazy(() => import('../features/enterprises/animals
 // Enterprise budget
 const EnterpriseBudgetForm  = lazy(() => import('../features/enterprises/budget/EnterpriseBudgetForm'))
 
+// Recurring transactions
+const RecurringTransactionsPage = lazy(() => import('../features/financials/RecurringTransactionsPage'))
+const RecurringTransactionForm  = lazy(() => import('../features/financials/RecurringTransactionForm'))
+
+// Loan readiness report
+const LoanReadinessPage = lazy(() => import('../features/reports/LoanReadinessPage'))
+
+// Phase 4 — Procurement + Budgets + Production Efficiency
+const PurchaseOrdersPage       = lazy(() => import('../features/procurement/PurchaseOrdersPage'))
+const CreatePurchaseOrderForm  = lazy(() => import('../features/procurement/CreatePurchaseOrderForm'))
+const PurchaseOrderDetailPage  = lazy(() => import('../features/procurement/PurchaseOrderDetailPage'))
+const FinancialBudgetPage      = lazy(() => import('../features/financials/FinancialBudgetPage'))
+const ProductionEfficiencyPage = lazy(() => import('../features/reports/ProductionEfficiencyPage'))
+
 function LoadingScreen() {
   return (
     <div className="flex h-dvh items-center justify-center bg-primary-500">
@@ -242,6 +256,9 @@ export function AppRoutes() {
           <Route path="/financials/sale" element={<ProtectedRoute><RecordSaleForm /></ProtectedRoute>} />
           <Route path="/financials/expense" element={<ProtectedRoute><RecordExpenseForm /></ProtectedRoute>} />
           <Route path="/financials/ar" element={<ProtectedRoute><AccountsReceivable /></ProtectedRoute>} />
+          <Route path="/financials/recurring" element={<ProtectedRoute><RecurringTransactionsPage /></ProtectedRoute>} />
+          <Route path="/financials/recurring/new" element={<ProtectedRoute><RecurringTransactionForm /></ProtectedRoute>} />
+          <Route path="/financials/recurring/:recurringId" element={<ProtectedRoute><RecurringTransactionForm /></ProtectedRoute>} />
 
           {/* Inventory — outside shell (specific before :id) */}
           <Route path="/inventory/receive" element={<ProtectedRoute><ReceiveStockForm /></ProtectedRoute>} />
@@ -252,6 +269,8 @@ export function AppRoutes() {
           {/* Reports — outside shell */}
           <Route path="/reports/config/:reportType" element={<ProtectedRoute><ReportConfigPage /></ProtectedRoute>} />
           <Route path="/reports/view" element={<ProtectedRoute><ReportViewPage /></ProtectedRoute>} />
+          <Route path="/reports/loan-readiness" element={<ProtectedRoute><LoanReadinessPage /></ProtectedRoute>} />
+          <Route path="/reports/production-efficiency" element={<ProtectedRoute><ProductionEfficiencyPage /></ProtectedRoute>} />
 
           {/* Sync — outside shell */}
           <Route path="/sync" element={<ProtectedRoute><SyncStatusPage /></ProtectedRoute>} />
@@ -333,6 +352,15 @@ export function AppRoutes() {
           <Route path="/decision/calendar"        element={<ProtectedRoute><PlanningCalendar /></ProtectedRoute>} />
           <Route path="/decision/break-even"      element={<ProtectedRoute><BreakEvenCalculator /></ProtectedRoute>} />
           <Route path="/decision/feed-cost"       element={<ProtectedRoute><FeedCostAnalyzer /></ProtectedRoute>} />
+
+          {/* Procurement — outside shell (specific before :id) */}
+          <Route path="/procurement/orders/new"      element={<ProtectedRoute><CreatePurchaseOrderForm /></ProtectedRoute>} />
+          <Route path="/procurement/orders/:id/edit" element={<ProtectedRoute><CreatePurchaseOrderForm /></ProtectedRoute>} />
+          <Route path="/procurement/orders/:id"      element={<ProtectedRoute><PurchaseOrderDetailPage /></ProtectedRoute>} />
+          <Route path="/procurement/orders"          element={<ProtectedRoute><PurchaseOrdersPage /></ProtectedRoute>} />
+
+          {/* Financial budget — outside shell */}
+          <Route path="/financials/budget" element={<ProtectedRoute><FinancialBudgetPage /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

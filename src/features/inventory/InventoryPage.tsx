@@ -3,7 +3,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus, ChevronDown, ChevronRight, Package, AlertTriangle, ArrowUpDown, Download } from 'lucide-react'
+import { Plus, ChevronDown, ChevronRight, Package, AlertTriangle, ArrowUpDown, Download, ShoppingCart } from 'lucide-react'
 import { db } from '../../core/database/db'
 import { useInventoryItems, useLowStockItems } from '../../core/database/hooks/use-inventory'
 import { useAuthStore } from '../../stores/auth-store'
@@ -362,22 +362,30 @@ function AlertsTab() {
       {lowItems.map(item => {
         const isOut = item.currentStock === 0
         return (
-          <button key={item.id} onClick={() => navigate(`/inventory/${item.id}`)}
-            className="card w-full text-left flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isOut ? 'bg-red-50' : 'bg-amber-50'}`}>
-              <AlertTriangle size={18} className={isOut ? 'text-red-500' : 'text-amber-500'} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {item.currentStock} {item.unitOfMeasurement} remaining
-                {item.reorderPoint != null && <span className="ml-1">· reorder at {item.reorderPoint}</span>}
-              </p>
-            </div>
-            <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${isOut ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-              {isOut ? 'Out' : 'Low'}
-            </span>
-          </button>
+          <div key={item.id} className="card w-full flex items-center gap-3">
+            <button onClick={() => navigate(`/inventory/${item.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isOut ? 'bg-red-50' : 'bg-amber-50'}`}>
+                <AlertTriangle size={18} className={isOut ? 'text-red-500' : 'text-amber-500'} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {item.currentStock} {item.unitOfMeasurement} remaining
+                  {item.reorderPoint != null && <span className="ml-1">· reorder at {item.reorderPoint}</span>}
+                </p>
+              </div>
+              <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${isOut ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                {isOut ? 'Out' : 'Low'}
+              </span>
+            </button>
+            <button
+              onClick={() => navigate(`/procurement/orders/new?itemId=${item.id}`)}
+              className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-1.5 rounded-lg active:bg-primary-100 transition-colors"
+              title="Create Purchase Order"
+            >
+              <ShoppingCart size={12} /> PO
+            </button>
+          </div>
         )
       })}
     </div>

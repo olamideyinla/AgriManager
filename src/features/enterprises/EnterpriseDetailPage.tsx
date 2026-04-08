@@ -7,6 +7,9 @@ import { BroilerOverview } from './broilers/BroilerOverview'
 import { FishOverview } from './fishery/FishOverview'
 import { CattleOverview } from './cattle/CattleOverview'
 import { CropOverview } from './crops/CropOverview'
+import { PigOverview } from './pigs/PigOverview'
+import { RabbitOverview } from './rabbit/RabbitOverview'
+import { CustomAnimalOverview } from './custom/CustomAnimalOverview'
 import { EnterpriseRecords } from './tabs/EnterpriseRecords'
 import { EnterpriseAnalysis } from './tabs/EnterpriseAnalysis'
 import { EnterpriseFinancials } from './tabs/EnterpriseFinancials'
@@ -60,6 +63,10 @@ function Overview({ enterprise }: { enterprise: EnterpriseInstance }) {
     case 'fish':            return <FishOverview enterprise={enterprise} />
     case 'crop_annual':
     case 'crop_perennial':  return <CropOverview enterprise={enterprise} />
+    case 'pigs_breeding':
+    case 'pigs_growfinish': return <PigOverview enterprise={enterprise} />
+    case 'rabbit':          return <RabbitOverview enterprise={enterprise} />
+    case 'custom_animal':   return <CustomAnimalOverview enterprise={enterprise} />
     default:
       return (
         <div className="p-4 text-center text-gray-400 py-12">

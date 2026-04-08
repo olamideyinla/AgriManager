@@ -12,6 +12,7 @@ import { useUpcomingHealthEvents } from '../../core/database/hooks/use-health'
 import { useTodayAttendanceSummary } from '../../core/database/hooks/use-labor'
 import { useTeamDailyStatus } from '../../core/database/hooks/use-worker-tasks'
 import { useCurrency } from '../../shared/hooks/useCurrency'
+import { BudgetWidget } from './BudgetWidget'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
 
 
@@ -346,6 +347,11 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Budget widget */}
+        {appUser?.organizationId && (
+          <BudgetWidget orgId={appUser.organizationId} />
         )}
 
         {/* Attendance reminder card */}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format, parseISO, subMonths } from 'date-fns'
-import { Plus, ExternalLink, ArrowLeft } from 'lucide-react'
+import { Plus, ExternalLink, ArrowLeft, RefreshCw, PieChart } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -396,12 +396,26 @@ export default function FinancialsPage() {
               <p className="text-xs text-gray-500">{format(now, 'MMMM yyyy')}</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/financials/ar')}
-            className="flex items-center gap-1 text-xs text-primary-600 font-medium border border-primary-200 rounded-lg px-2.5 py-1.5 active:scale-95 transition-transform"
-          >
-            <ExternalLink size={13} /> View AR
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/financials/budget')}
+              className="flex items-center gap-1 text-xs text-primary-600 font-medium border border-primary-200 rounded-lg px-2.5 py-1.5 active:scale-95 transition-transform"
+            >
+              <PieChart size={13} /> Budget
+            </button>
+            <button
+              onClick={() => navigate('/financials/recurring')}
+              className="flex items-center gap-1 text-xs text-primary-600 font-medium border border-primary-200 rounded-lg px-2.5 py-1.5 active:scale-95 transition-transform"
+            >
+              <RefreshCw size={13} /> Recurring
+            </button>
+            <button
+              onClick={() => navigate('/financials/ar')}
+              className="flex items-center gap-1 text-xs text-primary-600 font-medium border border-primary-200 rounded-lg px-2.5 py-1.5 active:scale-95 transition-transform"
+            >
+              <ExternalLink size={13} /> View AR
+            </button>
+          </div>
         </div>
 
         {/* Summary cards */}

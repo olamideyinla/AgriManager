@@ -4,6 +4,7 @@ import { ProductionCurveChart } from '../../../shared/components/charts/Producti
 import { TrendLineChart } from '../../../shared/components/charts/TrendLineChart'
 import { FeatureGate } from '../../../shared/components/FeatureGate'
 import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
+import { EggGradingSection } from './EggGradingSection'
 import type { EnterpriseInstance } from '../../../shared/types'
 
 interface Props { enterprise: EnterpriseInstance }
@@ -113,6 +114,11 @@ export function LayerOverview({ enterprise }: Props) {
           emptyText="No feed data yet"
         />
       </div>
+
+      {/* Egg grading breakdown */}
+      <FeatureGate feature="unit_economics">
+        <EggGradingSection records={metrics.records} />
+      </FeatureGate>
     </div>
   )
 }

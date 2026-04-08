@@ -15,6 +15,8 @@ import type {
   BatchCloseout, ThinningRecord, PlacementRecord, FishStockingRecord,
   LitterConditionLog, SoilTestRecord, PostHarvestRecord,
   AnimalRecord, AnimalWeightEntry, AnimalEvent, EnterpriseBudget,
+  RecurringTransaction,
+  PurchaseOrder, PurchaseOrderItem, FinancialBudget,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -92,6 +94,10 @@ export class AgriDatabase extends Dexie {
   animalWeightEntries!: EntityTable<AnimalWeightEntry, 'id'>
   animalEvents!: EntityTable<AnimalEvent, 'id'>
   enterpriseBudgets!: EntityTable<EnterpriseBudget, 'id'>
+  recurringTransactions!: EntityTable<RecurringTransaction, 'id'>
+  purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
+  purchaseOrderItems!: EntityTable<PurchaseOrderItem, 'id'>
+  financialBudgets!: EntityTable<FinancialBudget, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -236,6 +242,22 @@ export class AgriDatabase extends Dexie {
         '&id, animalId, date, eventType, [animalId+date]',
       enterpriseBudgets:
         '&id, enterpriseInstanceId, periodType, [enterpriseInstanceId+periodType]',
+    })
+
+    // v13 — adds recurring transactions
+    this.version(13).stores({
+      recurringTransactions:
+        '&id, organizationId, isActive, nextDueDate, enterpriseInstanceId, [organizationId+isActive]',
+    })
+
+    // v14 — adds procurement (purchase orders) + financial budgets
+    this.version(14).stores({
+      purchaseOrders:
+        '&id, organizationId, supplierId, status, orderDate, [organizationId+status]',
+      purchaseOrderItems:
+        '&id, purchaseOrderId, inventoryItemId',
+      financialBudgets:
+        '&id, organizationId, month, category, [organizationId+month]',
     })
   }
 }
