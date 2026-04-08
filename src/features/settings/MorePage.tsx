@@ -4,7 +4,7 @@ import { supabase } from '../../core/config/supabase'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
 import type { Theme, FontSize } from '../../stores/ui-store'
-import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText, Banknote, Settings } from 'lucide-react'
+import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText, Banknote, Settings, UserCircle } from 'lucide-react'
 import { PermissionGate } from '../../shared/components/PermissionGate'
 import type { UserRole } from '../../shared/types'
 
@@ -60,6 +60,7 @@ export default function MorePage() {
   }
 
   const allItems = [
+    { icon: UserCircle,    label: 'Profile',          to: '/settings/profile',           permission: null },
     { icon: CreditCard,    label: 'Subscription',    to: '/settings/subscription',     permission: null },
     { icon: FileText,      label: 'Invoicing',       to: '/invoicing',                 permission: 'financial:read' as const },
     { icon: Banknote,      label: 'Payroll',          to: '/payroll',                   permission: 'financial:read' as const },
@@ -90,7 +91,10 @@ export default function MorePage() {
 
       {/* Profile */}
       {appUser && (
-        <div className="card dark:bg-[var(--bg-card)] dark:border-gray-700 p-4">
+        <button
+          onClick={() => navigate('/settings/profile')}
+          className="card dark:bg-[var(--bg-card)] dark:border-gray-700 p-4 w-full text-left active:bg-gray-50 dark:active:bg-gray-700/50 transition-colors"
+        >
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center shrink-0">
               <span className="text-primary-700 dark:text-primary-300 font-bold text-base">
@@ -99,13 +103,18 @@ export default function MorePage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{appUser.fullName}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{appUser.phone ?? appUser.email ?? ''}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {appUser.phone ?? appUser.email ?? 'Tap to edit profile'}
+              </p>
             </div>
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${ROLE_COLORS[appUser.role] ?? 'bg-gray-100 text-gray-700'}`}>
-              {appUser.role}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${ROLE_COLORS[appUser.role] ?? 'bg-gray-100 text-gray-700'}`}>
+                {appUser.role}
+              </span>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
           </div>
-        </div>
+        </button>
       )}
 
       {/* Appearance */}

@@ -104,6 +104,9 @@ const WorkerReminderSettings = lazy(() => import('../features/settings/WorkerRem
 const HealthSchedulePage   = lazy(() => import('../features/health/HealthSchedulePage'))
 const ProtocolManagement   = lazy(() => import('../features/health/ProtocolManagement'))
 
+// Profile settings
+const ProfilePage              = lazy(() => import('../features/settings/ProfilePage'))
+
 // Subscription pages
 const SubscriptionPage         = lazy(() => import('../features/settings/SubscriptionPage'))
 const SubscriptionPaymentPage  = lazy(() => import('../features/settings/SubscriptionPaymentPage'))
@@ -255,6 +258,9 @@ export function AppRoutes() {
           {/* Task templates & reminder settings — outside shell */}
           <Route path="/settings/task-templates" element={<ProtectedRoute><TaskTemplatesPage /></ProtectedRoute>} />
           <Route path="/settings/reminders"      element={<ProtectedRoute><WorkerReminderSettings /></ProtectedRoute>} />
+
+          {/* Profile — outside shell */}
+          <Route path="/settings/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
           {/* Subscription — outside shell */}
           <Route path="/settings/subscription"         element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
