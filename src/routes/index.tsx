@@ -142,6 +142,17 @@ const LayerDepletionAnalyzer=lazy(() => import('../features/decision-support/Lay
 const BatchPlanner          = lazy(() => import('../features/decision-support/BatchPlanner'))
 const BenchmarkTool         = lazy(() => import('../features/decision-support/BenchmarkTool'))
 const PlanningCalendar      = lazy(() => import('../features/decision-support/PlanningCalendar'))
+const BreakEvenCalculator   = lazy(() => import('../features/decision-support/BreakEvenCalculator'))
+const FeedCostAnalyzer      = lazy(() => import('../features/decision-support/FeedCostAnalyzer'))
+
+// Animal registry pages
+const AnimalRegistryPage    = lazy(() => import('../features/enterprises/animals/AnimalRegistryPage'))
+const RegisterAnimalForm    = lazy(() => import('../features/enterprises/animals/RegisterAnimalForm'))
+const AnimalDetailPage      = lazy(() => import('../features/enterprises/animals/AnimalDetailPage'))
+const AddWeightEntryForm    = lazy(() => import('../features/enterprises/animals/AddWeightEntryForm'))
+
+// Enterprise budget
+const EnterpriseBudgetForm  = lazy(() => import('../features/enterprises/budget/EnterpriseBudgetForm'))
 
 function LoadingScreen() {
   return (
@@ -304,6 +315,15 @@ export function AppRoutes() {
           <Route path="/payroll/run/:runId"       element={<ProtectedRoute><RunPayrollFlow /></ProtectedRoute>} />
           <Route path="/payroll/payslip/:payslipId" element={<ProtectedRoute><PayslipDetailPage /></ProtectedRoute>} />
 
+          {/* Animal registry — outside shell (specific before :id) */}
+          <Route path="/enterprises/:id/animals/register"           element={<ProtectedRoute><RegisterAnimalForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/animals/:animalId/weight"   element={<ProtectedRoute><AddWeightEntryForm /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/animals/:animalId"          element={<ProtectedRoute><AnimalDetailPage /></ProtectedRoute>} />
+          <Route path="/enterprises/:id/animals"                    element={<ProtectedRoute><AnimalRegistryPage /></ProtectedRoute>} />
+
+          {/* Enterprise budget — outside shell */}
+          <Route path="/enterprises/:id/budget"  element={<ProtectedRoute><EnterpriseBudgetForm /></ProtectedRoute>} />
+
           {/* Decision support tools — outside shell */}
           <Route path="/decision"                 element={<ProtectedRoute><DecisionToolsPage /></ProtectedRoute>} />
           <Route path="/decision/broiler-sell"    element={<ProtectedRoute><BroilerSellCalculator /></ProtectedRoute>} />
@@ -311,6 +331,8 @@ export function AppRoutes() {
           <Route path="/decision/batch-planner"   element={<ProtectedRoute><BatchPlanner /></ProtectedRoute>} />
           <Route path="/decision/benchmark"       element={<ProtectedRoute><BenchmarkTool /></ProtectedRoute>} />
           <Route path="/decision/calendar"        element={<ProtectedRoute><PlanningCalendar /></ProtectedRoute>} />
+          <Route path="/decision/break-even"      element={<ProtectedRoute><BreakEvenCalculator /></ProtectedRoute>} />
+          <Route path="/decision/feed-cost"       element={<ProtectedRoute><FeedCostAnalyzer /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

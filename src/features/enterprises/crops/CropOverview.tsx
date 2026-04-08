@@ -1,4 +1,7 @@
 import { useCropMetrics } from '../hooks/use-crop-metrics'
+import { KPICard } from '../../../shared/components/charts/KPICard'
+import { FeatureGate } from '../../../shared/components/FeatureGate'
+import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
 import type { EnterpriseInstance, CropActivityType } from '../../../shared/types'
 
 interface Props { enterprise: EnterpriseInstance }
@@ -70,6 +73,7 @@ function ActivityRow({ date, activityType, notes }: { date: string; activityType
 
 export function CropOverview({ enterprise }: Props) {
   const metrics = useCropMetrics(enterprise.id, enterprise.startDate)
+  const econ = useUnitEconomics(enterprise.id, enterprise)
 
   if (metrics === undefined) {
     return <div className="p-4 text-sm text-gray-400">Loading…</div>
@@ -77,6 +81,17 @@ export function CropOverview({ enterprise }: Props) {
 
   return (
     <div className="space-y-4 p-4">
+      {/* Cost Intelligence */}
+      <FeatureGate feature="unit_economics">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cost Intelligence</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <KPICard label="Cost / kg harvest" value={econ.costPerKgHarvest != null ? `$${econ.costPerKgHarvest.toFixed(2)}` : '—'} subValue="per kg" variant="default" />
+            <KPICard label="Labour cost %"     value={`${econ.laborCostPct.toFixed(1)}%`} subValue="of expenses" variant={econ.laborCostPct > 50 ? 'warning' : 'default'} />
+          </div>
+        </div>
+      </FeatureGate>
+
       {/* Growth stage timeline */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex items-baseline justify-between mb-4">

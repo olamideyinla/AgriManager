@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Download, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useEnterpriseFinancials } from '../../../core/database/hooks/use-financials'
 import { CostBreakdownPie } from '../../../shared/components/charts/CostBreakdownPie'
 import { netProfit, profitMarginPct } from '../../../core/services/kpi-calculator'
@@ -9,7 +10,9 @@ import { createBatchReport } from '../../../core/services/pdf-export'
 import { shareFile } from '../../../shared/utils/file-download'
 import { db } from '../../../core/database/db'
 import { useCurrency } from '../../../shared/hooks/useCurrency'
-import type { EnterpriseInstance, FinancialCategory, FinancialTransaction } from '../../../shared/types'
+import { FeatureGate } from '../../../shared/components/FeatureGate'
+import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
+import type { EnterpriseInstance, FinancialCategory, FinancialTransaction, EnterpriseBudget } from '../../../shared/types'
 import type { AnyDailyRecord } from '../../../core/database/hooks/use-daily-records'
 
 // ── Colour map for categories ──────────────────────────────────────────────────
@@ -37,6 +40,67 @@ function categoryLabel(cat: FinancialCategory): string {
 
 // ── Summary card ──────────────────────────────────────────────────────────────
 
+// ── Budget vs Actual ──────────────────────────────────────────────────────────
+
+function BudgetBar({ label, actual, budget, fmt }: { label: string; actual: number; budget: number; fmt: (n: number) => string }) {
+  const pct = budget > 0 ? Math.min((actual / budget) * 100, 120) : 0
+  const color = pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-amber-400' : 'bg-emerald-500'
+  const variance = actual - budget
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-gray-500 font-medium">{label}</span>
+        <span className={`font-semibold ${variance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+          {variance >= 0 ? '+' : ''}{fmt(variance)}
+        </span>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+      </div>
+      <p className="text-xs text-gray-400">{fmt(actual)} of {fmt(budget)} budget</p>
+    </div>
+  )
+}
+
+function BudgetVsActualCard({ budget, totalExpenses, totalIncome, feedCostTotal, fmt }: {
+  budget: EnterpriseBudget
+  totalExpenses: number
+  totalIncome: number
+  feedCostTotal: number
+  fmt: (n: number) => string
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-gray-700">Budget vs Actual</p>
+        <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{budget.periodLabel}</span>
+      </div>
+      <BudgetBar
+        label="Revenue"
+        actual={totalIncome}
+        budget={budget.revenueTargetCents / 100}
+        fmt={fmt}
+      />
+      <BudgetBar
+        label="Total Costs"
+        actual={totalExpenses}
+        budget={budget.totalCostBudgetCents / 100}
+        fmt={fmt}
+      />
+      {budget.feedCostBudgetCents != null && (
+        <BudgetBar
+          label="Feed Costs"
+          actual={feedCostTotal}
+          budget={budget.feedCostBudgetCents / 100}
+          fmt={fmt}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Summary row ────────────────────────────────────────────────────────────────
+
 function SummaryRow({ label, value, color, fmt }: { label: string; value: number; color: string; fmt: (n: number) => string }) {
   return (
     <div className="text-center flex-1">
@@ -53,8 +117,18 @@ interface Props { enterprise: EnterpriseInstance }
 export function EnterpriseFinancials({ enterprise }: Props) {
   const navigate = useNavigate()
   const transactions = useEnterpriseFinancials(enterprise.id)
+  const economics = useUnitEconomics(enterprise.id, enterprise)
   const [isExporting, setIsExporting] = useState(false)
   const { fmt, currency } = useCurrency()
+
+  const budget = useLiveQuery(
+    async () => {
+      const budgets = await db.enterpriseBudgets
+        .where('enterpriseInstanceId').equals(enterprise.id).toArray()
+      return budgets[0] ?? null
+    },
+    [enterprise.id],
+  )
 
   const handleExportPdf = async () => {
     if (!transactions) return
@@ -156,6 +230,27 @@ export function EnterpriseFinancials({ enterprise }: Props) {
           <CostBreakdownPie data={pieData} height={200} />
         </div>
       )}
+
+      {/* Budget vs Actual */}
+      <FeatureGate feature="budget_tracking">
+        {budget ? (
+          <BudgetVsActualCard
+            budget={budget}
+            totalExpenses={expenses}
+            totalIncome={income}
+            feedCostTotal={economics.feedCostTotal}
+            fmt={fmt}
+          />
+        ) : (
+          <button
+            onClick={() => navigate(`/enterprises/${enterprise.id}/budget`)}
+            className="w-full bg-white rounded-2xl border border-dashed border-gray-300 p-4 text-center"
+          >
+            <p className="text-sm font-medium text-primary-600">+ Set Batch Budget</p>
+            <p className="text-xs text-gray-400 mt-0.5">Track revenue & cost targets</p>
+          </button>
+        )}
+      </FeatureGate>
 
       {/* Per-unit economics */}
       {expenses > 0 && (entType === 'layers' || entType === 'cattle_dairy' || entType === 'broilers' || entType === 'fish') && (

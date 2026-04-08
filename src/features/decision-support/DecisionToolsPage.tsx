@@ -48,6 +48,24 @@ const TOOLS = [
     color: 'bg-purple-50 border-purple-200',
     accent: 'text-purple-700',
   },
+  {
+    to: '/decision/break-even',
+    emoji: '💹',
+    title: 'Break-Even Price',
+    subtitle: 'Cost vs market analysis',
+    desc: 'Calculate the minimum price per unit to cover all costs — live from your data.',
+    color: 'bg-teal-50 border-teal-200',
+    accent: 'text-teal-700',
+  },
+  {
+    to: '/decision/feed-cost',
+    emoji: '🌾',
+    title: 'Feed Cost Analyzer',
+    subtitle: 'Feed efficiency & trends',
+    desc: 'Track feed cost as % of total expenses vs benchmark — get actionable recommendations.',
+    color: 'bg-lime-50 border-lime-200',
+    accent: 'text-lime-700',
+  },
 ]
 
 export default function DecisionToolsPage() {

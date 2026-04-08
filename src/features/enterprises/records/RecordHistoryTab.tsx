@@ -8,7 +8,7 @@ import type { EnterpriseInstance } from '../../../shared/types'
 
 type RecordKind =
   | 'placement' | 'fish_stocking' | 'thinning' | 'batch_closeout'
-  | 'litter' | 'soil_test' | 'post_harvest'
+  | 'litter' | 'soil_test' | 'post_harvest' | 'animal_registry'
 
 interface ActionButton {
   kind: RecordKind
@@ -45,8 +45,16 @@ function getActions(enterprise: EnterpriseInstance): ActionButton[] {
       { kind: 'soil_test',    label: 'Soil Test',   path: `${base}/soil-test`,    icon: '🧪' },
       { kind: 'post_harvest', label: 'Post-Harvest',path: `${base}/post-harvest`, icon: '🏭' },
     )
+  } else if (t === 'cattle_dairy' || t === 'cattle_beef' || t === 'rabbit' || t === 'custom_animal') {
+    buttons.push(
+      { kind: 'placement',     label: 'Placement',  path: `${base}/placement`,  icon: '🐣' },
+      { kind: 'thinning',      label: 'Thinning',   path: `${base}/thinning`,   icon: '✂️' },
+      { kind: 'batch_closeout',label: 'Close-out',  path: `${base}/closeout`,   icon: '📋' },
+    )
+    buttons.push(
+      { kind: 'animal_registry', label: 'Animals', path: `/enterprises/${enterprise.id}/animals`, icon: '🏷️' },
+    )
   } else {
-    // Fallback for cattle, rabbit, custom_animal
     buttons.push(
       { kind: 'placement',     label: 'Placement',  path: `${base}/placement`,  icon: '🐣' },
       { kind: 'thinning',      label: 'Thinning',   path: `${base}/thinning`,   icon: '✂️' },

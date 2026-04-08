@@ -2,6 +2,8 @@ import { useLayerMetrics } from '../hooks/use-layer-metrics'
 import { KPICard } from '../../../shared/components/charts/KPICard'
 import { ProductionCurveChart } from '../../../shared/components/charts/ProductionCurveChart'
 import { TrendLineChart } from '../../../shared/components/charts/TrendLineChart'
+import { FeatureGate } from '../../../shared/components/FeatureGate'
+import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
 import type { EnterpriseInstance } from '../../../shared/types'
 
 interface Props { enterprise: EnterpriseInstance }
@@ -13,9 +15,15 @@ export function LayerOverview({ enterprise }: Props) {
     enterprise.currentStockCount,
     enterprise.initialStockCount,
   )
+  const econ = useUnitEconomics(enterprise.id, enterprise)
 
   if (metrics === undefined) {
     return <div className="p-4 text-sm text-gray-400">Loading…</div>
+  }
+
+  function fmtCents(v: number | undefined, decimals = 2): string {
+    if (v == null) return '—'
+    return v.toFixed(decimals)
   }
 
   const hdpVariant = metrics.currentHdpPct >= 75 ? 'good' : metrics.currentHdpPct >= 55 ? 'warning' : 'danger'
@@ -56,6 +64,19 @@ export function LayerOverview({ enterprise }: Props) {
           />
         </div>
       </div>
+
+      {/* Cost Intelligence */}
+      <FeatureGate feature="unit_economics">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cost Intelligence</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <KPICard label="Cost / egg"  value={econ.costPerEgg != null ? `¢${(econ.costPerEgg * 100).toFixed(1)}` : '—'} subValue="per egg" variant="default" />
+            <KPICard label="Cost / tray" value={econ.costPerTray != null ? `$${fmtCents(econ.costPerTray)}` : '—'} subValue="30 eggs" variant="default" />
+            <KPICard label="Break-even"  value={econ.breakEvenEggPrice != null ? `¢${(econ.breakEvenEggPrice * 100).toFixed(1)}` : '—'} subValue="per egg" variant="default" />
+            <KPICard label="Feed cost %"  value={`${econ.feedCostPct.toFixed(1)}%`} subValue="of expenses" variant={econ.feedCostPct > 70 ? 'warning' : 'default'} />
+          </div>
+        </div>
+      </FeatureGate>
 
       {/* Production curve */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">

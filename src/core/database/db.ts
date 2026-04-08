@@ -14,6 +14,7 @@ import type {
   PayrollSettings, WorkerPayrollProfile, PayrollRun, PayslipRecord, RemittanceObligation,
   BatchCloseout, ThinningRecord, PlacementRecord, FishStockingRecord,
   LitterConditionLog, SoilTestRecord, PostHarvestRecord,
+  AnimalRecord, AnimalWeightEntry, AnimalEvent, EnterpriseBudget,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -87,6 +88,10 @@ export class AgriDatabase extends Dexie {
   litterConditionLogs!: EntityTable<LitterConditionLog, 'id'>
   soilTestRecords!: EntityTable<SoilTestRecord, 'id'>
   postHarvestRecords!: EntityTable<PostHarvestRecord, 'id'>
+  animalRecords!: EntityTable<AnimalRecord, 'id'>
+  animalWeightEntries!: EntityTable<AnimalWeightEntry, 'id'>
+  animalEvents!: EntityTable<AnimalEvent, 'id'>
+  enterpriseBudgets!: EntityTable<EnterpriseBudget, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -219,6 +224,18 @@ export class AgriDatabase extends Dexie {
         '&id, enterpriseInstanceId, testDate, [enterpriseInstanceId+testDate]',
       postHarvestRecords:
         '&id, enterpriseInstanceId, date, [enterpriseInstanceId+date]',
+    })
+
+    // v12 — adds animal registry + enterprise budgets
+    this.version(12).stores({
+      animalRecords:
+        '&id, enterpriseInstanceId, status, tagId, [enterpriseInstanceId+status]',
+      animalWeightEntries:
+        '&id, animalId, date, enterpriseInstanceId, [animalId+date]',
+      animalEvents:
+        '&id, animalId, date, eventType, [animalId+date]',
+      enterpriseBudgets:
+        '&id, enterpriseInstanceId, periodType, [enterpriseInstanceId+periodType]',
     })
   }
 }
