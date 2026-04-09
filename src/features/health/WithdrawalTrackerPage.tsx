@@ -280,7 +280,7 @@ export default function WithdrawalTrackerPage() {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-95"
+            className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-95"
           >
             <Plus size={18} />
           </button>

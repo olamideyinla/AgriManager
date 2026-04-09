@@ -231,9 +231,9 @@ export default function CreatePurchaseOrderForm() {
                     <button
                       type="button"
                       onClick={() => remove(idx)}
-                      className="text-red-400 active:scale-95 transition-transform"
+                      className="w-9 h-9 flex items-center justify-center text-red-400 active:scale-95 transition-transform rounded-lg"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={16} />
                     </button>
                   )}
                 </div>

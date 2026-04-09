@@ -281,7 +281,7 @@ export default function ProductionEfficiencyPage() {
         <div className="flex items-center gap-2 mb-1">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 flex items-center justify-center text-gray-500 active:scale-95 -ml-1"
+            className="w-10 h-10 flex items-center justify-center text-gray-500 active:scale-95 -ml-2"
           >
             <ArrowLeft size={20} />
           </button>

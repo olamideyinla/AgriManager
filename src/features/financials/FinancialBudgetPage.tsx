@@ -58,7 +58,7 @@ function BudgetRow({
   month: string
   existingBudget: FinancialBudget | undefined
 }) {
-  const { fmt } = useCurrency()
+  const { fmt, symbol } = useCurrency()
   const pct = budgetCents > 0 ? Math.min((actualCents / budgetCents) * 100, 100) : 0
 
   const barColor = budgetCents === 0
@@ -108,7 +108,7 @@ function BudgetRow({
       <div className="flex items-center gap-2 pl-9">
         <span className="text-xs text-gray-400">Budget:</span>
         <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1 bg-gray-50">
-          <span className="text-xs text-gray-400">$</span>
+          <span className="text-xs text-gray-400">{symbol}</span>
           <input
             type="number"
             step="0.01"
@@ -159,7 +159,7 @@ export default function FinancialBudgetPage() {
         <div className="flex items-center gap-2 mb-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 flex items-center justify-center text-gray-500 active:scale-95 -ml-1"
+            className="w-10 h-10 flex items-center justify-center text-gray-500 active:scale-95 -ml-2"
           >
             <ArrowLeft size={20} />
           </button>
@@ -169,14 +169,14 @@ export default function FinancialBudgetPage() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setCurrentDate(d => subMonths(d, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-200 text-gray-600"
+            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-200 text-gray-600"
           >
             <ChevronLeft size={18} />
           </button>
           <p className="text-base font-semibold text-gray-800">{monthLabel}</p>
           <button
             onClick={() => setCurrentDate(d => addMonths(d, 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-200 text-gray-600"
+            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-200 text-gray-600"
           >
             <ChevronRight size={18} />
           </button>

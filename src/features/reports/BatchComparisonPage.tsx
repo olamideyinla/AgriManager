@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
+import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
 import type { BatchCloseout } from '../../shared/types'
 
@@ -137,7 +138,7 @@ function BatchCard({
 export default function BatchComparisonPage() {
   const navigate  = useNavigate()
   const orgId     = useAuthStore(s => s.appUser?.organizationId) ?? ''
-  const currency  = useAuthStore(s => s.appUser?.currencySymbol ?? '')
+  const { symbol: currency } = useCurrency()
   const [sortKey, setSortKey]   = useState<SortKey>('date')
   const [sortDir, setSortDir]   = useState<SortDir>('desc')
   const [typeFilter, setTypeFilter] = useState<string>('all')

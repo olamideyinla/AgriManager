@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
+import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
 import { useMarketPrices, useLatestMarketPrices } from '../../core/database/hooks/use-market-prices'
 import type { MarketPrice } from '../../shared/types'
@@ -287,7 +288,7 @@ function AddPriceForm({
 export default function MarketPricePage() {
   const navigate  = useNavigate()
   const orgId     = useAuthStore(s => s.appUser?.organizationId) ?? ''
-  const currency  = useAuthStore(s => s.appUser?.currencySymbol ?? '')
+  const { symbol: currency } = useCurrency()
   const [showForm, setShowForm]             = useState(false)
   const [prefillCommodity, setPrefill]      = useState<string | undefined>()
   const [selectedCommodity, setSelected]    = useState<string | null>(null)

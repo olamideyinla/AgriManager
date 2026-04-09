@@ -20,8 +20,19 @@ export function useCurrency() {
     'USD',
   )
 
+  const symbol = (() => {
+    try {
+      return new Intl.NumberFormat('en', { style: 'currency', currency, maximumFractionDigits: 0 })
+        .formatToParts(0).find(p => p.type === 'currency')?.value ?? currency
+    } catch {
+      return currency
+    }
+  })()
+
   return {
     currency,
+    /** Currency symbol, e.g. '$', '₵', '₦' */
+    symbol,
     /** Format a monetary amount with the org's currency symbol */
     fmt: (amount: number) => formatCurrency(Math.abs(amount), currency),
   }

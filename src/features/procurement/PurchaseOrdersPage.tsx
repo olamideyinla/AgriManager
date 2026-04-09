@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Plus, ShoppingCart, ChevronRight, Package } from 'lucide-react'
+import { Plus, ShoppingCart, ChevronRight, Package, ArrowLeft } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { usePurchaseOrders } from '../../core/database/hooks/use-purchase-orders'
@@ -183,9 +183,10 @@ function Header({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate(-1)}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 active:scale-95 -ml-1"
+          className="w-9 h-9 flex items-center justify-center text-gray-500 active:scale-95 -ml-1"
+          aria-label="Go back"
         >
-          ←
+          <ArrowLeft size={22} />
         </button>
         <div>
           <h1 className="text-lg font-bold text-gray-900">Purchase Orders</h1>

@@ -1,4 +1,6 @@
 import { useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
 import { newId, nowIso } from '../../shared/types/base'
@@ -164,6 +166,7 @@ async function submitWizard() {
 // ── Main wizard ───────────────────────────────────────────────────────────────
 
 export default function OnboardingWizard() {
+  const navigate  = useNavigate()
   const appUser = useAuthStore(s => s.appUser)
   const {
     currentStep, isSubmitting, isComplete, submitError,
@@ -256,6 +259,19 @@ export default function OnboardingWizard() {
 
   return (
     <div className="h-dvh flex flex-col bg-white">
+      {/* Exit button shown only on step 0 */}
+      {currentStep === 0 && (
+        <div className="flex items-center px-3 pt-safe-top pt-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-100 active:bg-gray-200 -ml-1"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={22} />
+          </button>
+        </div>
+      )}
       <StepIndicator currentStep={currentStep} steps={STEP_LABELS} />
 
       {/* Step content */}
