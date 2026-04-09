@@ -273,6 +273,12 @@ export class AgriDatabase extends Dexie {
       marketPrices:
         '&id, organizationId, commodity, priceDate, [organizationId+commodity]',
     })
+
+    // v16 — adds poNumber index to purchaseOrders for reference lookups
+    this.version(16).stores({
+      purchaseOrders:
+        '&id, organizationId, supplierId, status, orderDate, [organizationId+status], poNumber',
+    })
   }
 }
 

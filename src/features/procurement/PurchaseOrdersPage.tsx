@@ -44,17 +44,18 @@ function PORow({ po, supplierName, itemCount }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-gray-800 truncate">
-            {supplierName ?? 'No supplier'}
+            {supplierName ?? po.supplierName ?? 'No supplier'}
           </p>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.cls}`}>
             {cfg.label}
           </span>
         </div>
         <p className="text-xs text-gray-400 mt-0.5">
-          {format(parseISO(po.orderDate), 'd MMM yyyy')}
+          <span className="font-mono">{po.poNumber ?? '—'}</span>
+          {' · '}{format(parseISO(po.orderDate), 'd MMM yyyy')}
           {' · '}{itemCount} item{itemCount !== 1 ? 's' : ''}
-          {' · '}{fmt(po.totalAmountCents / 100)}
         </p>
+        <p className="text-xs font-semibold text-gray-600 mt-0.5">{fmt(po.totalAmountCents / 100)}</p>
       </div>
       <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
     </button>

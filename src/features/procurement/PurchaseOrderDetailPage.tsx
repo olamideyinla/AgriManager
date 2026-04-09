@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Edit2, CheckCircle, Package, Truck } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { nanoid } from 'nanoid'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
@@ -24,31 +23,18 @@ const STATUS_CONFIG: Record<PurchaseOrderStatus, { label: string; cls: string }>
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function PurchaseOrderDetailPage() {
-  const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
-  const po = usePurchaseOrder(id)
-  const items = usePurchaseOrderItems(id)
-  const userId = useAuthStore(s => s.user?.id) ?? ''
-  const addToast = useUIStore(s => s.addToast)
-  const { fmt } = useCurrency()
+  const navigate   = useNavigate()
+  const { id }     = useParams<{ id: string }>()
+  const po         = usePurchaseOrder(id)
+  const items      = usePurchaseOrderItems(id)
+  const orgId      = useAuthStore(s => s.appUser?.organizationId) ?? ''
+  const userId     = useAuthStore(s => s.user?.id) ?? ''
+  const addToast   = useUIStore(s => s.addToast)
+  const { fmt }    = useCurrency()
 
   const [partialQtys, setPartialQtys] = useState<Record<string, string>>({})
   const [showPartial, setShowPartial] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-
-  // Load supplier name + item names
-  const meta = useLiveQuery(async () => {
-    if (!po || !items) return null
-    const supplierContact = po.supplierId ? await db.contacts.get(po.supplierId) : null
-    const inventoryItems = items.length > 0
-      ? await db.inventoryItems.bulkGet(items.map(i => i.inventoryItemId))
-      : []
-    const itemNameMap = new Map<string, string>()
-    for (const inv of inventoryItems) {
-      if (inv) itemNameMap.set(inv.id, `${inv.name} (${inv.unitOfMeasurement})`)
-    }
-    return { supplierName: supplierContact?.name, itemNameMap }
-  }, [po, items])
+  const [isSaving, setIsSaving]       = useState(false)
 
   if (po === undefined || items === undefined) {
     return (
@@ -57,7 +43,6 @@ export default function PurchaseOrderDetailPage() {
       </div>
     )
   }
-
   if (!po) {
     return (
       <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
@@ -66,14 +51,37 @@ export default function PurchaseOrderDetailPage() {
     )
   }
 
-  const cfg = STATUS_CONFIG[po.status]
+  const cfg        = STATUS_CONFIG[po.status]
+  const canReceive = po.status === 'ordered' || po.status === 'partially_received'
+  const displaySupplier = po.supplierName ?? 'No supplier'
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Create a financial expense transaction for received stock */
+  async function recordFinancialLeg(receivedCents: number, today: string, now: string) {
+    if (receivedCents <= 0) return
+    await db.financialTransactions.add({
+      id:             nanoid(),
+      organizationId: orgId,
+      date:           today,
+      type:           'expense',
+      category:       'other',
+      amount:         receivedCents / 100,
+      paymentMethod:  'cash',
+      reference:      po.poNumber,
+      notes:          `Purchased: ${displaySupplier} — ${po.poNumber}`,
+      syncStatus:     'pending',
+      createdAt:      now,
+      updatedAt:      now,
+    })
+  }
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
   const markOrdered = async () => {
     await db.purchaseOrders.update(po.id, {
-      status: 'ordered',
-      updatedAt: new Date().toISOString(),
+      status:     'ordered',
+      updatedAt:  new Date().toISOString(),
       syncStatus: 'pending',
     })
     addToast({ message: 'Marked as ordered', type: 'success' })
@@ -83,50 +91,58 @@ export default function PurchaseOrderDetailPage() {
     setIsSaving(true)
     try {
       const today = new Date().toISOString().split('T')[0]
-      const now = new Date().toISOString()
+      const now   = new Date().toISOString()
+      let totalReceivedCents = 0
 
       await Promise.all(
         items.map(async item => {
           const remaining = item.orderedQuantity - item.receivedQuantity
           if (remaining <= 0) return
 
-          // 1. Stock-in transaction
-          await db.inventoryTransactions.add({
-            id: nanoid(),
-            inventoryItemId: item.inventoryItemId,
-            type: 'in',
-            quantity: remaining,
-            unitCost: item.unitCostCents / 100,
-            date: today,
-            recordedBy: userId,
-            notes: `Received via PO #${po.id.slice(0, 8)}`,
-            syncStatus: 'pending',
-            createdAt: now,
-            updatedAt: now,
-          })
+          totalReceivedCents += remaining * item.unitCostCents
 
-          // 2. Update inventory stock
-          await db.inventoryItems
-            .where('id').equals(item.inventoryItemId)
-            .modify(i => { i.currentStock += remaining })
+          // 1. Stock-in transaction (only if linked to inventory item)
+          if (item.inventoryItemId) {
+            await db.inventoryTransactions.add({
+              id:              nanoid(),
+              inventoryItemId: item.inventoryItemId,
+              type:            'in',
+              quantity:        remaining,
+              unitCost:        item.unitCostCents / 100,
+              date:            today,
+              recordedBy:      userId,
+              notes:           `Received via ${po.poNumber}`,
+              syncStatus:      'pending',
+              createdAt:       now,
+              updatedAt:       now,
+            })
+            // 2. Update stock count
+            await db.inventoryItems
+              .where('id').equals(item.inventoryItemId)
+              .modify(i => { i.currentStock += remaining })
+          }
 
-          // 3. Update received qty on item
+          // 3. Mark item fully received
           await db.purchaseOrderItems.update(item.id, {
             receivedQuantity: item.orderedQuantity,
-            updatedAt: now,
-            syncStatus: 'pending',
+            updatedAt:        now,
+            syncStatus:       'pending',
           })
         }),
       )
 
+      // 4. Financial expense leg
+      await recordFinancialLeg(totalReceivedCents, today, now)
+
+      // 5. Update PO status
       await db.purchaseOrders.update(po.id, {
-        status: 'received',
+        status:             'received',
         actualDeliveryDate: today,
-        updatedAt: now,
-        syncStatus: 'pending',
+        updatedAt:          now,
+        syncStatus:         'pending',
       })
 
-      addToast({ message: 'All items received — stock updated', type: 'success' })
+      addToast({ message: 'All items received — stock & finances updated', type: 'success' })
     } catch {
       addToast({ message: 'Failed to receive items', type: 'error' })
     } finally {
@@ -138,8 +154,9 @@ export default function PurchaseOrderDetailPage() {
     setIsSaving(true)
     try {
       const today = new Date().toISOString().split('T')[0]
-      const now = new Date().toISOString()
-      let allReceived = true
+      const now   = new Date().toISOString()
+      let allReceived        = true
+      let totalReceivedCents = 0
 
       await Promise.all(
         items.map(async item => {
@@ -149,45 +166,51 @@ export default function PurchaseOrderDetailPage() {
             return
           }
 
-          await db.inventoryTransactions.add({
-            id: nanoid(),
-            inventoryItemId: item.inventoryItemId,
-            type: 'in',
-            quantity: qty,
-            unitCost: item.unitCostCents / 100,
-            date: today,
-            recordedBy: userId,
-            notes: `Partial receive via PO #${po.id.slice(0, 8)}`,
-            syncStatus: 'pending',
-            createdAt: now,
-            updatedAt: now,
-          })
+          totalReceivedCents += qty * item.unitCostCents
 
-          await db.inventoryItems
-            .where('id').equals(item.inventoryItemId)
-            .modify(i => { i.currentStock += qty })
+          if (item.inventoryItemId) {
+            await db.inventoryTransactions.add({
+              id:              nanoid(),
+              inventoryItemId: item.inventoryItemId,
+              type:            'in',
+              quantity:        qty,
+              unitCost:        item.unitCostCents / 100,
+              date:            today,
+              recordedBy:      userId,
+              notes:           `Partial receive via ${po.poNumber}`,
+              syncStatus:      'pending',
+              createdAt:       now,
+              updatedAt:       now,
+            })
+            await db.inventoryItems
+              .where('id').equals(item.inventoryItemId)
+              .modify(i => { i.currentStock += qty })
+          }
 
           const newReceived = item.receivedQuantity + qty
           if (newReceived < item.orderedQuantity) allReceived = false
 
           await db.purchaseOrderItems.update(item.id, {
             receivedQuantity: newReceived,
-            updatedAt: now,
-            syncStatus: 'pending',
+            updatedAt:        now,
+            syncStatus:       'pending',
           })
         }),
       )
 
+      // Financial expense leg for this receive
+      await recordFinancialLeg(totalReceivedCents, today, now)
+
       const newStatus = allReceived ? 'received' : 'partially_received'
       await db.purchaseOrders.update(po.id, {
-        status: newStatus,
+        status:             newStatus,
         actualDeliveryDate: allReceived ? today : po.actualDeliveryDate,
-        updatedAt: now,
-        syncStatus: 'pending',
+        updatedAt:          now,
+        syncStatus:         'pending',
       })
 
       setShowPartial(false)
-      addToast({ message: 'Items received — stock updated', type: 'success' })
+      addToast({ message: 'Items received — stock & finances updated', type: 'success' })
     } catch {
       addToast({ message: 'Failed to receive items', type: 'error' })
     } finally {
@@ -198,15 +221,15 @@ export default function PurchaseOrderDetailPage() {
   const cancelPO = async () => {
     if (!confirm('Cancel this purchase order?')) return
     await db.purchaseOrders.update(po.id, {
-      status: 'cancelled',
-      updatedAt: new Date().toISOString(),
+      status:     'cancelled',
+      updatedAt:  new Date().toISOString(),
       syncStatus: 'pending',
     })
     addToast({ message: 'Purchase order cancelled', type: 'info' })
     navigate(-1)
   }
 
-  const canReceive = po.status === 'ordered' || po.status === 'partially_received'
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-10 fade-in">
@@ -220,8 +243,9 @@ export default function PurchaseOrderDetailPage() {
             <ArrowLeft size={22} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold text-lg leading-tight truncate">
-              {meta?.supplierName ?? 'No supplier'}
+            <p className="text-white/60 text-xs font-mono">{po.poNumber}</p>
+            <p className="text-white font-semibold text-base leading-tight truncate">
+              {displaySupplier}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.cls}`}>
@@ -235,7 +259,7 @@ export default function PurchaseOrderDetailPage() {
           {po.status !== 'received' && po.status !== 'cancelled' && (
             <button
               onClick={() => navigate(`/procurement/orders/${po.id}/edit`)}
-              className="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white active:scale-95"
+              className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white active:scale-95"
             >
               <Edit2 size={18} />
             </button>
@@ -267,7 +291,7 @@ export default function PurchaseOrderDetailPage() {
           )}
         </div>
 
-        {/* Line items table */}
+        {/* Line items */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
@@ -278,14 +302,15 @@ export default function PurchaseOrderDetailPage() {
             <div className="p-4 text-center text-xs text-gray-400">No items</div>
           )}
           {items.map(item => {
-            const name = meta?.itemNameMap.get(item.inventoryItemId) ?? 'Unknown'
+            const displayName = item.itemName
+              + (item.unitOfMeasurement ? ` (${item.unitOfMeasurement})` : '')
             const lineTotal = (item.orderedQuantity * item.unitCostCents) / 100
-            const allRcvd = item.receivedQuantity >= item.orderedQuantity
+            const allRcvd   = item.receivedQuantity >= item.orderedQuantity
             return (
               <div key={item.id} className="px-4 py-3 border-b border-gray-50 last:border-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{name}</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{displayName}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {fmt(item.unitCostCents / 100)}/unit
                     </p>
@@ -312,7 +337,7 @@ export default function PurchaseOrderDetailPage() {
                       {item.receivedQuantity}/{item.orderedQuantity} rcvd
                     </p>
                     {allRcvd && (
-                      <CheckCircle size={12} className="text-emerald-500 ml-auto mt-1" />
+                      <CheckCircle size={14} className="text-emerald-500 ml-auto mt-1" />
                     )}
                   </div>
                 </div>
@@ -326,7 +351,7 @@ export default function PurchaseOrderDetailPage() {
           {po.status === 'draft' && (
             <button
               onClick={markOrdered}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-blue-600 text-white font-semibold text-sm active:bg-blue-700 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-blue-600 text-white font-semibold text-sm active:bg-blue-700 transition-colors"
             >
               <Truck size={18} /> Mark as Ordered
             </button>
@@ -337,13 +362,13 @@ export default function PurchaseOrderDetailPage() {
               <button
                 onClick={receiveAll}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-sm active:bg-emerald-700 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 text-white font-semibold text-sm active:bg-emerald-700 transition-colors disabled:opacity-50"
               >
                 <CheckCircle size={18} /> {isSaving ? 'Processing…' : 'Receive All'}
               </button>
               <button
                 onClick={() => setShowPartial(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 font-semibold text-sm active:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-semibold text-sm active:bg-gray-50"
               >
                 <Package size={18} /> Partial Receive
               </button>
@@ -355,7 +380,7 @@ export default function PurchaseOrderDetailPage() {
               <button
                 onClick={receivePartial}
                 disabled={isSaving}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-sm active:bg-emerald-700 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 text-white font-semibold text-sm active:bg-emerald-700 disabled:opacity-50"
               >
                 <CheckCircle size={18} /> {isSaving ? 'Processing…' : 'Save Received Quantities'}
               </button>
@@ -371,7 +396,7 @@ export default function PurchaseOrderDetailPage() {
           {po.status !== 'cancelled' && po.status !== 'received' && (
             <button
               onClick={cancelPO}
-              className="w-full py-3 rounded-2xl text-red-500 font-medium text-sm bg-white border border-red-100 active:bg-red-50 transition-colors"
+              className="w-full py-3 rounded-2xl text-red-500 font-medium text-sm bg-white border border-red-100 active:bg-red-50"
             >
               Cancel PO
             </button>

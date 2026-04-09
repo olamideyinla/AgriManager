@@ -1,12 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { supabase } from '../../core/config/supabase'
 import { useAuthStore } from '../../stores/auth-store'
 import { useUIStore } from '../../stores/ui-store'
 import type { Theme, FontSize } from '../../stores/ui-store'
-import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText, Banknote, Settings, UserCircle, ShoppingCart } from 'lucide-react'
+import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, ClipboardList, BrainCircuit, Database, Stethoscope, Users2, BellRing, CreditCard, FileText, Banknote, Settings, UserCircle, ShoppingCart, ImageIcon } from 'lucide-react'
 import { PermissionGate } from '../../shared/components/PermissionGate'
+import { db } from '../../core/database/db'
 import type { UserRole } from '../../shared/types'
+
+// ── Logo helpers ───────────────────────────────────────────────────────────────
+
+/** Resize & compress an image file to at most maxSize×maxSize, returns base64 data URL */
+function compressImage(file: File, maxSize = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1)
+      const w = Math.round(img.width  * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width  = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.onerror = reject
+    img.src = url
+  })
+}
 
 // Paths that appear in the desktop sidebar per role — hide from More on lg+ screens
 const SIDEBAR_PATHS_BY_ROLE: Record<UserRole, ReadonlySet<string>> = {
@@ -44,6 +70,46 @@ export default function MorePage() {
   const setTheme  = useUIStore(s => s.setTheme)
   const fontSize  = useUIStore(s => s.fontSize)
   const setFontSize = useUIStore(s => s.setFontSize)
+  const addToast  = useUIStore(s => s.addToast)
+
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+
+  const org = useLiveQuery(
+    () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
+    [appUser?.organizationId],
+  )
+
+  const handleLogoChange = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0]
+    if (!file || !org) return
+    setIsUploadingLogo(true)
+    try {
+      const dataUrl = await compressImage(file)
+      await db.organizations.update(org.id, {
+        logoUrl:    dataUrl,
+        updatedAt:  new Date().toISOString(),
+        syncStatus: 'pending',
+      })
+      addToast({ type: 'success', message: 'Logo saved' })
+    } catch {
+      addToast({ type: 'error', message: 'Failed to save logo' })
+    } finally {
+      setIsUploadingLogo(false)
+      // Reset input so same file can be re-selected
+      if (logoInputRef.current) logoInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveLogo = async () => {
+    if (!org) return
+    await db.organizations.update(org.id, {
+      logoUrl:    undefined,
+      updatedAt:  new Date().toISOString(),
+      syncStatus: 'pending',
+    })
+    addToast({ type: 'info', message: 'Logo removed' })
+  }
 
   // Track whether the sidebar is visible (lg breakpoint = 1024px)
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024)
@@ -117,6 +183,54 @@ export default function MorePage() {
           </div>
         </button>
       )}
+
+      {/* Farm Branding */}
+      <div className="card dark:bg-[var(--bg-card)] dark:border-gray-700">
+        <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+          Farm Branding
+        </h2>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          Logo appears on invoices, receipts &amp; purchase orders
+        </p>
+        <div className="flex items-center gap-4">
+          {/* Logo preview */}
+          <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 flex items-center justify-center overflow-hidden shrink-0 bg-gray-50 dark:bg-gray-800">
+            {org?.logoUrl ? (
+              <img src={org.logoUrl} alt="Farm logo" className="w-full h-full object-contain" />
+            ) : (
+              <ImageIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+            )}
+          </div>
+          {/* Upload controls */}
+          <div className="flex-1 space-y-2">
+            <button
+              onClick={() => logoInputRef.current?.click()}
+              disabled={isUploadingLogo}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold bg-primary-600 text-white active:bg-primary-700 disabled:opacity-60 transition-colors"
+            >
+              {isUploadingLogo ? 'Saving…' : org?.logoUrl ? 'Change Logo' : 'Upload Logo'}
+            </button>
+            {org?.logoUrl && (
+              <button
+                onClick={handleRemoveLogo}
+                className="w-full py-1.5 text-xs text-red-500 font-medium active:opacity-70"
+              >
+                Remove logo
+              </button>
+            )}
+          </div>
+        </div>
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoChange}
+        />
+        {org?.name && (
+          <p className="text-xs text-gray-400 mt-3 text-center">{org.name}</p>
+        )}
+      </div>
 
       {/* Appearance */}
       <div className="card dark:bg-[var(--bg-card)] dark:border-gray-700">
