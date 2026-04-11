@@ -151,20 +151,21 @@ export default function AdminContactsPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
-    supabase
-      .from('contact_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error: err }) => {
-        if (cancelled) return
-        if (err) { setError(err.message); setLoading(false); return }
-        setMessages((data as ContactMessage[]) ?? [])
-        setLoading(false)
-      })
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      const { data, error: err } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (cancelled) return
+      if (err) setError(err.message)
+      else setMessages((data as ContactMessage[]) ?? [])
+      setLoading(false)
+    }
 
+    void load()
     return () => { cancelled = true }
   }, [refreshKey])
 

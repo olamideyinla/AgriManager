@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import { db } from '../database/db'
 import { newId, nowIso } from '../../shared/types/base'
 import type {
@@ -6,15 +5,6 @@ import type {
   DailyTask, DailyTaskChecklist,
   TaskPriority, TimeWindow, TaskType,
 } from '../../shared/types'
-
-// ── Time window from hour of day ──────────────────────────────────────────────
-
-function currentTimeWindow(): TimeWindow {
-  const h = new Date().getHours()
-  if (h < 12) return 'morning'
-  if (h < 17) return 'midday'
-  return 'evening'
-}
 
 // ── Map template category to task type ───────────────────────────────────────
 

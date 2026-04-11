@@ -5,7 +5,6 @@ import {
   startOfWeek,
   endOfWeek,
   addWeeks,
-  isWithinInterval,
 } from 'date-fns'
 
 export interface WeeklyCashFlow {

@@ -10,9 +10,9 @@ describe('TIERS config', () => {
     expect(TIERS.free.monthlyUsd).toBe(0)
   })
 
-  it('pro tier has monthlyUsd of 10 and annualUsd of 100', () => {
-    expect(TIERS.pro.monthlyUsd).toBe(10)
-    expect(TIERS.pro.annualUsd).toBe(100)
+  it('pro tier has monthlyUsd of 20 and annualUsd of 200', () => {
+    expect(TIERS.pro.monthlyUsd).toBe(20)
+    expect(TIERS.pro.annualUsd).toBe(200)
   })
 
   it('x tier has null monthlyUsd', () => {
