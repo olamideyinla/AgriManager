@@ -80,6 +80,7 @@ export default function AdminPartnersPage() {
   const [filter, setFilter]         = useState<PartnerStatus | 'all' | 'super'>(initialFilter)
   const [refreshKey, setRefreshKey] = useState(0)
   const [updating, setUpdating]     = useState<string | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
   const [addOpen, setAddOpen]       = useState(false)
 
   useEffect(() => {
@@ -118,11 +119,14 @@ export default function AdminPartnersPage() {
 
   const updateStatus = async (id: string, status: PartnerStatus) => {
     setUpdating(id)
+    setUpdateError(null)
     const { error: err } = await supabase
       .from('partners')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
-    if (!err) {
+    if (err) {
+      setUpdateError(`Failed to update: ${err.message}`)
+    } else {
       setPartners(prev => prev.map(p => p.id === id ? { ...p, status } : p))
     }
     setUpdating(null)
@@ -194,6 +198,14 @@ export default function AdminPartnersPage() {
             </div>
           ))}
         </div>
+
+        {/* Update error banner */}
+        {updateError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-center justify-between">
+            <p className="text-sm text-red-700">{updateError}</p>
+            <button onClick={() => setUpdateError(null)} className="text-red-400 hover:text-red-600 text-lg leading-none ml-3">✕</button>
+          </div>
+        )}
 
         {/* Status filter */}
         <div className="flex flex-wrap gap-2">
@@ -271,21 +283,27 @@ export default function AdminPartnersPage() {
 
                 {/* Pending: approve / reject */}
                 {p.status === 'pending' && (
-                  <div className="flex gap-2 px-4 pb-3.5">
-                    <button
-                      onClick={() => void updateStatus(p.id, 'approved')}
-                      disabled={updating === p.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
-                    >
-                      <CheckCircle size={13} /> Approve
-                    </button>
-                    <button
-                      onClick={() => void updateStatus(p.id, 'rejected')}
-                      disabled={updating === p.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-semibold py-2 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
-                    >
-                      <XCircle size={13} /> Reject
-                    </button>
+                  <div className="px-4 pb-3.5">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => void updateStatus(p.id, 'approved')}
+                        disabled={updating === p.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
+                      >
+                        {updating === p.id
+                          ? <span className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
+                          : <CheckCircle size={13} />
+                        }
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => void updateStatus(p.id, 'rejected')}
+                        disabled={updating === p.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-semibold py-2 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+                      >
+                        <XCircle size={13} /> Reject
+                      </button>
+                    </div>
                   </div>
                 )}
 

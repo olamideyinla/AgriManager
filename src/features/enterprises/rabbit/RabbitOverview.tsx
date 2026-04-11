@@ -3,6 +3,7 @@ import { KPICard } from '../../../shared/components/charts/KPICard'
 import { TrendLineChart } from '../../../shared/components/charts/TrendLineChart'
 import { FeatureGate } from '../../../shared/components/FeatureGate'
 import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import type { EnterpriseInstance } from '../../../shared/types'
 
 interface Props { enterprise: EnterpriseInstance }
@@ -10,6 +11,7 @@ interface Props { enterprise: EnterpriseInstance }
 export function RabbitOverview({ enterprise }: Props) {
   const metrics = useRabbitMetrics(enterprise)
   const econ    = useUnitEconomics(enterprise.id, enterprise)
+  const { symbol } = useCurrency()
 
   if (metrics === undefined) {
     return <div className="p-4 text-sm text-gray-400">Loading…</div>
@@ -67,7 +69,7 @@ export function RabbitOverview({ enterprise }: Props) {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cost Intelligence</p>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <KPICard label="Cost / animal" value={econ.costPerBird != null ? `$${econ.costPerBird.toFixed(2)}` : '—'} subValue="per head placed" variant="default" />
+            <KPICard label="Cost / animal" value={econ.costPerBird != null ? `${symbol}${econ.costPerBird.toFixed(2)}` : '—'} subValue="per head placed" variant="default" />
             <KPICard label="Feed cost %" value={`${econ.feedCostPct.toFixed(1)}%`} subValue="of expenses" variant={econ.feedCostPct > 65 ? 'warning' : 'default'} />
             <KPICard label="Total feed" value={`${metrics.totalFeedKg} kg`} subValue={`${metrics.avgFeedPerDayKg} kg/day`} variant="default" />
           </div>

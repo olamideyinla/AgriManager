@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { format } from 'date-fns'
 import { db } from '../../../core/database/db'
 import { useAuthStore } from '../../../stores/auth-store'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import { newId, nowIso } from '../../../shared/types/base'
 import type { Worker, PaymentMethod } from '../../../shared/types'
 
@@ -22,6 +23,7 @@ export function PayWorkerSheet({
   daysWorked, basePay, overtimePay, onClose,
 }: PayWorkerSheetProps) {
   const userId      = useAuthStore(s => s.user?.id) ?? ''
+  const { symbol }  = useCurrency()
   const [deductions, setDeductions] = useState('0')
   const [notes, setNotes]           = useState('')
   const [method, setMethod]         = useState<PaymentMethod>('cash')
@@ -168,7 +170,7 @@ export function PayWorkerSheet({
             disabled={saving || netPay < 0}
             className="w-full bg-primary-600 text-white py-3 rounded-2xl font-semibold text-sm disabled:opacity-60 hover:bg-primary-700 active:bg-primary-800 transition-colors"
           >
-            {saving ? 'Processing…' : `Confirm Payment $${netPay.toFixed(2)}`}
+            {saving ? 'Processing…' : `Confirm Payment ${symbol}${netPay.toFixed(2)}`}
           </button>
         </div>
       </div>

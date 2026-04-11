@@ -83,14 +83,7 @@ function exportPDF(plan: BatchPlan, orgName: string, fmt: (n: number) => string)
 export default function BatchPlanner() {
   const navigate  = useNavigate()
   const appUser   = useAuthStore(s => s.appUser)
-  const { fmt, currency } = useCurrency()
-  const sym = useMemo(() => {
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency', currency: currency ?? 'USD', currencyDisplay: 'narrowSymbol',
-      }).formatToParts(1).find(p => p.type === 'currency')?.value ?? currency ?? '$'
-    } catch { return '$' }
-  }, [currency])
+  const { fmt, symbol: sym } = useCurrency()
   const [saving,  setSaving] = useState(false)
   const [saved,   setSaved]  = useState(false)
 

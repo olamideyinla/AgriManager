@@ -4,6 +4,7 @@ import { TrendLineChart } from '../../../shared/components/charts/TrendLineChart
 import { WaterQualityGauge, WQ_ZONES } from '../../../shared/components/charts/WaterQualityGauge'
 import { FeatureGate } from '../../../shared/components/FeatureGate'
 import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import type { EnterpriseInstance } from '../../../shared/types'
 
 interface Props { enterprise: EnterpriseInstance }
@@ -16,6 +17,7 @@ export function FishOverview({ enterprise }: Props) {
     enterprise.initialStockCount,
   )
   const econ = useUnitEconomics(enterprise.id, enterprise)
+  const { symbol } = useCurrency()
 
   if (metrics === undefined) {
     return <div className="p-4 text-sm text-gray-400">Loading…</div>
@@ -60,7 +62,7 @@ export function FishOverview({ enterprise }: Props) {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cost Intelligence</p>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <KPICard label="Cost / kg fish" value={econ.costPerKgFish != null ? `$${econ.costPerKgFish.toFixed(2)}` : '—'} subValue="est. biomass" variant="default" />
+            <KPICard label="Cost / kg fish" value={econ.costPerKgFish != null ? `${symbol}${econ.costPerKgFish.toFixed(2)}` : '—'} subValue="est. biomass" variant="default" />
             <KPICard label="Feed cost %"    value={`${econ.feedCostPct.toFixed(1)}%`} subValue="of expenses" variant={econ.feedCostPct > 60 ? 'warning' : 'default'} />
           </div>
         </div>

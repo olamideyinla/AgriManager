@@ -143,14 +143,7 @@ function CustomTooltip({ active, payload, label, sym }: {
 
 export default function LayerDepletionAnalyzer() {
   const navigate   = useNavigate()
-  const { fmt, currency } = useCurrency()
-  const sym = useMemo(() => {
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency', currency: currency ?? 'USD', currencyDisplay: 'narrowSymbol',
-      }).formatToParts(1).find(p => p.type === 'currency')?.value ?? currency ?? '$'
-    } catch { return '$' }
-  }, [currency])
+  const { fmt, symbol: sym } = useCurrency()
   const batchData  = useLayerData()
   const [selIdx,   setSelIdx]   = useState(0)
 

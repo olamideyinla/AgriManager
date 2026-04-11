@@ -83,7 +83,7 @@ function Header({ onBack }: { onBack: () => void }) {
 export default function BreakEvenCalculator() {
   const navigate    = useNavigate()
   const enterprises = useActiveEnterprises()
-  const { fmt }     = useCurrency()
+  const { fmt, symbol }     = useCurrency()
 
   const [selectedIdx, setSelectedIdx] = useState(0)
   const enterprise = enterprises?.[selectedIdx] as EnterpriseInstance | undefined
@@ -172,14 +172,14 @@ export default function BreakEvenCalculator() {
             value={effectiveCost}
             onChange={setTotalCost}
             step={1}
-            suffix="$"
+            suffix={symbol}
           />
           <InputRow
             label="Estimated additional cost"
             value={additionalCost}
             onChange={setAdditionalCost}
             step={1}
-            suffix="$"
+            suffix={symbol}
           />
           <InputRow
             label={`Expected total output (${unit})`}
@@ -198,7 +198,7 @@ export default function BreakEvenCalculator() {
             value={effectivePrice}
             onChange={setMarketPrice}
             step={0.01}
-            suffix={`$/${unit.split(' ')[0]}`}
+            suffix={`${symbol}/${unit.split(' ')[0]}`}
           />
         </div>
 

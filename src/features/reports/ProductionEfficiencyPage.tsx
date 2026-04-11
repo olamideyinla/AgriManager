@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpDown, Copy } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
+import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
 import type { EnterpriseType } from '../../shared/types'
 
@@ -33,17 +34,19 @@ const FCR_GOOD  = 2.0
 const FCR_WARN  = 2.5
 const MORT_GOOD = 3.0
 const MORT_WARN = 6.0
-const COST_UNITS: Partial<Record<EnterpriseType, string>> = {
-  layers:         '$/egg',
-  broilers:       '$/kg',
-  cattle_dairy:   '$/L',
-  cattle_beef:    '$/head',
-  fish:           '$/kg',
-  pigs_breeding:  '$/head',
-  pigs_growfinish:'$/kg',
-  rabbit:         '$/kg',
-  crop_annual:    '$/kg',
-  crop_perennial: '$/kg',
+function costUnits(sym: string): Partial<Record<EnterpriseType, string>> {
+  return {
+    layers:         `${sym}/egg`,
+    broilers:       `${sym}/kg`,
+    cattle_dairy:   `${sym}/L`,
+    cattle_beef:    `${sym}/head`,
+    fish:           `${sym}/kg`,
+    pigs_breeding:  `${sym}/head`,
+    pigs_growfinish:`${sym}/kg`,
+    rabbit:         `${sym}/kg`,
+    crop_annual:    `${sym}/kg`,
+    crop_perennial: `${sym}/kg`,
+  }
 }
 
 const TYPE_LABEL: Record<EnterpriseType, string> = {
@@ -91,6 +94,8 @@ type SortKey = 'name' | 'days' | 'fcr' | 'mortalityPct' | 'costPerUnit' | 'statu
 export default function ProductionEfficiencyPage() {
   const navigate = useNavigate()
   const userId   = useAuthStore(s => s.user?.id)
+  const { symbol } = useCurrency()
+  const COST_UNITS = useMemo(() => costUnits(symbol), [symbol])
   const [sortKey, setSortKey] = useState<SortKey>('status')
   const [sortAsc, setSortAsc] = useState(true)
 
@@ -344,7 +349,7 @@ export default function ProductionEfficiencyPage() {
                           {row.mortalityPct !== null ? `${row.mortalityPct.toFixed(1)}%` : '—'}
                         </td>
                         <td className="px-3 py-3 text-xs text-gray-600">
-                          {row.costPerUnit !== null ? `$${row.costPerUnit.toFixed(2)}` : '—'}
+                          {row.costPerUnit !== null ? `${symbol}${row.costPerUnit.toFixed(2)}` : '—'}
                           {row.costPerUnit !== null && (
                             <span className="text-[10px] text-gray-400 block">{COST_UNITS[row.type] ?? ''}</span>
                           )}

@@ -8,6 +8,7 @@ import { useUIStore } from '../../../stores/ui-store'
 import { db } from '../../../core/database/db'
 import { NumberInput } from '../../../shared/components/entry/NumberInput'
 import { SaveButton } from '../../../shared/components/entry/SaveButton'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import type { AnimalRecord, AnimalSex, AnimalStatus } from '../../../shared/types'
 
 interface FormValues {
@@ -28,6 +29,7 @@ export default function RegisterAnimalForm() {
   const navigate = useNavigate()
   const orgId    = useAuthStore(s => s.appUser?.organizationId) ?? ''
   const addToast = useUIStore(s => s.addToast)
+  const { symbol } = useCurrency()
   const [isSaving, setIsSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -159,7 +161,7 @@ export default function RegisterAnimalForm() {
             </div>
             <NumberInput
               label="Acquisition cost"
-              unit="$"
+              unit={symbol}
               isDecimal
               value={watch('acquisitionCost')}
               onChange={v => setValue('acquisitionCost', v)}

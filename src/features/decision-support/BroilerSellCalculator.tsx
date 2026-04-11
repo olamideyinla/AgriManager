@@ -138,7 +138,7 @@ function InputRow({ label, value, onChange, min = 0, step = 0.01, suffix = '' }:
 export default function BroilerSellCalculator() {
   const navigate  = useNavigate()
   const batchData = useBroilerData()
-  const { fmt: fmtUSD } = useCurrency()
+  const { fmt: fmtUSD, symbol } = useCurrency()
 
   const [selectedIdx, setSelectedIdx] = useState(0)
 
@@ -228,8 +228,8 @@ export default function BroilerSellCalculator() {
         {/* Market inputs */}
         <div className="card p-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Market Inputs</p>
-          <InputRow label="Current market price" value={pricePerKg}    onChange={setPricePerKg}    step={0.01} suffix="$/kg" />
-          <InputRow label="Feed cost per kg"     value={feedCostPerKg} onChange={setFeedCostPerKg} step={0.01} suffix="$/kg" />
+          <InputRow label="Current market price" value={pricePerKg}    onChange={setPricePerKg}    step={0.01} suffix={`${symbol}/kg`} />
+          <InputRow label="Feed cost per kg"     value={feedCostPerKg} onChange={setFeedCostPerKg} step={0.01} suffix={`${symbol}/kg`} />
           <InputRow label="Target sell weight"   value={targetWeight}  onChange={setTargetWeight}  step={0.05} suffix="kg" />
         </div>
 
@@ -286,7 +286,7 @@ export default function BroilerSellCalculator() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false}
-                tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                tickFormatter={v => `${symbol}${(v / 1000).toFixed(0)}k`} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
                 formatter={(v: number) => [fmtUSD(v)]}

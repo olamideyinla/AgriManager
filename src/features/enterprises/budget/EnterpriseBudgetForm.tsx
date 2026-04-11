@@ -9,6 +9,7 @@ import { useUIStore } from '../../../stores/ui-store'
 import { db } from '../../../core/database/db'
 import { NumberInput } from '../../../shared/components/entry/NumberInput'
 import { SaveButton } from '../../../shared/components/entry/SaveButton'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import type { EnterpriseBudget, BudgetPeriodType } from '../../../shared/types'
 
 interface FormValues {
@@ -28,6 +29,7 @@ export default function EnterpriseBudgetForm() {
   const navigate = useNavigate()
   const orgId    = useAuthStore(s => s.appUser?.organizationId) ?? ''
   const addToast = useUIStore(s => s.addToast)
+  const { symbol } = useCurrency()
   const [isSaving, setIsSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -171,7 +173,7 @@ export default function EnterpriseBudgetForm() {
             <h3 className="text-sm font-semibold text-gray-700">Targets</h3>
             <NumberInput
               label="Revenue target"
-              unit="$"
+              unit={symbol}
               isDecimal
               value={watch('revenueTarget')}
               onChange={v => setValue('revenueTarget', v)}
@@ -179,7 +181,7 @@ export default function EnterpriseBudgetForm() {
             />
             <NumberInput
               label="Total cost budget"
-              unit="$"
+              unit={symbol}
               isDecimal
               value={watch('totalCostBudget')}
               onChange={v => setValue('totalCostBudget', v)}
@@ -201,7 +203,7 @@ export default function EnterpriseBudgetForm() {
               <div className="space-y-3 pt-1">
                 <NumberInput
                   label="Feed budget"
-                  unit="$"
+                  unit={symbol}
                   isDecimal
                   value={watch('feedCostBudget')}
                   onChange={v => setValue('feedCostBudget', v)}
@@ -209,7 +211,7 @@ export default function EnterpriseBudgetForm() {
                 />
                 <NumberInput
                   label="Labour budget"
-                  unit="$"
+                  unit={symbol}
                   isDecimal
                   value={watch('laborCostBudget')}
                   onChange={v => setValue('laborCostBudget', v)}
@@ -217,7 +219,7 @@ export default function EnterpriseBudgetForm() {
                 />
                 <NumberInput
                   label="Medication budget"
-                  unit="$"
+                  unit={symbol}
                   isDecimal
                   value={watch('medicationBudget')}
                   onChange={v => setValue('medicationBudget', v)}
@@ -225,7 +227,7 @@ export default function EnterpriseBudgetForm() {
                 />
                 <NumberInput
                   label="Other costs budget"
-                  unit="$"
+                  unit={symbol}
                   isDecimal
                   value={watch('otherCostBudget')}
                   onChange={v => setValue('otherCostBudget', v)}

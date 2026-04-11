@@ -3,6 +3,7 @@ import { KPICard } from '../../../shared/components/charts/KPICard'
 import { TrendLineChart } from '../../../shared/components/charts/TrendLineChart'
 import { FeatureGate } from '../../../shared/components/FeatureGate'
 import { useUnitEconomics } from '../../../core/database/hooks/use-unit-economics'
+import { useCurrency } from '../../../shared/hooks/useCurrency'
 import { db } from '../../../core/database/db'
 import type { EnterpriseInstance } from '../../../shared/types'
 
@@ -14,6 +15,7 @@ function daysSince(dateStr: string): number {
 
 export function CustomAnimalOverview({ enterprise }: Props) {
   const econ    = useUnitEconomics(enterprise.id, enterprise)
+  const { symbol } = useCurrency()
 
   const records = useLiveQuery(
     () => db.customAnimalDailyRecords
@@ -114,7 +116,7 @@ export function CustomAnimalOverview({ enterprise }: Props) {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cost Intelligence</p>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <KPICard label="Cost / animal" value={econ.costPerBird != null ? `$${econ.costPerBird.toFixed(2)}` : '—'} subValue="per head placed" variant="default" />
+            <KPICard label="Cost / animal" value={econ.costPerBird != null ? `${symbol}${econ.costPerBird.toFixed(2)}` : '—'} subValue="per head placed" variant="default" />
             <KPICard label="Feed cost %" value={`${econ.feedCostPct.toFixed(1)}%`} subValue="of expenses" variant={econ.feedCostPct > 65 ? 'warning' : 'default'} />
           </div>
         </div>
