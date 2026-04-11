@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Crown, Zap, Star } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { TIERS, type TierSlug } from '@/core/config/tiers'
-import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone } from '@/core/config/currencies'
+import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
 import { useAuthStore } from '@/stores/auth-store'
 import { db } from '@/core/database/db'
 import { format } from 'date-fns'
@@ -86,10 +86,15 @@ export default function SubscriptionPage() {
     return (country ? CURRENCY_MAP[country] : null) ?? CURRENCY_MAP['DEFAULT']!
   })()
 
-  const freeDisplay  = 'Free'
-  const proMonthly = formatPrice(currency.pro.monthly, currency)
-  const proAnnual  = formatPrice(currency.pro.annual, currency)
-  const xAnnual    = formatPrice(currency.x.annual, currency)
+  const freeDisplay    = 'Free'
+  // Year-1 launch prices (50% off)
+  const proMonthly     = formatPrice(currency.pro.monthly * FIRST_YEAR_DISCOUNT, currency)
+  const proAnnual      = formatPrice(currency.pro.annual * FIRST_YEAR_DISCOUNT, currency)
+  const xAnnual        = formatPrice(currency.x.annual * FIRST_YEAR_DISCOUNT, currency)
+  // Full prices (shown as strikethrough)
+  const proMonthlyFull = formatPrice(currency.pro.monthly, currency)
+  const proAnnualFull  = formatPrice(currency.pro.annual, currency)
+  const xAnnualFull    = formatPrice(currency.x.annual, currency)
 
   const { icon: BadgeIcon, color: badgeColor, bg: badgeBg } = TIER_BADGE[tier]
 
@@ -200,12 +205,20 @@ export default function SubscriptionPage() {
             <Zap size={18} className="text-accent" />
             <h3 className="text-lg font-bold text-white">Pro</h3>
           </div>
-          <p className="text-3xl font-bold text-white mb-0.5">
-            {billingPeriod === 'monthly' ? proMonthly : proAnnual}
-          </p>
-          <p className="text-xs text-primary-200 mb-4">
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <p className="text-3xl font-bold text-white">
+              {billingPeriod === 'monthly' ? proMonthly : proAnnual}
+            </p>
+            <p className="text-primary-300 text-base line-through">
+              {billingPeriod === 'monthly' ? proMonthlyFull : proAnnualFull}
+            </p>
+          </div>
+          <p className="text-xs text-primary-200 mb-2">
             {billingPeriod === 'monthly' ? 'per month' : 'per year (save ~17%)'}
           </p>
+          <div className="inline-flex items-center gap-1 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2 py-0.5 rounded-full mb-4">
+            50% off · 1st year
+          </div>
           <ul className="space-y-2 mb-5">
             {PRO_DISPLAY_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-2 text-sm text-white">
@@ -234,8 +247,14 @@ export default function SubscriptionPage() {
             <Crown size={18} className="text-amber-400" />
             <h3 className="text-lg font-bold text-white">X</h3>
           </div>
-          <p className="text-3xl font-bold text-white mb-0.5">{xAnnual}</p>
-          <p className="text-xs text-gray-400 mb-4">per year · billed annually</p>
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <p className="text-3xl font-bold text-white">{xAnnual}</p>
+            <p className="text-gray-500 text-base line-through">{xAnnualFull}</p>
+          </div>
+          <p className="text-xs text-gray-400 mb-2">per year · billed annually</p>
+          <div className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full mb-4">
+            50% off · 1st year
+          </div>
           <ul className="space-y-2 mb-5">
             {X_DISPLAY_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-2 text-sm text-gray-300">

@@ -4,7 +4,7 @@ import { Check, Crown, Zap } from 'lucide-react'
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 import { trackEvent } from '../../../shared/utils/analytics'
 import { useCurrencyContext } from '../context/CurrencyContext'
-import { getCurrencyConfig, formatPrice } from '@/core/config/currencies'
+import { getCurrencyConfig, formatPrice, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
 import { CurrencySelector } from './CurrencySelector'
 
 const freeFeatures = [
@@ -54,10 +54,15 @@ export function PricingSection() {
 
   const currency = getCurrencyConfig(countryCode)
 
-  const freeStr       = isDetecting ? null : formatPrice(0, currency)
-  const proMonthlyStr = isDetecting ? null : formatPrice(currency.pro.monthly, currency) + '/mo'
-  const proAnnualStr  = isDetecting ? null : formatPrice(currency.pro.annual, currency) + '/yr'
-  const xAnnualStr    = isDetecting ? null : formatPrice(currency.x.annual, currency) + '/yr'
+  const freeStr            = isDetecting ? null : formatPrice(0, currency)
+  // Year-1 launch prices (50% off full price = original pre-doubling price)
+  const proMonthlyStr      = isDetecting ? null : formatPrice(currency.pro.monthly * FIRST_YEAR_DISCOUNT, currency) + '/mo'
+  const proAnnualStr       = isDetecting ? null : formatPrice(currency.pro.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
+  const xAnnualStr         = isDetecting ? null : formatPrice(currency.x.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
+  // Full prices (shown as strikethrough)
+  const proMonthlyFullStr  = isDetecting ? null : formatPrice(currency.pro.monthly, currency) + '/mo'
+  const proAnnualFullStr   = isDetecting ? null : formatPrice(currency.pro.annual, currency) + '/yr'
+  const xAnnualFullStr     = isDetecting ? null : formatPrice(currency.x.annual, currency) + '/yr'
 
   return (
     <section id="pricing" className="py-20 bg-white">
@@ -127,15 +132,25 @@ export function PricingSection() {
               <PriceSkeleton />
             ) : yearly ? (
               <>
-                <p className="text-4xl font-bold text-white mb-1 kpi-value">{proAnnualStr}</p>
-                <p className="text-primary-200 text-sm mb-6">Save 17% vs monthly</p>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <p className="text-4xl font-bold text-white kpi-value">{proAnnualStr}</p>
+                  <p className="text-primary-300 text-lg line-through">{proAnnualFullStr}</p>
+                </div>
+                <p className="text-primary-200 text-sm mb-4">Save 17% vs monthly</p>
+                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                  50% off · 1st year
+                </div>
               </>
             ) : (
               <>
-                <p className="text-4xl font-bold text-white mb-1 kpi-value">{proMonthlyStr}</p>
-                <p className="text-primary-200 text-sm mb-6">
-                  or {proAnnualStr} (save 17%)
-                </p>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <p className="text-4xl font-bold text-white kpi-value">{proMonthlyStr}</p>
+                  <p className="text-primary-300 text-lg line-through">{proMonthlyFullStr}</p>
+                </div>
+                <p className="text-primary-200 text-sm mb-4">or {proAnnualStr}/yr (save 17%)</p>
+                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                  50% off · 1st year
+                </div>
               </>
             )}
             {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
@@ -170,8 +185,14 @@ export function PricingSection() {
               <PriceSkeleton />
             ) : (
               <>
-                <p className="text-4xl font-bold text-white mb-1 kpi-value">{xAnnualStr}</p>
-                <p className="text-gray-400 text-sm mb-6">per year · billed annually</p>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <p className="text-4xl font-bold text-white kpi-value">{xAnnualStr}</p>
+                  <p className="text-gray-500 text-lg line-through">{xAnnualFullStr}</p>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">per year · billed annually</p>
+                <div className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                  50% off · 1st year
+                </div>
               </>
             )}
             {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}

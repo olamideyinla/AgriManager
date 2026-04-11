@@ -11,42 +11,47 @@ export type CurrencyConfig = {
   exampleCostPerEgg: string
 }
 
+/** 50% launch discount applied to all paid plans for the first year.
+ *  year-1 price = full price × FIRST_YEAR_DISCOUNT (= original pre-doubling price).
+ *  After year 1, billing reverts to the full price. */
+export const FIRST_YEAR_DISCOUNT = 0.5
+
 export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
 
   // ── East Africa ───────────────────────────────────────────────────────────────
   KE: {
     code: 'KES', symbol: 'KSh', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 1200, annual: 10000 },
-    x: { annual: 150000 },
+    pro: { monthly: 2400, annual: 20000 },
+    x: { annual: 300000 },
     exampleRevenue: 'KSh 312,000', exampleCostPerEgg: 'KSh 12.50',
   },
   TZ: {
     code: 'TZS', symbol: 'TSh', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 18000, annual: 150000 },
-    x: { annual: 2000000 },
+    pro: { monthly: 36000, annual: 300000 },
+    x: { annual: 4000000 },
     exampleRevenue: 'TSh 7,200,000', exampleCostPerEgg: 'TSh 290',
   },
   UG: {
     code: 'UGX', symbol: 'USh', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 30000, annual: 250000 },
-    x: { annual: 4000000 },
+    pro: { monthly: 60000, annual: 500000 },
+    x: { annual: 8000000 },
     exampleRevenue: 'USh 9,600,000', exampleCostPerEgg: 'USh 420',
   },
   RW: {
     code: 'RWF', symbol: 'FRw', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 7000, annual: 60000 },
-    x: { annual: 800000 },
+    pro: { monthly: 14000, annual: 120000 },
+    x: { annual: 1600000 },
     exampleRevenue: 'FRw 3,600,000', exampleCostPerEgg: 'FRw 150',
   },
   ET: {
     code: 'ETB', symbol: 'Br', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 600, annual: 5000 },
-    x: { annual: 60000 },
+    pro: { monthly: 1200, annual: 10000 },
+    x: { annual: 120000 },
     exampleRevenue: 'Br 160,000', exampleCostPerEgg: 'Br 7',
   },
 
@@ -54,36 +59,36 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   NG: {
     code: 'NGN', symbol: '₦', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 15000, annual: 120000 },
-    x: { annual: 1800000 },
+    pro: { monthly: 30000, annual: 240000 },
+    x: { annual: 3600000 },
     exampleRevenue: '₦2,400,000', exampleCostPerEgg: '₦85',
   },
   GH: {
     code: 'GHS', symbol: 'GH₵', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 100, annual: 800 },
-    x: { annual: 12000 },
+    pro: { monthly: 200, annual: 1600 },
+    x: { annual: 24000 },
     exampleRevenue: 'GH₵ 36,000', exampleCostPerEgg: 'GH₵ 1.50',
   },
   SN: {
     code: 'XOF', symbol: 'FCFA', symbolPosition: 'after',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 5000, annual: 40000 },
-    x: { annual: 600000 },
+    pro: { monthly: 10000, annual: 80000 },
+    x: { annual: 1200000 },
     exampleRevenue: '1,920,000 FCFA', exampleCostPerEgg: '85 FCFA',
   },
   CI: {
     code: 'XOF', symbol: 'FCFA', symbolPosition: 'after',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 5000, annual: 40000 },
-    x: { annual: 600000 },
+    pro: { monthly: 10000, annual: 80000 },
+    x: { annual: 1200000 },
     exampleRevenue: '1,920,000 FCFA', exampleCostPerEgg: '85 FCFA',
   },
   CM: {
     code: 'XAF', symbol: 'FCFA', symbolPosition: 'after',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 5000, annual: 40000 },
-    x: { annual: 600000 },
+    pro: { monthly: 10000, annual: 80000 },
+    x: { annual: 1200000 },
     exampleRevenue: '1,920,000 FCFA', exampleCostPerEgg: '85 FCFA',
   },
 
@@ -91,22 +96,22 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   ZA: {
     code: 'ZAR', symbol: 'R', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 150, annual: 1200 },
-    x: { annual: 18000 },
+    pro: { monthly: 300, annual: 2400 },
+    x: { annual: 36000 },
     exampleRevenue: 'R 44,000', exampleCostPerEgg: 'R 1.80',
   },
   ZM: {
     code: 'ZMW', symbol: 'ZK', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 250, annual: 2000 },
-    x: { annual: 30000 },
+    pro: { monthly: 500, annual: 4000 },
+    x: { annual: 60000 },
     exampleRevenue: 'ZK 96,000', exampleCostPerEgg: 'ZK 4.20',
   },
   MW: {
     code: 'MWK', symbol: 'MK', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 12000, annual: 100000 },
-    x: { annual: 1500000 },
+    pro: { monthly: 24000, annual: 200000 },
+    x: { annual: 3000000 },
     exampleRevenue: 'MK 4,800,000', exampleCostPerEgg: 'MK 200',
   },
 
@@ -114,8 +119,8 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   EG: {
     code: 'EGP', symbol: 'EGP', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 400, annual: 3500 },
-    x: { annual: 50000 },
+    pro: { monthly: 800, annual: 7000 },
+    x: { annual: 100000 },
     exampleRevenue: 'EGP 96,000', exampleCostPerEgg: 'EGP 4.20',
   },
 
@@ -123,22 +128,22 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   IN: {
     code: 'INR', symbol: '₹', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 500, annual: 4000 },
-    x: { annual: 75000 },
+    pro: { monthly: 1000, annual: 8000 },
+    x: { annual: 150000 },
     exampleRevenue: '₹ 1,60,000', exampleCostPerEgg: '₹ 5.50',
   },
   PK: {
     code: 'PKR', symbol: 'Rs', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 2500, annual: 20000 },
-    x: { annual: 300000 },
+    pro: { monthly: 5000, annual: 40000 },
+    x: { annual: 600000 },
     exampleRevenue: 'Rs 640,000', exampleCostPerEgg: 'Rs 28',
   },
   BD: {
     code: 'BDT', symbol: '৳', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 1000, annual: 8000 },
-    x: { annual: 120000 },
+    pro: { monthly: 2000, annual: 16000 },
+    x: { annual: 240000 },
     exampleRevenue: '৳ 2,80,000', exampleCostPerEgg: '৳ 12',
   },
 
@@ -146,22 +151,22 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   PH: {
     code: 'PHP', symbol: '₱', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 500, annual: 4000 },
-    x: { annual: 60000 },
+    pro: { monthly: 1000, annual: 8000 },
+    x: { annual: 120000 },
     exampleRevenue: '₱ 120,000', exampleCostPerEgg: '₱ 8',
   },
   ID: {
     code: 'IDR', symbol: 'Rp', symbolPosition: 'before',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 100000, annual: 800000 },
-    x: { annual: 12000000 },
+    pro: { monthly: 200000, annual: 1600000 },
+    x: { annual: 24000000 },
     exampleRevenue: 'Rp 38.400.000', exampleCostPerEgg: 'Rp 2.200',
   },
   VN: {
     code: 'VND', symbol: '₫', symbolPosition: 'after',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 200000, annual: 1600000 },
-    x: { annual: 24000000 },
+    pro: { monthly: 400000, annual: 3200000 },
+    x: { annual: 48000000 },
     exampleRevenue: '39.600.000₫', exampleCostPerEgg: '1.900₫',
   },
 
@@ -169,22 +174,22 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   BR: {
     code: 'BRL', symbol: 'R$', symbolPosition: 'before',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 2,
-    pro: { monthly: 45, annual: 400 },
-    x: { annual: 6000 },
+    pro: { monthly: 90, annual: 800 },
+    x: { annual: 12000 },
     exampleRevenue: 'R$ 14.400', exampleCostPerEgg: 'R$ 0,58',
   },
   MX: {
     code: 'MXN', symbol: 'MX$', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 150, annual: 1200 },
-    x: { annual: 18000 },
+    pro: { monthly: 300, annual: 2400 },
+    x: { annual: 36000 },
     exampleRevenue: 'MX$ 48,000', exampleCostPerEgg: 'MX$ 2.80',
   },
   CO: {
     code: 'COP', symbol: 'COP$', symbolPosition: 'before',
     thousandsSeparator: '.', decimalSeparator: ',', decimals: 0,
-    pro: { monthly: 35000, annual: 300000 },
-    x: { annual: 4500000 },
+    pro: { monthly: 70000, annual: 600000 },
+    x: { annual: 9000000 },
     exampleRevenue: 'COP$ 9.600.000', exampleCostPerEgg: 'COP$ 520',
   },
 
@@ -192,8 +197,8 @@ export const CURRENCY_MAP: Record<string, CurrencyConfig> = {
   DEFAULT: {
     code: 'USD', symbol: '$', symbolPosition: 'before',
     thousandsSeparator: ',', decimalSeparator: '.', decimals: 0,
-    pro: { monthly: 10, annual: 100 },
-    x: { annual: 1500 },
+    pro: { monthly: 20, annual: 200 },
+    x: { annual: 3000 },
     exampleRevenue: '$2,480', exampleCostPerEgg: '$0.032',
   },
 }
