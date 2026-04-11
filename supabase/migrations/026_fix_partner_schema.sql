@@ -84,12 +84,16 @@ CREATE TRIGGER trg_partner_override_commission
   FOR EACH ROW EXECUTE FUNCTION public.partner_override_commission();
 
 -- ── RLS: Super Partners can view their sub-partners ─────────────────────────
+-- Uses SECURITY DEFINER function (from 018) to avoid infinite recursion.
+
+CREATE OR REPLACE FUNCTION public.get_my_partner_id()
+RETURNS uuid LANGUAGE sql SECURITY DEFINER STABLE AS $$
+  SELECT id FROM public.partners WHERE user_id = auth.uid() LIMIT 1;
+$$;
 
 DROP POLICY IF EXISTS "super_partner_view_subpartners" ON public.partners;
 CREATE POLICY "super_partner_view_subpartners" ON public.partners
   FOR SELECT TO authenticated
   USING (
-    parent_partner_id IN (
-      SELECT id FROM public.partners WHERE user_id = auth.uid()
-    )
+    parent_partner_id = public.get_my_partner_id()
   );
