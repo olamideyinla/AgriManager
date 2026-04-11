@@ -205,20 +205,20 @@ export default function SubscriptionPage() {
             <Zap size={18} className="text-accent" />
             <h3 className="text-lg font-bold text-white">Pro</h3>
           </div>
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <p className="text-3xl font-bold text-white">
-              {billingPeriod === 'monthly' ? proMonthly : proAnnual}
-            </p>
-            <p className="text-primary-300 text-base line-through">
-              {billingPeriod === 'monthly' ? proMonthlyFull : proAnnualFull}
-            </p>
-          </div>
-          <p className="text-xs text-primary-200 mb-2">
-            {billingPeriod === 'monthly' ? 'per month' : 'per year (save ~17%)'}
-          </p>
-          <div className="inline-flex items-center gap-1 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2 py-0.5 rounded-full mb-4">
+          <div className="inline-flex items-center gap-1 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2 py-0.5 rounded-full mb-2">
             50% off · 1st year
           </div>
+          <p className="text-3xl font-bold text-white mb-0.5">
+            {billingPeriod === 'monthly' ? proMonthly : proAnnual}
+          </p>
+          <p className="text-xs text-primary-300 mb-1">
+            <span className="line-through">
+              {billingPeriod === 'monthly' ? proMonthlyFull : proAnnualFull}
+            </span>{' '}regular price
+          </p>
+          <p className="text-xs text-primary-200 mb-4">
+            {billingPeriod === 'monthly' ? 'per month' : 'per year (save ~17%)'}
+          </p>
           <ul className="space-y-2 mb-5">
             {PRO_DISPLAY_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-2 text-sm text-white">
@@ -247,14 +247,14 @@ export default function SubscriptionPage() {
             <Crown size={18} className="text-amber-400" />
             <h3 className="text-lg font-bold text-white">X</h3>
           </div>
-          <div className="flex items-baseline gap-2 mb-0.5">
-            <p className="text-3xl font-bold text-white">{xAnnual}</p>
-            <p className="text-gray-500 text-base line-through">{xAnnualFull}</p>
-          </div>
-          <p className="text-xs text-gray-400 mb-2">per year · billed annually</p>
-          <div className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full mb-4">
+          <div className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full mb-2">
             50% off · 1st year
           </div>
+          <p className="text-3xl font-bold text-white mb-0.5">{xAnnual}</p>
+          <p className="text-xs text-gray-500 mb-1">
+            <span className="line-through">{xAnnualFull}</span> regular price
+          </p>
+          <p className="text-xs text-gray-400 mb-4">per year · billed annually</p>
           <ul className="space-y-2 mb-5">
             {X_DISPLAY_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-2 text-sm text-gray-300">

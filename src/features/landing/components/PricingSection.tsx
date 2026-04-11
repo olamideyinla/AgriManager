@@ -132,25 +132,25 @@ export function PricingSection() {
               <PriceSkeleton />
             ) : yearly ? (
               <>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <p className="text-4xl font-bold text-white kpi-value">{proAnnualStr}</p>
-                  <p className="text-primary-300 text-lg line-through">{proAnnualFullStr}</p>
-                </div>
-                <p className="text-primary-200 text-sm mb-4">Save 17% vs monthly</p>
-                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-2">
                   50% off · 1st year
                 </div>
+                <p className="text-4xl font-bold text-white kpi-value mb-1">{proAnnualStr}</p>
+                <p className="text-primary-300 text-sm mb-1">
+                  <span className="line-through">{proAnnualFullStr}</span> regular price
+                </p>
+                <p className="text-primary-200 text-xs mb-6">Save 17% vs monthly</p>
               </>
             ) : (
               <>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <p className="text-4xl font-bold text-white kpi-value">{proMonthlyStr}</p>
-                  <p className="text-primary-300 text-lg line-through">{proMonthlyFullStr}</p>
-                </div>
-                <p className="text-primary-200 text-sm mb-4">or {proAnnualStr}/yr (save 17%)</p>
-                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-2">
                   50% off · 1st year
                 </div>
+                <p className="text-4xl font-bold text-white kpi-value mb-1">{proMonthlyStr}</p>
+                <p className="text-primary-300 text-sm mb-1">
+                  <span className="line-through">{proMonthlyFullStr}</span> regular price
+                </p>
+                <p className="text-primary-200 text-xs mb-6">or {proAnnualStr}/yr (save 17%)</p>
               </>
             )}
             {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
@@ -185,14 +185,14 @@ export function PricingSection() {
               <PriceSkeleton />
             ) : (
               <>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <p className="text-4xl font-bold text-white kpi-value">{xAnnualStr}</p>
-                  <p className="text-gray-500 text-lg line-through">{xAnnualFullStr}</p>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">per year · billed annually</p>
-                <div className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full mb-4">
+                <div className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full mb-2">
                   50% off · 1st year
                 </div>
+                <p className="text-4xl font-bold text-white kpi-value mb-1">{xAnnualStr}</p>
+                <p className="text-gray-500 text-sm mb-1">
+                  <span className="line-through">{xAnnualFullStr}</span> regular price
+                </p>
+                <p className="text-gray-400 text-xs mb-6">per year · billed annually</p>
               </>
             )}
             {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
