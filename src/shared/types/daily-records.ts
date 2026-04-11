@@ -9,6 +9,8 @@ export interface BaseDailyRecord extends BaseEntity {
 
 export interface LayerDailyRecord extends BaseDailyRecord {
   totalEggs: number
+  morningEggs?: number    // individual eggs collected in morning round
+  eveningEggs?: number    // individual eggs collected in evening round
   brokenEggs?: number
   rejectEggs?: number
   mortalityCount: number

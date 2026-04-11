@@ -16,6 +16,7 @@ export interface LayerMetrics {
   weeklyProduction: Array<{ week: number; hdp: number }>    // for ProductionCurveChart
   weeklyMortality: Array<{ date: string; value: number }>   // for TrendLineChart (weekly mort count)
   dailyFeed: Array<{ date: string; value: number }>
+  dailyEggSplit: Array<{ date: string; morning: number; evening: number }>
   // Raw records
   records: LayerDailyRecord[]
 }
@@ -41,7 +42,7 @@ export function useLayerMetrics(
         dayOfCycle: daysSince(startDate),
         currentHdpPct: 0, hdpTrend7d: null,
         cumulativeMortPct: 0, totalFeedKg: 0, totalEggs: 0,
-        weeklyProduction: [], weeklyMortality: [], dailyFeed: [],
+        weeklyProduction: [], weeklyMortality: [], dailyFeed: [], dailyEggSplit: [],
         records: [],
       }
     }
@@ -93,11 +94,18 @@ export function useLayerMetrics(
     // Daily feed (last 30 records)
     const dailyFeed = records.slice(-30).map(r => ({ date: r.date.slice(5), value: r.feedConsumedKg }))
 
+    // Daily egg split — last 30 records; fall back to 60/40 for records without stored split
+    const dailyEggSplit = records.slice(-30).map(r => {
+      const morning = r.morningEggs ?? (r.totalEggs > 0 ? Math.round(r.totalEggs * 0.6) : 0)
+      const evening = r.eveningEggs ?? (r.totalEggs - Math.round(r.totalEggs * 0.6))
+      return { date: r.date.slice(5), morning, evening }
+    })
+
     return {
       dayOfCycle, currentHdpPct, hdpTrend7d, cumulativeMortPct,
       totalFeedKg: Math.round(totalFeedKg * 10) / 10,
       totalEggs,
-      weeklyProduction, weeklyMortality, dailyFeed,
+      weeklyProduction, weeklyMortality, dailyFeed, dailyEggSplit,
       records,
     }
   }, [enterpriseId, startDate, currentStockCount, initialStockCount])

@@ -1,3 +1,6 @@
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+} from 'recharts'
 import { useLayerMetrics } from '../hooks/use-layer-metrics'
 import { KPICard } from '../../../shared/components/charts/KPICard'
 import { ProductionCurveChart } from '../../../shared/components/charts/ProductionCurveChart'
@@ -102,6 +105,46 @@ export function LayerOverview({ enterprise }: Props) {
           showGrid
           emptyText="No mortality data yet"
         />
+      </div>
+
+      {/* Egg collection pattern */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p className="text-sm font-semibold text-gray-700 mb-1">Egg Collection Pattern</p>
+        <p className="text-xs text-gray-400 mb-3">Morning vs evening · last 30 days</p>
+        {metrics.dailyEggSplit.length === 0 ? (
+          <div className="h-36 flex items-center justify-center text-gray-400 text-xs">No records yet</div>
+        ) : (
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart
+              data={metrics.dailyEggSplit}
+              margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+              barCategoryGap="20%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 9, fill: '#9ca3af' }}
+                tickLine={false}
+                axisLine={false}
+                interval={Math.floor(metrics.dailyEggSplit.length / 6)}
+              />
+              <YAxis
+                tick={{ fontSize: 9, fill: '#9ca3af' }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', padding: '6px 10px' }}
+                formatter={(v: number, name: string) => [v.toLocaleString(), name]}
+                labelFormatter={(label) => `Date: ${label}`}
+              />
+              <Legend iconSize={10} wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+              <Bar dataKey="morning" name="Morning" stackId="a" fill="#2D6A4F" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="evening" name="Evening" stackId="a" fill="#8B6914" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Feed trend */}

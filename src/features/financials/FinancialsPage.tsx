@@ -189,8 +189,9 @@ function TxList({
 // ── Overview tab ──────────────────────────────────────────────────────────────
 
 function OverviewTab() {
-  const userId = useAuthStore(s => s.user?.id)
-  const now    = new Date()
+  const userId    = useAuthStore(s => s.user?.id)
+  const { fmt }   = useCurrency()
+  const now       = new Date()
 
   // Six-month income/expense chart — one query, JS grouping
   const sixMonthData = useLiveQuery(async () => {

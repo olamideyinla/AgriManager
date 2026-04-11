@@ -120,14 +120,15 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
   useEffect(() => {
     if (existingRecord === undefined) return  // still loading
     if (existingRecord) {
-      // Convert stored egg total back to display unit, split 60/40 morning/evening
+      // Convert stored egg total back to display unit; use stored split if available
       const toRaw = (eggs: number) =>
         eggUnit === 'tray30'   ? String(Math.round(eggs / 30))  :
         eggUnit === 'crate360' ? String(Math.round(eggs / 360)) :
         String(eggs)
       const total   = existingRecord.totalEggs
-      const morning = total > 0 ? Math.round(total * 0.6) : 0
-      const evening = total > 0 ? total - morning : 0
+      // Prefer stored morning/evening values; fall back to 60/40 estimate for old records
+      const morning = existingRecord.morningEggs ?? (total > 0 ? Math.round(total * 0.6) : 0)
+      const evening = existingRecord.eveningEggs ?? (total > 0 ? total - Math.round(total * 0.6) : 0)
       reset({
         eggMorning:         toRaw(morning),
         eggEvening:         toRaw(evening),
@@ -175,7 +176,11 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
     setIsSaving(true)
     try {
       const now  = new Date().toISOString()
-      const eggs = toActualEggs((parseFloat(values.eggMorning) || 0) + (parseFloat(values.eggEvening) || 0), eggUnit)
+      const rawMorning = parseFloat(values.eggMorning) || 0
+      const rawEvening = parseFloat(values.eggEvening) || 0
+      const morningEggs = toActualEggs(rawMorning, eggUnit)
+      const eveningEggs = toActualEggs(rawEvening, eggUnit)
+      const eggs = morningEggs + eveningEggs
       const currentHenCt   = parseInt(values.currentHenCount) || 0
       const mortalityCount = Math.max(0, baseHenCount - currentHenCt)
       const record: LayerDailyRecord = {
@@ -184,6 +189,8 @@ export function LayerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormPro
         date,
         recordedBy:           userId,
         totalEggs:            eggs,
+        morningEggs:          morningEggs || undefined,
+        eveningEggs:          eveningEggs || undefined,
         brokenEggs:           parseFloat(values.brokenEggs) || undefined,
         rejectEggs:           parseFloat(values.rejectEggs) || undefined,
         mortalityCount,
