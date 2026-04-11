@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, CheckCircle, Loader2, Shield } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
-import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone } from '@/core/config/currencies'
+import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
 import { TIERS } from '@/core/config/tiers'
 import { useAuthStore } from '@/stores/auth-store'
 import { supabase } from '@/core/config/supabase'
@@ -91,14 +91,17 @@ export default function SubscriptionPaymentPage() {
   const useLocalCurrency = PAYSTACK_SUPPORTED.has(localCurrency.code)
   const chargeCurrency = useLocalCurrency ? localCurrency : CURRENCY_MAP['DEFAULT']!
 
-  const priceNum =
+  const fullPriceNum =
     plan === 'x'
       ? chargeCurrency.x.annual
       : period === 'annual'
         ? chargeCurrency.pro.annual
         : chargeCurrency.pro.monthly
 
+  // Year-1 launch: charge 50% of the full price
+  const priceNum    = fullPriceNum * FIRST_YEAR_DISCOUNT
   const price       = formatPrice(priceNum, chargeCurrency)
+  const fullPrice   = formatPrice(fullPriceNum, chargeCurrency)
   const periodLabel = plan === 'x' ? 'per year' : period === 'annual' ? 'per year' : 'per month'
   const isAnnual    = plan === 'x' || period === 'annual'
 
@@ -144,9 +147,11 @@ export default function SubscriptionPaymentPage() {
           organization_id: appUser.organizationId,
           plan,
           period: isAnnual ? 'annual' : 'monthly',
+          discount: 'first_year_50pct',
           custom_fields: [
-            { display_name: 'Plan',   variable_name: 'plan',   value: plan },
-            { display_name: 'Period', variable_name: 'period', value: isAnnual ? 'annual' : 'monthly' },
+            { display_name: 'Plan',     variable_name: 'plan',     value: plan },
+            { display_name: 'Period',   variable_name: 'period',   value: isAnnual ? 'annual' : 'monthly' },
+            { display_name: 'Discount', variable_name: 'discount', value: '50% off 1st year' },
           ],
         },
 
@@ -244,10 +249,16 @@ export default function SubscriptionPaymentPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
           <p className="text-sm text-gray-500 mb-1">You selected</p>
           <p className="text-2xl font-bold text-gray-900">AgriManager {tierConfig.name}</p>
-          <p className="text-3xl font-bold text-primary-600 mt-2">{price}</p>
-          <p className="text-sm text-gray-400">{periodLabel}</p>
+          <div className="inline-flex items-center gap-1.5 bg-primary-50 border border-primary-200 text-primary-700 text-xs font-bold px-2.5 py-1 rounded-full mt-3 mb-2">
+            50% off · 1st year
+          </div>
+          <p className="text-3xl font-bold text-primary-600">{price}</p>
+          <p className="text-sm text-gray-400 mb-1">{periodLabel}</p>
+          <p className="text-xs text-gray-400">
+            <span className="line-through">{fullPrice}</span> regular price · renews at full rate from year 2
+          </p>
           {!useLocalCurrency && (
-            <p className="text-xs text-amber-600 mt-1">
+            <p className="text-xs text-amber-600 mt-2">
               Charged in USD (your local currency is not yet supported by Paystack)
             </p>
           )}
