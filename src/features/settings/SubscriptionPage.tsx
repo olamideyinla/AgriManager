@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, Crown, Zap, Star } from 'lucide-react'
+import { ArrowLeft, Check, Crown, Zap, Star, ArrowUpCircle } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { differenceInMonths } from 'date-fns'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { TIERS, type TierSlug } from '@/core/config/tiers'
 import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
@@ -63,7 +64,7 @@ const X_DISPLAY_FEATURES = [
 export default function SubscriptionPage() {
   const navigate = useNavigate()
   const appUser = useAuthStore(s => s.appUser)
-  const { tier, expiresAt, loadFromSupabase } = useSubscriptionStore()
+  const { tier, billingPeriod, expiresAt, subscribedAt, loadFromSupabase } = useSubscriptionStore()
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
 
   // Load subscription status from Supabase on mount (non-blocking; updates tier if paid)
@@ -86,6 +87,12 @@ export default function SubscriptionPage() {
     return (country ? CURRENCY_MAP[country] : null) ?? CURRENCY_MAP['DEFAULT']!
   })()
 
+  // Monthly → annual upgrade: discount window
+  const monthsOnPlan = subscribedAt ? differenceInMonths(new Date(), new Date(subscribedAt)) : 0
+  const discountEligible = monthsOnPlan < 6          // within first 6 months of subscription
+  const monthsRemaining  = Math.max(0, 5 - monthsOnPlan)  // months left in window
+  const isProMonthly     = tier === 'pro' && billingPeriod === 'monthly'
+
   const freeDisplay    = 'Free'
   // Year-1 launch prices (50% off)
   const proMonthly     = formatPrice(currency.pro.monthly * FIRST_YEAR_DISCOUNT, currency)
@@ -95,6 +102,8 @@ export default function SubscriptionPage() {
   const proMonthlyFull = formatPrice(currency.pro.monthly, currency)
   const proAnnualFull  = formatPrice(currency.pro.annual, currency)
   const xAnnualFull    = formatPrice(currency.x.annual, currency)
+  // Annual upgrade price: discounted if within window, full if outside
+  const upgradeAnnualPrice = discountEligible ? proAnnual : proAnnualFull
 
   const { icon: BadgeIcon, color: badgeColor, bg: badgeBg } = TIER_BADGE[tier]
 
@@ -228,8 +237,42 @@ export default function SubscriptionPage() {
             ))}
           </ul>
           {tier === 'pro' ? (
-            <div className="w-full text-center py-2.5 rounded-xl text-sm font-semibold bg-white/20 text-white">
-              Current Plan
+            <div className="space-y-3">
+              <div className="w-full text-center py-2.5 rounded-xl text-sm font-semibold bg-white/20 text-white">
+                Current Plan · {billingPeriod === 'monthly' ? 'Monthly' : 'Annual'}
+              </div>
+              {isProMonthly && (
+                <div className="border border-white/20 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-accent">
+                    <ArrowUpCircle size={13} />
+                    Switch to Annual &amp; Save ~17%
+                  </div>
+                  {discountEligible ? (
+                    <p className="text-xs text-white/70">
+                      50% launch discount still applies — valid for {monthsRemaining} more month{monthsRemaining !== 1 ? 's' : ''}.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-white/70">
+                      Launch discount has expired (over 6 months on monthly plan). Annual billed at regular rate.
+                    </p>
+                  )}
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold text-white">{upgradeAnnualPrice}</span>
+                    <span className="text-xs text-white/60">/yr</span>
+                    {discountEligible && (
+                      <span className="text-xs text-white/40 line-through ml-1">{proAnnualFull}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => navigate(
+                      `/settings/subscription/payment?plan=pro&period=annual${!discountEligible ? '&nodiscount=1' : ''}`
+                    )}
+                    className="w-full bg-accent text-gray-900 font-semibold py-2 rounded-lg text-sm active:scale-95 transition-all"
+                  >
+                    Switch to Annual
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <button

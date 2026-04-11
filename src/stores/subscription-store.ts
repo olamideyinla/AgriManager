@@ -9,6 +9,7 @@ interface SubscriptionState {
   tier: TierSlug
   billingPeriod: BillingPeriod | null
   expiresAt: string | null
+  subscribedAt: string | null   // ISO — when the subscription row was first created
   countryCode: string
   setSubscription: (tier: TierSlug, billingPeriod: BillingPeriod | null, expiresAt: string | null) => void
   setCountry: (code: string) => void
@@ -23,6 +24,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       tier: 'free',
       billingPeriod: null,
       expiresAt: null,
+      subscribedAt: null,
       countryCode: 'DEFAULT',
       setSubscription: (tier, billingPeriod, expiresAt) => set({ tier, billingPeriod, expiresAt }),
       setCountry: (code) => set({ countryCode: code }),
@@ -32,7 +34,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         try {
           const { data } = await supabase
             .from('subscriptions')
-            .select('tier, billing_period, expires_at, country_code, status')
+            .select('tier, billing_period, expires_at, country_code, status, created_at')
             .eq('organization_id', organizationId)
             .maybeSingle()
           if (!data) return
@@ -43,6 +45,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             tier,
             billingPeriod: data.billing_period as BillingPeriod | null,
             expiresAt: data.expires_at,
+            subscribedAt: data.created_at ?? null,
             countryCode: data.country_code ?? 'DEFAULT',
           })
         } catch { /* offline — keep cached state */ }

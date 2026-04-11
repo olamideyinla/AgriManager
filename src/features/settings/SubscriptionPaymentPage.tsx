@@ -67,8 +67,9 @@ export default function SubscriptionPaymentPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const plan   = (searchParams.get('plan') ?? 'pro') as 'pro' | 'x'
-  const period = (searchParams.get('period') ?? 'monthly') as 'monthly' | 'annual'
+  const plan       = (searchParams.get('plan') ?? 'pro') as 'pro' | 'x'
+  const period     = (searchParams.get('period') ?? 'monthly') as 'monthly' | 'annual'
+  const noDiscount = searchParams.get('nodiscount') === '1'
 
   const { appUser } = useAuthStore()
   const { setSubscription } = useSubscriptionStore()
@@ -98,8 +99,9 @@ export default function SubscriptionPaymentPage() {
         ? chargeCurrency.pro.annual
         : chargeCurrency.pro.monthly
 
-  // Year-1 launch: charge 50% of the full price
-  const priceNum    = fullPriceNum * FIRST_YEAR_DISCOUNT
+  // Discount: 50% for first-year launch, unless upgrade is past the 6-month window
+  const discountMultiplier = noDiscount ? 1 : FIRST_YEAR_DISCOUNT
+  const priceNum    = fullPriceNum * discountMultiplier
   const price       = formatPrice(priceNum, chargeCurrency)
   const fullPrice   = formatPrice(fullPriceNum, chargeCurrency)
   const periodLabel = plan === 'x' ? 'per year' : period === 'annual' ? 'per year' : 'per month'
@@ -147,7 +149,7 @@ export default function SubscriptionPaymentPage() {
           organization_id: appUser.organizationId,
           plan,
           period: isAnnual ? 'annual' : 'monthly',
-          discount: 'first_year_50pct',
+          discount: noDiscount ? 'none' : 'first_year_50pct',
           custom_fields: [
             { display_name: 'Plan',     variable_name: 'plan',     value: plan },
             { display_name: 'Period',   variable_name: 'period',   value: isAnnual ? 'annual' : 'monthly' },
@@ -249,14 +251,20 @@ export default function SubscriptionPaymentPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
           <p className="text-sm text-gray-500 mb-1">You selected</p>
           <p className="text-2xl font-bold text-gray-900">AgriManager {tierConfig.name}</p>
-          <div className="inline-flex items-center gap-1.5 bg-primary-50 border border-primary-200 text-primary-700 text-xs font-bold px-2.5 py-1 rounded-full mt-3 mb-2">
-            50% off · 1st year
-          </div>
+          {!noDiscount && (
+            <div className="inline-flex items-center gap-1.5 bg-primary-50 border border-primary-200 text-primary-700 text-xs font-bold px-2.5 py-1 rounded-full mt-3 mb-2">
+              50% off · 1st year
+            </div>
+          )}
           <p className="text-3xl font-bold text-primary-600">{price}</p>
           <p className="text-sm text-gray-400 mb-1">{periodLabel}</p>
-          <p className="text-xs text-gray-400">
-            <span className="line-through">{fullPrice}</span> regular price · renews at full rate from year 2
-          </p>
+          {!noDiscount ? (
+            <p className="text-xs text-gray-400">
+              <span className="line-through">{fullPrice}</span> regular price · renews at full rate from year 2
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400">Regular rate · launch discount period has expired</p>
+          )}
           {!useLocalCurrency && (
             <p className="text-xs text-amber-600 mt-2">
               Charged in USD (your local currency is not yet supported by Paystack)
