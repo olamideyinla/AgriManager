@@ -33,37 +33,70 @@ const TYPE_ICON: Record<EnterpriseType, string> = {
   crop_annual: '🌾', crop_perennial: '🌳', rabbit: '🐰', custom_animal: '🐾',
 }
 
-// ── Key metric extraction per type ────────────────────────────────────────────
+const TYPE_LABEL: Record<EnterpriseType, string> = {
+  layers: 'Layers', broilers: 'Broilers',
+  cattle_dairy: 'Dairy Cattle', cattle_beef: 'Beef Cattle',
+  pigs_breeding: 'Breeding Pigs', pigs_growfinish: 'Grow/Finish Pigs',
+  fish: 'Fish', crop_annual: 'Annual Crop', crop_perennial: 'Perennial Crop',
+  rabbit: 'Rabbits', custom_animal: 'Custom Animal',
+}
 
-function keyMetric(ent: EnterpriseInstance, latestRecord: any | null, dayOfCycle: number): string {
+// ── Stock count label per type ─────────────────────────────────────────────────
+
+function stockLabel(ent: EnterpriseInstance): string {
   const n = ent.currentStockCount
+  if (n <= 0) return ''
+  switch (ent.enterpriseType) {
+    case 'layers':
+    case 'broilers':          return `${n.toLocaleString()} birds`
+    case 'cattle_dairy':
+    case 'cattle_beef':       return `${n.toLocaleString()} heads`
+    case 'fish':              return `${n.toLocaleString()} fish`
+    case 'pigs_breeding':
+    case 'pigs_growfinish':   return `${n.toLocaleString()} pigs`
+    case 'rabbit':            return `${n.toLocaleString()} rabbits`
+    case 'custom_animal':     return `${n.toLocaleString()} ${ent.breedOrVariety ?? 'animals'}`
+    case 'crop_annual':
+    case 'crop_perennial':    return ent.breedOrVariety ?? ''
+    default:                  return ''
+  }
+}
 
+// ── Production metric per type ────────────────────────────────────────────────
+
+function productionMetric(ent: EnterpriseInstance, latestRecord: any | null, dayOfCycle: number): string {
   switch (ent.enterpriseType) {
     case 'layers': {
       if (!latestRecord) return `Day ${dayOfCycle} — no data yet`
-      const stock = n || 1
+      const stock = ent.currentStockCount || 1
       const hdp = Math.round((latestRecord.totalEggs / stock) * 1000) / 10
-      return `${hdp}% production`
+      return `${hdp}% HDP · ${latestRecord.totalEggs.toLocaleString()} eggs today`
     }
     case 'broilers':
       return latestRecord?.bodyWeightSampleAvg
-        ? `${n.toLocaleString()} birds · ${latestRecord.bodyWeightSampleAvg} kg avg`
-        : `${n.toLocaleString()} birds`
+        ? `${latestRecord.bodyWeightSampleAvg} kg avg weight · Day ${dayOfCycle}`
+        : `Day ${dayOfCycle}`
     case 'cattle_dairy':
       return latestRecord?.milkYieldLiters
-        ? `${n.toLocaleString()} heads · ${latestRecord.milkYieldLiters} L milk`
-        : `${n.toLocaleString()} heads`
+        ? `${latestRecord.milkYieldLiters} L milk today`
+        : `Day ${dayOfCycle}`
     case 'cattle_beef':
-      return `${n.toLocaleString()} heads`
+      return `Day ${dayOfCycle}`
     case 'fish':
-      return `${n.toLocaleString()} fish`
+      return latestRecord?.feedGivenKg
+        ? `${latestRecord.feedGivenKg} kg fed · Day ${dayOfCycle}`
+        : `Day ${dayOfCycle}`
     case 'pigs_breeding':
     case 'pigs_growfinish':
-      return `${n.toLocaleString()} pigs`
+      return latestRecord?.avgBodyWeightSampleKg
+        ? `${latestRecord.avgBodyWeightSampleKg} kg avg · Day ${dayOfCycle}`
+        : `Day ${dayOfCycle}`
     case 'rabbit':
-      return `${n.toLocaleString()} rabbits`
+      return `Day ${dayOfCycle}`
     case 'custom_animal':
-      return `${n.toLocaleString()} ${ent.breedOrVariety ?? 'animals'}`
+      return latestRecord?.metric1Value != null
+        ? `${latestRecord.metric1Name ?? 'Value'}: ${latestRecord.metric1Value}`
+        : `Day ${dayOfCycle}`
     case 'crop_annual':
     case 'crop_perennial':
       return latestRecord?.growthStage
@@ -282,22 +315,32 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Enterprises</p>
             <div className="space-y-2">
-              {data.items.map(({ enterprise, dayOfCycle, latestRecord }) => (
-                <button
-                  key={enterprise.id}
-                  onClick={() => navigate(`/enterprises/${enterprise.id}`)}
-                  className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 active:scale-[0.99] transition-transform text-left"
-                >
-                  <span className="text-3xl flex-shrink-0">{TYPE_ICON[enterprise.enterpriseType]}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-medium">{enterprise.name}</p>
-                    <p className="text-base font-bold text-primary-700 leading-tight">
-                      {keyMetric(enterprise, latestRecord, dayOfCycle)}
-                    </p>
-                  </div>
-                  <TrendingUp size={16} className="text-gray-300 flex-shrink-0" />
-                </button>
-              ))}
+              {data.items.map(({ enterprise, dayOfCycle, latestRecord }) => {
+                const stock = stockLabel(enterprise)
+                return (
+                  <button
+                    key={enterprise.id}
+                    onClick={() => navigate(`/enterprises/${enterprise.id}`)}
+                    className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 active:scale-[0.99] transition-transform text-left"
+                  >
+                    <span className="text-3xl flex-shrink-0">{TYPE_ICON[enterprise.enterpriseType]}</span>
+                    <div className="flex-1 min-w-0">
+                      {/* Name */}
+                      <p className="text-xs text-gray-400 font-medium truncate">{enterprise.name}</p>
+                      {/* Type + stock count */}
+                      <p className="text-sm font-semibold mt-0.5 leading-snug">
+                        <span className="text-primary-600">{TYPE_LABEL[enterprise.enterpriseType]}</span>
+                        {stock ? <span className="text-gray-400 font-normal"> · {stock}</span> : null}
+                      </p>
+                      {/* Production metric */}
+                      <p className="text-sm font-bold text-gray-900 leading-tight mt-0.5">
+                        {productionMetric(enterprise, latestRecord, dayOfCycle)}
+                      </p>
+                    </div>
+                    <TrendingUp size={16} className="text-gray-300 flex-shrink-0" />
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
