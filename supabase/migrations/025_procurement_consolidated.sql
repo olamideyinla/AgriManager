@@ -1,13 +1,14 @@
 -- Migration 025: Procurement + Overhaul (consolidated, idempotent)
 -- Combines 022_phase4_procurement + 024_procurement_overhaul into one safe script.
 -- Safe to run even if 022 or 024 was partially applied.
+-- Fix: all id/organization_id columns use UUID to match the rest of the schema.
 
 -- ── purchase_orders ────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.purchase_orders (
-  id                       TEXT PRIMARY KEY,
-  organization_id          TEXT NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-  supplier_id              TEXT,
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id          UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+  supplier_id              UUID,
   supplier_name            TEXT,
   po_number                TEXT,
   status                   TEXT NOT NULL DEFAULT 'draft'
@@ -49,9 +50,9 @@ CREATE POLICY "org_members_purchase_orders" ON public.purchase_orders
 -- ── purchase_order_items ───────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.purchase_order_items (
-  id                  TEXT PRIMARY KEY,
-  purchase_order_id   TEXT NOT NULL REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
-  inventory_item_id   TEXT,               -- nullable: free-text items have no inventory link
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  purchase_order_id   UUID NOT NULL REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
+  inventory_item_id   UUID,               -- nullable: free-text items have no inventory link
   item_name           TEXT,               -- populated for all rows (required after migration)
   unit_of_measurement TEXT,
   ordered_quantity    NUMERIC NOT NULL,
@@ -68,15 +69,11 @@ ALTER TABLE public.purchase_order_items
   ADD COLUMN IF NOT EXISTS item_name           TEXT,
   ADD COLUMN IF NOT EXISTS unit_of_measurement TEXT;
 
--- Make inventory_item_id nullable (free-text items don't need a linked record)
-ALTER TABLE public.purchase_order_items
-  ALTER COLUMN inventory_item_id DROP NOT NULL;
-
 -- Back-fill item_name from linked inventory items where possible
 UPDATE public.purchase_order_items poi
   SET item_name = inv.name
   FROM public.inventory_items inv
-  WHERE inv.id::text = poi.inventory_item_id::text
+  WHERE inv.id = poi.inventory_item_id
     AND poi.item_name IS NULL;
 
 -- Fallback back-fill for rows with no linked inventory item
@@ -101,8 +98,8 @@ CREATE POLICY "org_members_purchase_order_items" ON public.purchase_order_items
 -- ── financial_budgets ──────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.financial_budgets (
-  id                   TEXT PRIMARY KEY,
-  organization_id      TEXT NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id      UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   month                TEXT NOT NULL,  -- YYYY-MM
   category             TEXT NOT NULL,
   budget_amount_cents  INTEGER NOT NULL,
