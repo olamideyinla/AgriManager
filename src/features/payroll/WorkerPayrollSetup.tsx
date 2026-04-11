@@ -1,11 +1,15 @@
 /**
  * WorkerPayrollSetup — set up or edit a worker's payroll profile.
  * Route: /payroll/worker/:workerId
+ *
+ * Salary structure uses named component amounts (Basic, Housing, Transport,
+ * Lunch, + custom allowances). Gross is auto-computed. Standard for all
+ * countries — statutory deductions are driven by the country payroll profile.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Info } from 'lucide-react'
 import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
 import { nowIso } from '../../shared/types/base'
@@ -14,6 +18,41 @@ import type { WorkerPayrollProfile, WorkerSalaryStructure, CustomDeduction } fro
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function newId() { return crypto.randomUUID() }
+function num(s: string) { return parseFloat(s) || 0 }
+function fmt(n: number) { return n > 0 ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—' }
+
+interface OtherAllowRow { id: string; name: string; amount: string }
+
+// ── Amount input ──────────────────────────────────────────────────────────────
+
+function AmountInput({
+  label, sublabel, value, onChange, hint,
+}: {
+  label: string
+  sublabel?: string
+  value: string
+  onChange: (v: string) => void
+  hint?: string
+}) {
+  return (
+    <div>
+      <label className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium text-gray-600">{label}</span>
+        {sublabel && <span className="text-xs text-gray-400">{sublabel}</span>}
+      </label>
+      <input
+        type="number"
+        inputMode="decimal"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="0.00"
+        min="0"
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+      />
+      {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
+    </div>
+  )
+}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -32,47 +71,71 @@ export default function WorkerPayrollSetup() {
     return db.workerPayrollProfiles.where('workerId').equals(workerId).first()
   }, [workerId])
 
-  // ── Form state ────────────────────────────────────────────────────────────
+  // ── Salary type ──────────────────────────────────────────────────────────
 
-  const [salaryType,       setSalaryType]       = useState<'monthly' | 'daily'>('monthly')
-  const [grossMonthly,     setGrossMonthly]      = useState('')
-  const [dailyRate,        setDailyRate]         = useState('')
-  const [basicPct,         setBasicPct]          = useState(50)
-  const [housingPct,       setHousingPct]        = useState(30)
-  const [transportPct,     setTransportPct]      = useState(20)
-  const [taxId,            setTaxId]             = useState('')
-  const [annualRent,       setAnnualRent]        = useState('')
-  const [rentDocs,         setRentDocs]          = useState(false)
-  const [pensionApply,     setPensionApply]      = useState(true)
-  const [pensionPin,       setPensionPin]        = useState('')
-  const [nhfApply,         setNhfApply]          = useState(false)
-  const [nhisApply,        setNhisApply]         = useState(false)
-  const [lifeInsurance,    setLifeInsurance]     = useState('')
-  const [bankName,         setBankName]          = useState('')
-  const [bankAccount,      setBankAccount]       = useState('')
-  const [otherDeductions,  setOtherDeductions]   = useState<CustomDeduction[]>([])
+  const [salaryType, setSalaryType] = useState<'monthly' | 'daily'>('monthly')
+  const [dailyRate,  setDailyRate]  = useState('')
+
+  // ── Salary components ────────────────────────────────────────────────────
+
+  const [basicAmt,     setBasicAmt]     = useState('')
+  const [housingAmt,   setHousingAmt]   = useState('')
+  const [transportAmt, setTransportAmt] = useState('')
+  const [lunchAmt,     setLunchAmt]     = useState('')
+  const [otherAllow,   setOtherAllow]   = useState<OtherAllowRow[]>([])
+
+  // ── Tax & reliefs ────────────────────────────────────────────────────────
+
+  const [taxId,        setTaxId]        = useState('')
+  const [annualRent,   setAnnualRent]   = useState('')
+  const [rentDocs,     setRentDocs]     = useState(false)
+  const [lifeInsurance,setLifeInsurance]= useState('')
+
+  // ── Statutory elections ──────────────────────────────────────────────────
+
+  const [pensionApply, setPensionApply] = useState(true)
+  const [pensionPin,   setPensionPin]   = useState('')
+  const [nhfApply,     setNhfApply]     = useState(false)
+  const [nhisApply,    setNhisApply]    = useState(false)
+
+  // ── Bank details ─────────────────────────────────────────────────────────
+
+  const [bankName,     setBankName]     = useState('')
+  const [bankAccount,  setBankAccount]  = useState('')
+
+  // ── Custom deductions (loans, advances, etc.) ────────────────────────────
+
+  const [otherDeductions, setOtherDeductions] = useState<CustomDeduction[]>([])
+
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
 
-  // Pre-fill from existing profile
+  // ── Pre-fill from existing profile ────────────────────────────────────────
+
   useEffect(() => {
     if (!existing) return
     setSalaryType(existing.salaryType)
-    setGrossMonthly(existing.grossMonthlySalary?.toString() ?? '')
     setDailyRate(existing.dailyRate?.toString() ?? '')
+
     const s = existing.salaryStructure
-    const g = s.grossTotal || 1
-    setBasicPct(Math.round((s.basic / g) * 100))
-    setHousingPct(Math.round((s.housing / g) * 100))
-    setTransportPct(Math.round((s.transport / g) * 100))
+    setBasicAmt(s.basic > 0 ? String(s.basic) : '')
+    setHousingAmt(s.housing > 0 ? String(s.housing) : '')
+    setTransportAmt(s.transport > 0 ? String(s.transport) : '')
+    setLunchAmt((s.lunch ?? 0) > 0 ? String(s.lunch) : '')
+    setOtherAllow(
+      s.otherAllowances
+        .filter(a => a.amount > 0)
+        .map(a => ({ id: newId(), name: a.name, amount: String(a.amount) }))
+    )
+
     setTaxId(existing.taxId ?? '')
     setAnnualRent(existing.annualRentPaid?.toString() ?? '')
     setRentDocs(existing.hasRentDocumentation)
+    setLifeInsurance(existing.lifeInsurancePremium?.toString() ?? '')
     setPensionApply(existing.pensionApplicable)
     setPensionPin(existing.pensionPin ?? '')
     setNhfApply(existing.nhfApplicable)
     setNhisApply(existing.nhisApplicable)
-    setLifeInsurance(existing.lifeInsurancePremium?.toString() ?? '')
     setBankName(existing.bankName ?? '')
     setBankAccount(existing.bankAccountNumber ?? '')
     setOtherDeductions(existing.otherDeductions)
@@ -80,14 +143,32 @@ export default function WorkerPayrollSetup() {
 
   if (!organizationId || !workerId) return null
 
-  // ── Derived salary structure ───────────────────────────────────────────────
+  // ── Derived totals ────────────────────────────────────────────────────────
+
+  const basic         = num(basicAmt)
+  const housing       = num(housingAmt)
+  const transport     = num(transportAmt)
+  const lunch         = num(lunchAmt)
+  const allowTotal    = otherAllow.reduce((s, a) => s + num(a.amount), 0)
+  const pensionable   = basic + housing + transport
+  const grossMonthly  = salaryType === 'monthly'
+    ? pensionable + lunch + allowTotal
+    : num(dailyRate) * 26
+  const dailyEquiv    = num(dailyRate) * 26
+
+  // ── Build structure ───────────────────────────────────────────────────────
 
   function buildStructure(): WorkerSalaryStructure {
-    const gross = salaryType === 'monthly' ? Number(grossMonthly) || 0 : (Number(dailyRate) || 0) * 26
-    const basic     = gross * basicPct     / 100
-    const housing   = gross * housingPct   / 100
-    const transport = gross * transportPct / 100
-    return { basic, housing, transport, otherAllowances: [], grossTotal: gross }
+    return {
+      basic,
+      housing,
+      transport,
+      lunch: lunch || undefined,
+      otherAllowances: otherAllow
+        .filter(a => a.name.trim() && num(a.amount) > 0)
+        .map(a => ({ name: a.name.trim(), amount: num(a.amount), taxable: true })),
+      grossTotal: grossMonthly,
+    }
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -101,17 +182,17 @@ export default function WorkerPayrollSetup() {
       workerId:               workerId!,
       organizationId:         organizationId!,
       salaryType,
-      grossMonthlySalary:     salaryType === 'monthly' ? Number(grossMonthly) || null : null,
-      dailyRate:              salaryType === 'daily'   ? Number(dailyRate)    || null : null,
+      grossMonthlySalary:     salaryType === 'monthly' ? grossMonthly || null : dailyEquiv || null,
+      dailyRate:              salaryType === 'daily' ? num(dailyRate) || null : null,
       salaryStructure:        structure,
       taxId:                  taxId.trim() || null,
-      annualRentPaid:         annualRent ? Number(annualRent) : null,
+      annualRentPaid:         annualRent ? num(annualRent) : null,
       hasRentDocumentation:   rentDocs,
       pensionApplicable:      pensionApply,
       pensionPin:             pensionPin.trim() || null,
       nhfApplicable:          nhfApply,
       nhisApplicable:         nhisApply,
-      lifeInsurancePremium:   lifeInsurance ? Number(lifeInsurance) : null,
+      lifeInsurancePremium:   lifeInsurance ? num(lifeInsurance) : null,
       otherDeductions,
       bankName:               bankName.trim() || null,
       bankAccountNumber:      bankAccount.trim() || null,
@@ -126,17 +207,26 @@ export default function WorkerPayrollSetup() {
     setTimeout(() => { setSaved(false); navigate(-1) }, 1200)
   }
 
-  // ── Add custom deduction ──────────────────────────────────────────────────
+  // ── Allowance row helpers ─────────────────────────────────────────────────
+
+  function addAllow() {
+    setOtherAllow(prev => [...prev, { id: newId(), name: '', amount: '' }])
+  }
+
+  function updateAllow(id: string, patch: Partial<OtherAllowRow>) {
+    setOtherAllow(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a))
+  }
+
+  function removeAllow(id: string) {
+    setOtherAllow(prev => prev.filter(a => a.id !== id))
+  }
+
+  // ── Deduction row helpers ─────────────────────────────────────────────────
 
   function addDeduction() {
     const d: CustomDeduction = {
-      id: newId(),
-      name: '',
-      amount: 0,
-      frequency: 'monthly',
-      remainingBalance: null,
-      startMonth: new Date().toISOString().slice(0, 7),
-      endMonth: null,
+      id: newId(), name: '', amount: 0, frequency: 'monthly',
+      remainingBalance: null, startMonth: new Date().toISOString().slice(0, 7), endMonth: null,
     }
     setOtherDeductions(prev => [...prev, d])
   }
@@ -149,12 +239,13 @@ export default function WorkerPayrollSetup() {
     setOtherDeductions(prev => prev.filter(d => d.id !== id))
   }
 
-  const gross = salaryType === 'monthly' ? Number(grossMonthly) || 0 : (Number(dailyRate) || 0) * 26
-  const pctSum = basicPct + housingPct + transportPct
-  const pctOk  = pctSum === 100
+  const canSave = salaryType === 'daily' ? num(dailyRate) > 0 : grossMonthly > 0
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col safe-top safe-bottom">
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="touch-target text-gray-500">
@@ -166,20 +257,19 @@ export default function WorkerPayrollSetup() {
         </div>
         <button
           onClick={handleSave}
-          disabled={saving || !pctOk}
+          disabled={saving || !canSave}
           className="flex items-center gap-1.5 bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-lg active:bg-primary-700 disabled:opacity-60"
         >
           <Save size={16} />
-          {saving ? 'Saving…' : saved ? 'Saved!' : 'Save'}
+          {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save'}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Salary */}
-        <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700">Salary</h2>
 
-          {/* Salary type toggle */}
+        {/* ── Salary type ────────────────────────────────────────────────── */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-700">Payment Type</h2>
           <div className="flex bg-gray-100 rounded-xl p-1">
             {(['monthly', 'daily'] as const).map(type => (
               <button
@@ -194,99 +284,148 @@ export default function WorkerPayrollSetup() {
             ))}
           </div>
 
-          {salaryType === 'monthly' ? (
-            <div>
-              <label className="text-xs text-gray-500 font-medium mb-1 block">Gross Monthly Salary</label>
-              <input
-                type="number"
-                value={grossMonthly}
-                onChange={e => setGrossMonthly(e.target.value)}
-                placeholder="0.00"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
-              />
+          {salaryType === 'daily' && (
+            <AmountInput
+              label="Daily Rate"
+              sublabel={`≈ ${fmt(num(dailyRate) * 26)}/mo`}
+              value={dailyRate}
+              onChange={setDailyRate}
+              hint="Estimated monthly = daily rate × 26 working days"
+            />
+          )}
+        </section>
+
+        {/* ── Salary structure ────────────────────────────────────────────── */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-700">Salary Breakdown</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Enter the amount for each component.{salaryType === 'monthly' ? ' Gross is auto-computed.' : ' Used for statutory deduction calculations.'}
+            </p>
+          </div>
+
+          {/* Pensionable components */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-xs font-semibold text-primary-700 uppercase tracking-wide">Pensionable Components</span>
+              <div className="group relative">
+                <Info size={12} className="text-gray-400 cursor-help" />
+                <div className="absolute left-0 bottom-5 w-64 bg-gray-800 text-white text-xs rounded-lg p-2.5 hidden group-hover:block z-10 shadow-lg">
+                  Pension is calculated on Basic + Housing + Transport only. These three components form the pensionable emoluments.
+                </div>
+              </div>
             </div>
-          ) : (
-            <div>
-              <label className="text-xs text-gray-500 font-medium mb-1 block">Daily Rate</label>
-              <input
-                type="number"
-                value={dailyRate}
-                onChange={e => setDailyRate(e.target.value)}
-                placeholder="0.00"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Estimated monthly = {(Number(dailyRate) || 0) * 26} (26 working days)
-              </p>
+            <AmountInput
+              label="Basic Salary"
+              value={basicAmt}
+              onChange={setBasicAmt}
+            />
+            <AmountInput
+              label="Housing Allowance"
+              value={housingAmt}
+              onChange={setHousingAmt}
+            />
+            <AmountInput
+              label="Transport Allowance"
+              value={transportAmt}
+              onChange={setTransportAmt}
+            />
+          </div>
+
+          {pensionable > 0 && (
+            <div className="bg-primary-50 rounded-xl px-3 py-2 text-xs text-primary-700 flex justify-between">
+              <span>Pensionable base</span>
+              <span className="font-semibold">{pensionable.toLocaleString()}</span>
+            </div>
+          )}
+
+          {/* Non-pensionable allowances */}
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Other Allowances</span>
+              <div className="group relative">
+                <Info size={12} className="text-gray-400 cursor-help" />
+                <div className="absolute left-0 bottom-5 w-64 bg-gray-800 text-white text-xs rounded-lg p-2.5 hidden group-hover:block z-10 shadow-lg">
+                  Lunch and other allowances are taxable but NOT part of pensionable emoluments. They are included in gross and therefore in NHF and PAYE calculations.
+                </div>
+              </div>
+            </div>
+            <AmountInput
+              label="Lunch Allowance"
+              value={lunchAmt}
+              onChange={setLunchAmt}
+            />
+            {otherAllow.map(a => (
+              <div key={a.id} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={a.name}
+                  onChange={e => updateAllow(a.id, { name: e.target.value })}
+                  placeholder="Allowance name"
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                />
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={a.amount}
+                  onChange={e => updateAllow(a.id, { amount: e.target.value })}
+                  placeholder="0.00"
+                  min="0"
+                  className="w-28 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                />
+                <button onClick={() => removeAllow(a.id)} className="text-red-400 shrink-0">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={addAllow}
+              className="flex items-center gap-1 text-xs text-primary-600 font-medium"
+            >
+              <Plus size={13} /> Add Allowance
+            </button>
+          </div>
+
+          {/* Gross summary */}
+          {grossMonthly > 0 && (
+            <div className="border-t border-gray-100 pt-3 space-y-1.5">
+              {salaryType === 'monthly' && (
+                <>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Pensionable (Basic + Housing + Transport)</span>
+                    <span>{pensionable.toLocaleString()}</span>
+                  </div>
+                  {(lunch + allowTotal) > 0 && (
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Other allowances</span>
+                      <span>{(lunch + allowTotal).toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              <div className="flex justify-between text-sm font-bold text-gray-900">
+                <span>Gross Monthly Salary</span>
+                <span>{grossMonthly.toLocaleString()}</span>
+              </div>
             </div>
           )}
         </section>
 
-        {/* Salary structure */}
-        {gross > 0 && (
-          <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-700">Salary Structure</h2>
-              {!pctOk && (
-                <span className="text-xs text-red-500 font-medium">Must total 100% (now {pctSum}%)</span>
-              )}
-            </div>
-            {[
-              { label: 'Basic',     pct: basicPct,     set: setBasicPct },
-              { label: 'Housing',   pct: housingPct,   set: setHousingPct },
-              { label: 'Transport', pct: transportPct, set: setTransportPct },
-            ].map(({ label, pct, set }) => (
-              <div key={label}>
-                <label className="text-xs text-gray-500 font-medium mb-1 flex justify-between">
-                  <span>{label}</span>
-                  <span>{(gross * pct / 100).toFixed(0)}</span>
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={0} max={100}
-                    value={pct}
-                    onChange={e => set(Number(e.target.value))}
-                    className="flex-1"
-                  />
-                  <input
-                    type="number"
-                    value={pct}
-                    onChange={e => set(Number(e.target.value))}
-                    className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center"
-                    min={0} max={100}
-                  />
-                  <span className="text-xs text-gray-500">%</span>
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* Tax */}
+        {/* ── Tax & reliefs ───────────────────────────────────────────────── */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
           <h2 className="text-sm font-semibold text-gray-700">Tax & Reliefs</h2>
-          <div>
-            <label className="text-xs text-gray-500 font-medium mb-1 block">Tax ID (optional)</label>
-            <input
-              type="text"
-              value={taxId}
-              onChange={e => setTaxId(e.target.value)}
-              placeholder="TIN / KRA PIN / TIN GH"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 font-medium mb-1 block">Annual Rent Paid (for rent relief)</label>
-            <input
-              type="number"
-              value={annualRent}
-              onChange={e => setAnnualRent(e.target.value)}
-              placeholder="0.00"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
-            />
-          </div>
-          {annualRent && Number(annualRent) > 0 && (
+          <AmountInput
+            label="Tax ID (optional)"
+            value={taxId}
+            onChange={setTaxId}
+            hint="TIN / KRA PIN / TIN GH"
+          />
+          <AmountInput
+            label="Annual Rent Paid (for rent relief)"
+            value={annualRent}
+            onChange={setAnnualRent}
+          />
+          {annualRent && num(annualRent) > 0 && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -294,28 +433,33 @@ export default function WorkerPayrollSetup() {
                 onChange={e => setRentDocs(e.target.checked)}
                 className="w-4 h-4 rounded text-primary-600"
               />
-              <span className="text-sm text-gray-700">Has rent documentation (receipt / tenancy agreement)</span>
+              <span className="text-sm text-gray-700">Has rent documentation</span>
             </label>
           )}
-          <div>
-            <label className="text-xs text-gray-500 font-medium mb-1 block">Annual Life Insurance Premium (for relief)</label>
-            <input
-              type="number"
-              value={lifeInsurance}
-              onChange={e => setLifeInsurance(e.target.value)}
-              placeholder="0.00"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
-            />
-          </div>
+          <AmountInput
+            label="Annual Life Insurance Premium (for relief)"
+            value={lifeInsurance}
+            onChange={setLifeInsurance}
+          />
         </section>
 
-        {/* Statutory elections */}
+        {/* ── Statutory elections ─────────────────────────────────────────── */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700">Statutory Elections</h2>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-700">Statutory Deductions</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Statutory deductions are subtracted before income tax is calculated.
+            </p>
+          </div>
+
+          {/* Pension */}
           <label className="flex items-center justify-between cursor-pointer">
             <div>
               <p className="text-sm text-gray-900">Pension Applicable</p>
-              <p className="text-xs text-gray-500">Deduct employee pension contribution</p>
+              <p className="text-xs text-gray-500">
+                Employee contribution · based on pensionable emoluments
+                {pensionable > 0 ? ` (${pensionable.toLocaleString()})` : ''}
+              </p>
             </div>
             <input
               type="checkbox"
@@ -331,15 +475,17 @@ export default function WorkerPayrollSetup() {
                 type="text"
                 value={pensionPin}
                 onChange={e => setPensionPin(e.target.value)}
-                placeholder="RSA/NSSF PIN"
+                placeholder="RSA PIN / NSSF number"
                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
               />
             </div>
           )}
+
+          {/* NHF */}
           <label className="flex items-center justify-between cursor-pointer">
             <div>
               <p className="text-sm text-gray-900">NHF Applicable</p>
-              <p className="text-xs text-gray-500">National Housing Fund (Nigeria only)</p>
+              <p className="text-xs text-gray-500">National Housing Fund — % of gross salary</p>
             </div>
             <input
               type="checkbox"
@@ -348,10 +494,12 @@ export default function WorkerPayrollSetup() {
               className="w-5 h-5 rounded text-primary-600"
             />
           </label>
+
+          {/* NHIS */}
           <label className="flex items-center justify-between cursor-pointer">
             <div>
               <p className="text-sm text-gray-900">NHIS Applicable</p>
-              <p className="text-xs text-gray-500">National Health Insurance (Nigeria only)</p>
+              <p className="text-xs text-gray-500">Health insurance — % of basic salary</p>
             </div>
             <input
               type="checkbox"
@@ -360,9 +508,28 @@ export default function WorkerPayrollSetup() {
               className="w-5 h-5 rounded text-primary-600"
             />
           </label>
+
+          {/* PAYE info bar */}
+          {grossMonthly > 0 && (
+            <div className="bg-blue-50 rounded-xl px-3 py-2.5 text-xs text-blue-700 space-y-1">
+              <p className="font-semibold">How PAYE is calculated</p>
+              <p>Taxable income = Gross − Pension − NHF − NHIS − Reliefs</p>
+              <p>Tax brackets are applied to the annual taxable income, then divided by 12.</p>
+              {pensionable > 0 && pensionApply && (
+                <p className="text-blue-600">
+                  Pension deduction: {pensionable.toLocaleString()} × rate (pre-tax, reduces taxable income)
+                </p>
+              )}
+              {nhfApply && (
+                <p className="text-blue-600">
+                  NHF deduction: {grossMonthly.toLocaleString()} × rate (pre-tax, reduces taxable income)
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
-        {/* Bank details */}
+        {/* ── Bank details ─────────────────────────────────────────────────── */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
           <h2 className="text-sm font-semibold text-gray-700">Bank Details</h2>
           <div>
@@ -387,20 +554,22 @@ export default function WorkerPayrollSetup() {
           </div>
         </section>
 
-        {/* Custom deductions */}
+        {/* ── Custom deductions (loans, advances) ──────────────────────────── */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">Other Deductions</h2>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-700">Other Deductions</h2>
+              <p className="text-xs text-gray-400">Loans, salary advances, etc. Applied after tax.</p>
+            </div>
             <button
               onClick={addDeduction}
               className="flex items-center gap-1 text-xs text-primary-600 font-medium"
             >
-              <Plus size={14} />
-              Add
+              <Plus size={14} /> Add
             </button>
           </div>
           {otherDeductions.length === 0 && (
-            <p className="text-xs text-gray-400">No custom deductions. Add loans, advances, etc.</p>
+            <p className="text-xs text-gray-400">No custom deductions.</p>
           )}
           {otherDeductions.map(d => (
             <div key={d.id} className="border border-gray-100 rounded-xl p-3 space-y-2">
@@ -451,7 +620,7 @@ export default function WorkerPayrollSetup() {
         </section>
 
         <p className="text-xs text-gray-400 text-center pb-4">
-          Payroll calculations are estimates only. Always verify statutory rates with a tax professional.
+          Payroll calculations are estimates only. Always verify statutory rates with a qualified tax professional.
         </p>
       </div>
     </div>

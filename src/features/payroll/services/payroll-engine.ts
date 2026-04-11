@@ -141,9 +141,10 @@ export function calculatePayslip(
   }
 
   // Build earnings array
-  if (structure.basic > 0)    earnings.push({ name: 'Basic Salary',       amount: structure.basic })
-  if (structure.housing > 0)  earnings.push({ name: 'Housing Allowance',  amount: structure.housing })
-  if (structure.transport > 0)earnings.push({ name: 'Transport Allowance',amount: structure.transport })
+  if (structure.basic > 0)           earnings.push({ name: 'Basic Salary',       amount: structure.basic })
+  if (structure.housing > 0)         earnings.push({ name: 'Housing Allowance',  amount: structure.housing })
+  if (structure.transport > 0)       earnings.push({ name: 'Transport Allowance',amount: structure.transport })
+  if ((structure.lunch ?? 0) > 0)    earnings.push({ name: 'Lunch Allowance',    amount: structure.lunch! })
   for (const a of structure.otherAllowances) {
     if (a.amount > 0) earnings.push({ name: a.name, amount: a.amount })
   }

@@ -119,6 +119,7 @@ export interface WorkerSalaryStructure {
   basic: number
   housing: number
   transport: number
+  lunch?: number        // not pensionable; fully taxable
   otherAllowances: { name: string; amount: number; taxable: boolean }[]
   grossTotal: number
 }
