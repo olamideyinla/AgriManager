@@ -65,7 +65,7 @@ export default function SubscriptionPage() {
   const navigate = useNavigate()
   const appUser = useAuthStore(s => s.appUser)
   const { tier, billingPeriod, expiresAt, subscribedAt, loadFromSupabase } = useSubscriptionStore()
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'annual'>('monthly')
 
   // Load subscription status from Supabase on mount (non-blocking; updates tier if paid)
   useLiveQuery(async () => {
@@ -158,17 +158,17 @@ export default function SubscriptionPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full p-1">
             <button
-              onClick={() => setBillingPeriod('monthly')}
+              onClick={() => setSelectedPeriod('monthly')}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === 'monthly' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+                selectedPeriod === 'monthly' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
               }`}
             >
               Monthly
             </button>
             <button
-              onClick={() => setBillingPeriod('annual')}
+              onClick={() => setSelectedPeriod('annual')}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === 'annual' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+                selectedPeriod === 'annual' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
               }`}
             >
               Annual <span className="text-emerald-600 text-xs">–17%</span>
@@ -218,15 +218,15 @@ export default function SubscriptionPage() {
             50% off · 1st year
           </div>
           <p className="text-3xl font-bold text-white mb-0.5">
-            {billingPeriod === 'monthly' ? proMonthly : proAnnual}
+            {selectedPeriod === 'monthly' ? proMonthly : proAnnual}
           </p>
           <p className="text-xs text-primary-300 mb-1">
             <span className="line-through">
-              {billingPeriod === 'monthly' ? proMonthlyFull : proAnnualFull}
+              {selectedPeriod === 'monthly' ? proMonthlyFull : proAnnualFull}
             </span>{' '}regular price
           </p>
           <p className="text-xs text-primary-200 mb-4">
-            {billingPeriod === 'monthly' ? 'per month' : 'per year (save ~17%)'}
+            {selectedPeriod === 'monthly' ? 'per month' : 'per year (save ~17%)'}
           </p>
           <ul className="space-y-2 mb-5">
             {PRO_DISPLAY_FEATURES.map(f => (
@@ -276,7 +276,7 @@ export default function SubscriptionPage() {
             </div>
           ) : (
             <button
-              onClick={() => navigate(`/settings/subscription/payment?plan=pro&period=${billingPeriod}`)}
+              onClick={() => navigate(`/settings/subscription/payment?plan=pro&period=${selectedPeriod}`)}
               className="w-full bg-white text-primary-700 font-semibold py-2.5 rounded-xl text-sm hover:bg-primary-50 active:scale-95 transition-all"
             >
               Upgrade to Pro
