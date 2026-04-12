@@ -16,8 +16,8 @@
  *     for insert to anon with check (true);
  */
 
-import { useState } from 'react'
-import { Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Send, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react'
 import { supabase } from '../../../core/config/supabase'
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 import { trackEvent } from '../../../shared/utils/analytics'
@@ -31,9 +31,17 @@ type FormValues = {
   message: string
 }
 
-type FormErrors = Partial<Record<keyof FormValues, string>>
+type FormErrors = Partial<Record<keyof FormValues | 'captcha', string>>
 
-function validate(v: FormValues): FormErrors {
+// ── Bot protection helpers ────────────────────────────────────────────────────
+
+function newChallenge() {
+  const a = Math.floor(Math.random() * 9) + 1
+  const b = Math.floor(Math.random() * 9) + 1
+  return { a, b, answer: a + b }
+}
+
+function validate(v: FormValues, captchaInput: string, expected: number): FormErrors {
   const errors: FormErrors = {}
   if (!v.email.trim()) {
     errors.email = 'Email is required'
@@ -50,6 +58,11 @@ function validate(v: FormValues): FormErrors {
   } else if (v.message.trim().length < 10) {
     errors.message = 'Message must be at least 10 characters'
   }
+  if (!captchaInput.trim()) {
+    errors.captcha = 'Please answer the human check'
+  } else if (parseInt(captchaInput.trim(), 10) !== expected) {
+    errors.captcha = 'Incorrect answer — try again'
+  }
   return errors
 }
 
@@ -58,6 +71,10 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
   const [values, setValues] = useState<FormValues>({ name: '', email: '', phone: '', message: '' })
   const [errors, setErrors] = useState<FormErrors>({})
   const [status, setStatus] = useState<Status>('idle')
+  const [challenge, setChallenge] = useState(newChallenge)
+  const [captchaInput, setCaptchaInput] = useState('')
+  // Honeypot — bots fill this; humans never see it
+  const honeypotRef = useRef<HTMLInputElement>(null)
 
   const set = (field: keyof FormValues) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -68,8 +85,17 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const errs = validate(values)
-    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+
+    // Honeypot: silently succeed if a bot filled the hidden field
+    if (honeypotRef.current?.value) { setStatus('success'); return }
+
+    const errs = validate(values, captchaInput, challenge.answer)
+    if (Object.keys(errs).length > 0) {
+      // Regenerate challenge on wrong captcha so answer can't be brute-forced
+      if (errs.captcha) { setChallenge(newChallenge()); setCaptchaInput('') }
+      setErrors(errs)
+      return
+    }
 
     setStatus('submitting')
     try {
@@ -110,7 +136,12 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
                 Thanks for reaching out. We'll get back to you shortly.
               </p>
               <button
-                onClick={() => { setStatus('idle'); setValues({ name: '', email: '', phone: '', message: '' }) }}
+                onClick={() => {
+                  setStatus('idle')
+                  setValues({ name: '', email: '', phone: '', message: '' })
+                  setChallenge(newChallenge())
+                  setCaptchaInput('')
+                }}
                 className="mt-6 text-sm text-primary-600 font-semibold hover:underline"
               >
                 Send another message
@@ -200,6 +231,41 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
                   className={`input-base resize-none ${errors.message ? 'border-red-400 focus:ring-red-400' : ''}`}
                 />
                 {errors.message && <p className="text-xs text-red-600 mt-1">{errors.message}</p>}
+              </div>
+
+              {/* Honeypot — visually hidden; bots fill it, humans skip it */}
+              <div aria-hidden="true" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }}>
+                <input
+                  ref={honeypotRef}
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Human check — arithmetic CAPTCHA */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <ShieldCheck size={16} className="text-primary-600 flex-shrink-0" />
+                  Human check
+                </div>
+                <p className="text-sm text-gray-600">
+                  What is <strong>{challenge.a} + {challenge.b}</strong>?
+                </p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={captchaInput}
+                  onChange={e => {
+                    setCaptchaInput(e.target.value)
+                    if (errors.captcha) setErrors(er => ({ ...er, captcha: undefined }))
+                  }}
+                  placeholder="Your answer"
+                  className={`input-base w-32 ${errors.captcha ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  autoComplete="off"
+                />
+                {errors.captcha && <p className="text-xs text-red-600">{errors.captcha}</p>}
               </div>
 
               <button
