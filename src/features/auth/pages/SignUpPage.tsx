@@ -3,15 +3,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown } from 'lucide-react'
+import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown, Ticket } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
 import { supabase } from '../../../core/config/supabase'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const step1Schema = z.object({
-  fullName: z.string().min(2, 'Full name is required'),
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
+  fullName:    z.string().min(2, 'Full name is required'),
+  email:       z.string().min(1, 'Email is required').email('Enter a valid email'),
+  partnerCode: z.string().optional(),
 })
 
 const step2Schema = z.object({
@@ -88,10 +89,18 @@ export default function SignUpPage() {
   const [step1Data, setStep1Data] = useState<Step1Form | null>(null)
   const [step2Data, setStep2Data] = useState<Step2Form | null>(null)
 
-  // Capture ?ref= from URL into localStorage so it survives multi-step signup
+  // Capture ?ref= from URL into localStorage AND pre-fill the partner code field
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('ref')
-    if (ref) localStorage.setItem('agri-ref-code', ref)
+    if (ref) {
+      localStorage.setItem('agri-ref-code', ref.toUpperCase())
+      step1Form.setValue('partnerCode', ref.toUpperCase())
+    } else {
+      // Pre-fill from any previously stored code (e.g. navigated away and back)
+      const stored = localStorage.getItem('agri-ref-code')
+      if (stored) step1Form.setValue('partnerCode', stored)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const step1Form = useForm<Step1Form>({ resolver: zodResolver(step1Schema) })
@@ -109,6 +118,9 @@ export default function SignUpPage() {
 
   const onStep1Submit = (data: Step1Form) => {
     clearError()
+    // Persist partner code from manual entry (uppercased so RPC match works)
+    const code = data.partnerCode?.trim().toUpperCase()
+    if (code) localStorage.setItem('agri-ref-code', code)
     setStep1Data(data)
     setStep(1)
   }
@@ -232,6 +244,31 @@ export default function SignUpPage() {
               {step1Form.formState.errors.email && (
                 <p className="mt-1 text-xs text-red-600">{step1Form.formState.errors.email.message}</p>
               )}
+            </div>
+
+            {/* Partner Code — optional */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Partner / Referral Code{' '}
+                <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <div className="relative">
+                <Ticket size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  {...step1Form.register('partnerCode')}
+                  type="text"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  placeholder="e.g. JOHN-NG-47"
+                  className="input-base pl-9 uppercase placeholder:normal-case"
+                  onChange={e => {
+                    step1Form.setValue('partnerCode', e.target.value.toUpperCase())
+                  }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                Enter the code from the person who referred you, if any.
+              </p>
             </div>
 
             <button type="submit" className="btn-primary w-full mt-2">Next</button>
