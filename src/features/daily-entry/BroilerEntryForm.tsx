@@ -190,7 +190,7 @@ export function BroilerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormP
   }
 
   const yPreview = yesterdayRecord
-    ? `${yesterdayRecord.mortalityCount} deaths · ${yesterdayRecord.feedConsumedKg} kg feed`
+    ? `${yesterdayRecord.mortalityCount} deaths · ${yesterdayRecord.feedConsumedKg} kg feed${yesterdayRecord.waterConsumedLiters != null ? ` · ${yesterdayRecord.waterConsumedLiters} L water` : ''}`
     : null
 
   return (
@@ -238,17 +238,27 @@ export function BroilerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormP
         </div>
       </div>
 
-      {/* Feed */}
+      {/* Feed & Water */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700">Feed</h3>
-        <NumberInput
-          label="Feed consumed"
-          unit="kg"
-          isDecimal
-          value={watch('feedConsumedKg')}
-          onChange={(v) => setValue('feedConsumedKg', v)}
-          min="0"
-        />
+        <h3 className="text-sm font-semibold text-gray-700">Feed &amp; Water</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <NumberInput
+            label="Feed consumed"
+            unit="kg"
+            isDecimal
+            value={watch('feedConsumedKg')}
+            onChange={(v) => setValue('feedConsumedKg', v)}
+            min="0"
+          />
+          <NumberInput
+            label="Water consumed"
+            unit="L"
+            isDecimal
+            value={watch('waterConsumedLiters')}
+            onChange={(v) => setValue('waterConsumedLiters', v)}
+            min="0"
+          />
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Feed type</label>
           <input {...register('feedType')} placeholder="e.g. Starter, Grower, Finisher" className="input-base" />
@@ -298,18 +308,6 @@ export function BroilerEntryForm({ enterprise, date, onSaveSuccess }: EntryFormP
           </div>
         )}
       </div>
-
-      {/* Water */}
-      <SectionCollapsible title="Water">
-        <NumberInput
-          label="Water consumed"
-          unit="L"
-          isDecimal
-          value={watch('waterConsumedLiters')}
-          onChange={(v) => setValue('waterConsumedLiters', v)}
-          min="0"
-        />
-      </SectionCollapsible>
 
       <SectionCollapsible title="Notes">
         <textarea
