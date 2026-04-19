@@ -19,6 +19,20 @@ import InstallPrompt from '../components/InstallPrompt'
 import { OfflineBanner } from '../components/OfflineBanner'
 import type { UserRole } from '../../shared/types'
 
+// ── Notification helper (SW-backed for Android vibration support) ─────────────
+
+async function notify(title: string, opts: NotificationOptions & { vibrate?: number[] }): Promise<void> {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, opts)
+      return
+    } catch { /* fall through */ }
+  }
+  new Notification(title, opts)
+}
+
 // ── Sync runner ───────────────────────────────────────────────────────────────
 
 function SyncRunner() {
@@ -59,10 +73,11 @@ function DailyEntryReminderRunner() {
       const fireKey = `${hhmm}-${now.toDateString()}`
       if (localStorage.getItem(DAILY_REMINDER_KEY) === fireKey) return
       localStorage.setItem(DAILY_REMINDER_KEY, fireKey)
-      new Notification('AgriManagerX — Daily Entry', {
+      void notify('AgriManagerX — Daily Entry', {
         body: 'Time to log today\'s farm records',
         icon: '/icons/icon-192.svg',
         tag: 'daily-entry-reminder',
+        vibrate: [200, 100, 200],
       })
     }
     check()
@@ -126,13 +141,15 @@ function AlertEngineRunner() {
     notifiedRef.current = now
     localStorage.setItem(NOTIFIED_KEY, String(now))
     if (newCritical.length === 1) {
-      new Notification('AgriManagerX Alert', {
+      void notify('AgriManagerX Alert', {
         body: newCritical[0].message, icon: '/icon-192.png', tag: newCritical[0].id,
+        vibrate: [300, 100, 300, 100, 300],
       })
     } else {
-      new Notification(`AgriManagerX — ${newCritical.length} new alerts`, {
+      void notify(`AgriManagerX — ${newCritical.length} new alerts`, {
         body: newCritical.map(a => `• ${a.message}`).join('\n'),
         icon: '/icon-192.png', tag: 'agri-bundle',
+        vibrate: [300, 100, 300, 100, 300],
       })
     }
   }, [alerts])

@@ -41,10 +41,20 @@ export function saveReminderConfig(cfg: Partial<ReminderConfig>): void {
 }
 
 // ── Notification helper ───────────────────────────────────────────────────────
+// Uses SW registration so Android vibration is supported.
+// Vibrate pattern: [on, off, on, ...] in milliseconds.
 
-function showNotification(title: string, body: string, tag: string): void {
+async function showNotification(title: string, body: string, tag: string, vibrate: number[] = [200, 100, 200]): Promise<void> {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
-  new Notification(title, { body, icon: '/icon-192.png', tag, badge: '/icon-192.png' })
+  const opts: NotificationOptions = { body, icon: '/icon-192.png', tag, badge: '/icon-192.png', vibrate }
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, opts)
+      return
+    } catch { /* fall through to basic notification */ }
+  }
+  new Notification(title, opts)
 }
 
 // ── Build morning briefing ────────────────────────────────────────────────────
@@ -132,7 +142,7 @@ export function initReminderScheduler(
   if (morningMs < 86_400_000) {
     timers.push(setTimeout(async () => {
       const { title, body } = await buildMorningBriefing(workerId, today)
-      showNotification(title, body, 'agri-morning')
+      await showNotification(title, body, 'agri-morning')
     }, morningMs))
   }
 
@@ -142,7 +152,7 @@ export function initReminderScheduler(
     timers.push(setTimeout(async () => {
       const overdue = await getOverdueTasks(workerId, today)
       if (overdue.length === 0) return
-      showNotification(
+      await showNotification(
         'Morning tasks check',
         `${overdue.length} morning task${overdue.length > 1 ? 's' : ''} still pending — ${overdue[0].title}`,
         'agri-midday',
@@ -165,9 +175,9 @@ export function initReminderScheduler(
       const remaining = total - completed
 
       if (remaining === 0) {
-        showNotification('Great work! 🌟', `All ${total} tasks done today. Tap to see your streak!`, 'agri-evening')
+        await showNotification('Great work! 🌟', `All ${total} tasks done today. Tap to see your streak!`, 'agri-evening')
       } else {
-        showNotification(
+        await showNotification(
           'End of day check',
           `You've completed ${completed} of ${total} tasks. ${remaining} remaining.`,
           'agri-evening',
@@ -186,7 +196,7 @@ export function initReminderScheduler(
 
     const first = overdue[0]
     const windowLabel = first.timeWindow === 'morning' ? 'morning' : 'midday'
-    showNotification(
+    void showNotification(
       'Task reminder',
       `${first.title} was due this ${windowLabel}. Tap to complete.`,
       `agri-nudge-${first.id}`,
