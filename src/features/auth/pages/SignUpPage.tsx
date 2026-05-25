@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown, Ticket } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
 import { supabase } from '../../../core/config/supabase'
+import { getCurrencyConfig } from '../../../core/config/currencies'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ const step1Schema = z.object({
 
 const step2Schema = z.object({
   farmName: z.string().min(2, 'Farm name is required'),
-  currency: z.string().min(1, 'Select a currency'),
+  country:  z.string().min(1, 'Select your country'),
 })
 
 const step3Schema = z.object({
@@ -32,26 +33,37 @@ type Step1Form = z.infer<typeof step1Schema>
 type Step2Form = z.infer<typeof step2Schema>
 type Step3Form = z.infer<typeof step3Schema>
 
-// ── Currency list ─────────────────────────────────────────────────────────────
+// ── Country list (sorted alphabetically; currency is derived automatically) ───
 
-const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'GBP', name: 'British Pound' },
-  { code: 'NGN', name: 'Nigerian Naira' },
-  { code: 'KES', name: 'Kenyan Shilling' },
-  { code: 'GHS', name: 'Ghanaian Cedi' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'UGX', name: 'Ugandan Shilling' },
-  { code: 'TZS', name: 'Tanzanian Shilling' },
-  { code: 'ETB', name: 'Ethiopian Birr' },
-  { code: 'XOF', name: 'West African CFA Franc' },
-  { code: 'INR', name: 'Indian Rupee' },
-  { code: 'PHP', name: 'Philippine Peso' },
-  { code: 'BRL', name: 'Brazilian Real' },
-  { code: 'MXN', name: 'Mexican Peso' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'AUD', name: 'Australian Dollar' },
+const COUNTRIES = [
+  { code: 'AU',      name: 'Australia' },
+  { code: 'BD',      name: 'Bangladesh' },
+  { code: 'BR',      name: 'Brazil' },
+  { code: 'CA',      name: 'Canada' },
+  { code: 'CI',      name: "Côte d'Ivoire" },
+  { code: 'CM',      name: 'Cameroon' },
+  { code: 'CO',      name: 'Colombia' },
+  { code: 'EG',      name: 'Egypt' },
+  { code: 'ET',      name: 'Ethiopia' },
+  { code: 'GB',      name: 'United Kingdom' },
+  { code: 'GH',      name: 'Ghana' },
+  { code: 'ID',      name: 'Indonesia' },
+  { code: 'IN',      name: 'India' },
+  { code: 'KE',      name: 'Kenya' },
+  { code: 'MW',      name: 'Malawi' },
+  { code: 'MX',      name: 'Mexico' },
+  { code: 'NG',      name: 'Nigeria' },
+  { code: 'PH',      name: 'Philippines' },
+  { code: 'PK',      name: 'Pakistan' },
+  { code: 'RW',      name: 'Rwanda' },
+  { code: 'SN',      name: 'Senegal' },
+  { code: 'TZ',      name: 'Tanzania' },
+  { code: 'UG',      name: 'Uganda' },
+  { code: 'US',      name: 'United States' },
+  { code: 'VN',      name: 'Vietnam' },
+  { code: 'ZA',      name: 'South Africa' },
+  { code: 'ZM',      name: 'Zambia' },
+  { code: 'DEFAULT', name: 'Other country' },
 ]
 
 // ── Step indicator ────────────────────────────────────────────────────────────
@@ -106,7 +118,7 @@ export default function SignUpPage() {
   const step1Form = useForm<Step1Form>({ resolver: zodResolver(step1Schema) })
   const step2Form = useForm<Step2Form>({
     resolver: zodResolver(step2Schema),
-    defaultValues: { currency: 'USD' },
+    defaultValues: { country: '' },
   })
   const step3Form = useForm<Step3Form>({ resolver: zodResolver(step3Schema) })
 
@@ -139,7 +151,7 @@ export default function SignUpPage() {
       phone: '',
       email: step1Data.email,
       farmName: step2Data.farmName,
-      currency: step2Data.currency,
+      country: step2Data.country,
       password: data.password,
     })
 
@@ -292,15 +304,26 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-              <select {...step2Form.register('currency')} className="input-base">
-                {CURRENCIES.map(c => (
-                  <option key={c.code} value={c.code}>{c.code} — {c.name}</option>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <select {...step2Form.register('country')} className="input-base">
+                <option value="">Select your country…</option>
+                {COUNTRIES.map(c => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
                 ))}
               </select>
-              {step2Form.formState.errors.currency && (
-                <p className="mt-1 text-xs text-red-600">{step2Form.formState.errors.currency.message}</p>
+              {step2Form.formState.errors.country && (
+                <p className="mt-1 text-xs text-red-600">{step2Form.formState.errors.country.message}</p>
               )}
+              {(() => {
+                const selected = step2Form.watch('country')
+                if (!selected) return null
+                const cfg = getCurrencyConfig(selected)
+                return (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Currency: <span className="font-medium text-gray-700">{cfg.code} ({cfg.symbol})</span>
+                  </p>
+                )
+              })()}
             </div>
 
             <button type="submit" className="btn-primary w-full mt-2">Next</button>

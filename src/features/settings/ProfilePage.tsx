@@ -1,7 +1,42 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Phone, Mail, User } from 'lucide-react'
+import { ArrowLeft, Save, Phone, Mail, User, Globe } from 'lucide-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useAuthStore } from '@/stores/auth-store'
+import { db } from '@/core/database/db'
+import { getCurrencyConfig } from '@/core/config/currencies'
+import { nowIso } from '@/shared/types/base'
+
+const COUNTRIES = [
+  { code: 'AU',      name: 'Australia' },
+  { code: 'BD',      name: 'Bangladesh' },
+  { code: 'BR',      name: 'Brazil' },
+  { code: 'CA',      name: 'Canada' },
+  { code: 'CI',      name: "Côte d'Ivoire" },
+  { code: 'CM',      name: 'Cameroon' },
+  { code: 'CO',      name: 'Colombia' },
+  { code: 'EG',      name: 'Egypt' },
+  { code: 'ET',      name: 'Ethiopia' },
+  { code: 'GB',      name: 'United Kingdom' },
+  { code: 'GH',      name: 'Ghana' },
+  { code: 'ID',      name: 'Indonesia' },
+  { code: 'IN',      name: 'India' },
+  { code: 'KE',      name: 'Kenya' },
+  { code: 'MW',      name: 'Malawi' },
+  { code: 'MX',      name: 'Mexico' },
+  { code: 'NG',      name: 'Nigeria' },
+  { code: 'PH',      name: 'Philippines' },
+  { code: 'PK',      name: 'Pakistan' },
+  { code: 'RW',      name: 'Rwanda' },
+  { code: 'SN',      name: 'Senegal' },
+  { code: 'TZ',      name: 'Tanzania' },
+  { code: 'UG',      name: 'Uganda' },
+  { code: 'US',      name: 'United States' },
+  { code: 'VN',      name: 'Vietnam' },
+  { code: 'ZA',      name: 'South Africa' },
+  { code: 'ZM',      name: 'Zambia' },
+  { code: 'DEFAULT', name: 'Other country (USD)' },
+]
 
 const ROLE_COLORS: Record<string, string> = {
   owner:      'bg-amber-100 text-amber-800',
@@ -18,29 +53,56 @@ export default function ProfilePage() {
   const error         = useAuthStore(s => s.error)
   const clearError    = useAuthStore(s => s.clearError)
 
+  const org = useLiveQuery(
+    () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
+    [appUser?.organizationId],
+  )
+
   const [name,    setName]    = useState(appUser?.fullName ?? '')
   const [phone,   setPhone]   = useState(appUser?.phone   ?? '')
   const [email,   setEmail]   = useState(appUser?.email   ?? '')
+  const [country, setCountry] = useState<string>('')
   const [saving,  setSaving]  = useState(false)
   const [saved,   setSaved]   = useState(false)
 
+  // Sync country state once org loads
+  const currentCountry = org?.country ?? ''
+  if (country === '' && currentCountry !== '') {
+    setCountry(currentCountry)
+  }
+
   if (!appUser) return null
+
+  const isOwner = appUser.role === 'owner'
 
   const isDirty =
     name.trim()  !== (appUser.fullName ?? '') ||
     phone.trim() !== (appUser.phone   ?? '') ||
-    email.trim() !== (appUser.email   ?? '')
+    email.trim() !== (appUser.email   ?? '') ||
+    (isOwner && country !== currentCountry)
 
   const handleSave = async () => {
     if (!isDirty) return
     clearError()
     setSaving(true)
     setSaved(false)
+
     await updateProfile({
       fullName: name.trim()  || appUser.fullName,
       phone:    phone.trim() || undefined,
       email:    email.trim() || undefined,
     })
+
+    if (isOwner && org && country !== currentCountry && country !== '') {
+      const cfg = getCurrencyConfig(country)
+      await db.organizations.update(org.id, {
+        country,
+        currency:   cfg.code,
+        updatedAt:  nowIso(),
+        syncStatus: 'pending',
+      })
+    }
+
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
@@ -118,7 +180,7 @@ export default function ProfilePage() {
               className="input-base"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Include country code (e.g. +234 for Nigeria). Used for login and local currency detection.
+              Include country code (e.g. +234 for Nigeria).
             </p>
           </div>
 
@@ -139,6 +201,41 @@ export default function ProfilePage() {
             />
           </div>
         </div>
+
+        {/* Farm Settings — owners only */}
+        {isOwner && (
+          <div className="card p-4 space-y-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Farm Settings</p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-gray-400" />
+                  Country
+                </span>
+              </label>
+              <select
+                value={country}
+                onChange={e => setCountry(e.target.value)}
+                className="input-base"
+              >
+                <option value="">Select country…</option>
+                {COUNTRIES.map(c => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+              {country && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Currency:{' '}
+                  <span className="font-medium text-gray-700">
+                    {getCurrencyConfig(country).code} ({getCurrencyConfig(country).symbol})
+                  </span>
+                  {' '}— changing this updates pricing across the entire app.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Error */}
         {error && (

@@ -6,17 +6,11 @@ import { useWizardStore } from '../wizard-store'
 import { LANGUAGES } from '../wizard-data'
 import type { StepHandle } from './Step1Farm'
 
-const CURRENCIES = [
-  'USD', 'EUR', 'GBP', 'NGN', 'KES', 'GHS', 'ZAR',
-  'UGX', 'TZS', 'ETB', 'XOF', 'INR', 'PHP', 'BRL', 'MXN', 'CAD', 'AUD',
-]
-
 const schema = z.object({
   unitSystem: z.enum(['metric', 'imperial']),
   eggCountUnit: z.enum(['individual', 'tray30', 'crate360']),
   feedBagKg: z.string(),
   feedBagCustom: z.string(),
-  currency: z.string().min(1),
   reminderAmTime: z.string(),
   reminderPmTime: z.string(),
   language: z.string(),
@@ -42,7 +36,6 @@ export const Step4Settings = forwardRef<StepHandle, Step4Props>((props, ref) => 
       eggCountUnit: state.eggCountUnit,
       feedBagKg: showCustomBag ? 'other' : state.feedBagKg,
       feedBagCustom: showCustomBag ? state.feedBagKg : '',
-      currency: state.currency,
       reminderAmTime: state.reminderAmTime,
       reminderPmTime: state.reminderPmTime,
       language: state.language,
@@ -160,16 +153,6 @@ export const Step4Settings = forwardRef<StepHandle, Step4Props>((props, ref) => 
             <span className="text-sm text-gray-500 flex-shrink-0">kg</span>
           </div>
         )}
-      </div>
-
-      {/* Currency */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Currency</label>
-        <select {...form.register('currency')} className="input-base">
-          {CURRENCIES.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
       </div>
 
       {/* Daily reminder */}

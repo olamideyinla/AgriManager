@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, CheckCircle, Loader2, Shield } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
-import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
+import { getCurrencyConfig, getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
 import { TIERS } from '@/core/config/tiers'
 import { useAuthStore } from '@/stores/auth-store'
 import { supabase } from '@/core/config/supabase'
@@ -81,10 +81,10 @@ export default function SubscriptionPaymentPage() {
     () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
     [appUser?.organizationId]
   )
-  // Resolve local currency: prefer org.currency if set and non-USD,
-  // otherwise fall back to phone-prefix inference so Nigerian users on older
-  // accounts (where org.currency defaulted to 'USD') still see ₦ pricing.
+  // Priority: 1) org.country (new accounts), 2) org.currency if non-USD (old accounts),
+  // 3) phone-prefix inference (legacy fallback), 4) USD default.
   const localCurrency = (() => {
+    if (org?.country) return getCurrencyConfig(org.country)
     if (org?.currency && org.currency !== 'USD') return getCurrencyConfigByCode(org.currency)
     const country = getCountryFromPhone(appUser?.phone)
     return (country ? CURRENCY_MAP[country] : null) ?? CURRENCY_MAP['DEFAULT']!

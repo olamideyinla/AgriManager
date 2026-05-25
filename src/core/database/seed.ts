@@ -1,6 +1,7 @@
 import { db } from './db'
 import { newId, nowIso } from '../../shared/types/base'
 import type { InventoryCategory, TaskTemplate } from '../../shared/types'
+import { getCurrencyConfig } from '../config/currencies'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -283,17 +284,19 @@ export async function seedInitialData(params: {
   email: string
   fullName: string
   orgName: string
-  currency?: string
+  country?: string
 }): Promise<{ orgId: string; locationId: string }> {
   const ts = nowIso()
   const orgId = newId()
   const locationId = newId()
+  const currency = getCurrencyConfig(params.country ?? 'DEFAULT').code
 
   await db.transaction('rw', [db.organizations, db.farmLocations, db.appUsers], async () => {
     await db.organizations.add({
       id: orgId,
       name: params.orgName,
-      currency: params.currency ?? 'USD',
+      country: params.country,
+      currency,
       defaultUnitSystem: 'metric',
       syncStatus: 'pending',
       createdAt: ts,

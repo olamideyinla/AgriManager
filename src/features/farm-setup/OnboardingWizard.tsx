@@ -59,7 +59,6 @@ async function submitWizard() {
         // Update organization
         await db.organizations.put({
           ...org,
-          currency: s.currency || org.currency,
           defaultUnitSystem: s.unitSystem,
           updatedAt: ts,
           syncStatus: 'pending',

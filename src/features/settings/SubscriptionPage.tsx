@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { differenceInMonths } from 'date-fns'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { TIERS, type TierSlug } from '@/core/config/tiers'
-import { getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
+import { getCurrencyConfig, getCurrencyConfigByCode, formatPrice, CURRENCY_MAP, getCountryFromPhone, FIRST_YEAR_DISCOUNT } from '@/core/config/currencies'
 import { useAuthStore } from '@/stores/auth-store'
 import { db } from '@/core/database/db'
 import { format } from 'date-fns'
@@ -79,9 +79,10 @@ export default function SubscriptionPage() {
     () => appUser ? db.organizations.get(appUser.organizationId) : undefined,
     [appUser?.organizationId]
   )
-  // Prefer org.currency if non-USD; fall back to phone-prefix inference for
-  // accounts created before local pricing was introduced (org.currency = 'USD').
+  // Priority: 1) org.country (new accounts), 2) org.currency if non-USD (old accounts),
+  // 3) phone-prefix inference (legacy fallback), 4) USD default.
   const currency = (() => {
+    if (org?.country) return getCurrencyConfig(org.country)
     if (org?.currency && org.currency !== 'USD') return getCurrencyConfigByCode(org.currency)
     const country = getCountryFromPhone(appUser?.phone)
     return (country ? CURRENCY_MAP[country] : null) ?? CURRENCY_MAP['DEFAULT']!

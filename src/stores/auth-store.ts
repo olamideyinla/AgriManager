@@ -17,7 +17,7 @@ export interface SignUpParams {
   password: string
   fullName: string
   farmName: string
-  currency?: string
+  country?: string
 }
 
 interface AuthState {
@@ -153,7 +153,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         email: params.email ?? '',
         fullName: params.fullName,
         orgName: params.farmName,
-        currency: params.currency,
+        country: params.country,
       })
 
       const appUser = await loadAppUser(data.user.id)
