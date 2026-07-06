@@ -23,13 +23,12 @@ export function HeroSection() {
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-gray-900 leading-tight mb-6">
-              The Farm Management App{' '}
-              <span className="text-primary-600">Built for Africa</span> &amp; Beyond
+              Run your entire farm <span className="text-primary-600">from one place.</span>
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-600 font-body leading-relaxed mb-8">
-              Track livestock, manage finances, record harvests — all from your phone,
-              even without internet.
+              AgriManagerX is the operational OS for growing farms — livestock, crops, inventory,
+              and reports in one simple platform your whole team can use. Even offline.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -42,12 +41,15 @@ export function HeroSection() {
               >
                 Get Started Free →
               </button>
-              <a
-                href="#how-it-works"
+              <button
+                onClick={() => {
+                  trackEvent('CTA Click', { button: 'hero-demo' })
+                  navigate('/demo')
+                }}
                 className="border-2 border-primary-300 text-primary-700 font-semibold text-lg px-8 py-4 rounded-xl hover:bg-primary-50 transition-all text-center"
               >
-                See How It Works
-              </a>
+                Book a Demo
+              </button>
             </div>
 
             <p className="mt-4 text-sm text-gray-500">No credit card required · Works offline · Free forever plan</p>

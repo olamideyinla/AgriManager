@@ -36,3 +36,5 @@ dist/stats.html
 *.njsproj
 *.sln
 *.sw?
+
+.vercel

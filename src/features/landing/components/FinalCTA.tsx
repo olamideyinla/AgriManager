@@ -11,10 +11,10 @@ export function FinalCTA() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
         <div ref={ref} className="reveal">
           <h2 className="font-display text-3xl sm:text-5xl mb-4 leading-tight">
-            Start Managing Your Farm Today
+            Your farm has outgrown the notebook.
           </h2>
           <p className="text-primary-200 text-lg mb-10 font-body">
-            Join 5,000+ farms already using AgriManagerX
+            Join 5,000+ farms already running on AgriManagerX — or let us show you around first.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -27,12 +27,15 @@ export function FinalCTA() {
             >
               Get Started Free — No Credit Card
             </button>
-            <a
-              href="#how-it-works"
+            <button
+              onClick={() => {
+                trackEvent('CTA Click', { button: 'bottom-cta-demo' })
+                navigate('/demo')
+              }}
               className="border-2 border-white/50 text-white font-semibold text-lg px-8 py-4 rounded-xl hover:bg-white/10 transition-all text-center"
             >
-              Watch a 2-min Demo
-            </a>
+              Book a Demo
+            </button>
           </div>
 
           <p className="mt-6 text-primary-300 text-sm">

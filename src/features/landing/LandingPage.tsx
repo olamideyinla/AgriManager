@@ -2,9 +2,11 @@ import { CurrencyProvider } from './context/CurrencyContext'
 import { LandingNav } from './components/LandingNav'
 import { HeroSection } from './components/HeroSection'
 import { TrustBar } from './components/TrustBar'
+import { QuickBenefits } from './components/QuickBenefits'
 import { ProblemSolution } from './components/ProblemSolution'
 import { FeaturesSection } from './components/FeaturesSection'
 import { HowItWorks } from './components/HowItWorks'
+import { OutcomesSection } from './components/OutcomesSection'
 import { Testimonials } from './components/Testimonials'
 import { PricingSection } from './components/PricingSection'
 import { FAQSection } from './components/FAQSection'
@@ -21,9 +23,11 @@ export default function LandingPage() {
         <main>
           <HeroSection />
           <TrustBar />
+          <QuickBenefits />
           <ProblemSolution />
           <FeaturesSection />
           <HowItWorks />
+          <OutcomesSection />
           <Testimonials />
           <PricingSection />
           <FAQSection />

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MobileShell } from '../shared/layouts/MobileShell'
+import { ScrollToTop } from '../shared/components/ScrollToTop'
 import { ProtectedRoute, GuestRoute, AdminRoute } from '../shared/components/ProtectedRoute'
 import { PartnerRoute } from '../shared/components/PartnerRoute'
 
@@ -27,6 +28,11 @@ const LandingPage  = lazy(() => import('../features/landing/LandingPage'))
 const PrivacyPage  = lazy(() => import('../features/landing/PrivacyPage'))
 const TermsPage    = lazy(() => import('../features/landing/TermsPage'))
 const ContactPage  = lazy(() => import('../features/landing/ContactPage'))
+const FeaturesPage = lazy(() => import('../features/landing/FeaturesPage'))
+const SolutionPage = lazy(() => import('../features/landing/SolutionPage'))
+const AboutPage    = lazy(() => import('../features/landing/AboutPage'))
+const PricingPage  = lazy(() => import('../features/landing/PricingPage'))
+const DemoPage     = lazy(() => import('../features/landing/DemoPage'))
 
 // Auth pages (guest only)
 const WelcomePage = lazy(() => import('../features/auth/pages/WelcomePage'))
@@ -188,6 +194,7 @@ function LoadingScreen() {
 export function AppRoutes() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Admin */}
@@ -202,6 +209,11 @@ export function AppRoutes() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/solutions/:slug" element={<SolutionPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/demo" element={<DemoPage />} />
 
           {/* Partner public pages — no auth required */}
           <Route path="/partners"        element={<LandingPartnersPage />} />

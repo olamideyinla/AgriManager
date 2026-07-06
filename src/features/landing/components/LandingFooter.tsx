@@ -1,8 +1,6 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 export function LandingFooter() {
-  const navigate = useNavigate()
-
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
@@ -11,25 +9,45 @@ export function LandingFooter() {
           <div>
             <p className="text-white font-bold text-xl mb-2 font-body">🌾 AgriManagerX</p>
             <p className="text-sm leading-relaxed text-gray-500">
-              Offline-first farm management built for smallholder farmers across Africa, Asia, and Latin America.
+              The operational OS for growing farms. Run your livestock, crops, inventory, and
+              reports from one place — even offline.
             </p>
-            <p className="mt-4 text-sm">Made with ♥ for smallholder farmers</p>
+            <p className="mt-4 text-sm">Made with ♥ for farmers everywhere</p>
           </div>
 
           {/* Product */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-3 font-body">Product</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-              <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
+              <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link to="/solutions/livestock" className="hover:text-white transition-colors">Livestock Operations</Link></li>
+              <li><Link to="/solutions/crops" className="hover:text-white transition-colors">Crop & Field Management</Link></li>
+              <li><Link to="/solutions/machinery" className="hover:text-white transition-colors">Machinery & Assets</Link></li>
+              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Company */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-3 font-body">Support</h4>
+            <h4 className="text-white font-semibold text-sm mb-3 font-body">Company</h4>
             <ul className="space-y-2 text-sm">
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/demo" className="hover:text-white transition-colors">Book a Demo</Link></li>
+              <li><Link to="/partners" className="hover:text-white transition-colors">Partner Program</Link></li>
+              <li><Link to="/partners/apply" className="hover:text-white transition-colors">Apply to Partner</Link></li>
+              <li><Link to="/partners/signin" className="hover:text-white transition-colors">Partner Sign In</Link></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3 font-body">Contact</h4>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/contact" className="hover:text-white transition-colors">
+                  Contact Us
+                </Link>
+              </li>
               <li>
                 <a
                   href="https://wa.me/PHONENUMBER?text=Hi%2C%20I%20need%20help%20with%20AgriManagerX"
@@ -37,53 +55,26 @@ export function LandingFooter() {
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Contact via WhatsApp
+                  WhatsApp Support
                 </a>
               </li>
-              <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
-              <li>
-                <Link to="/contact" className="hover:text-white transition-colors">
-                  Contact Us
-                </Link>
-              </li>
+              <li><Link to="/#faq" className="hover:text-white transition-colors">FAQ</Link></li>
             </ul>
           </div>
 
-          {/* Partners */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-3 font-body">Partners</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/partners" className="hover:text-white transition-colors">
-                  Partner Program
-                </Link>
-              </li>
-              <li>
-                <Link to="/partners/apply" className="hover:text-white transition-colors">
-                  Apply to Partner
-                </Link>
-              </li>
-              <li>
-                <Link to="/partners/signin" className="hover:text-white transition-colors">
-                  Partner Sign In
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
+          {/* Legal + Social */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-3 font-body">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <button onClick={() => navigate('/privacy')} className="hover:text-white transition-colors">
+                <Link to="/privacy" className="hover:text-white transition-colors">
                   Privacy Policy
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/terms')} className="hover:text-white transition-colors">
+                <Link to="/terms" className="hover:text-white transition-colors">
                   Terms of Service
-                </button>
+                </Link>
               </li>
             </ul>
 
