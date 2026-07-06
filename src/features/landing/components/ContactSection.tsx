@@ -21,6 +21,7 @@ import { Send, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react'
 import { supabase } from '../../../core/config/supabase'
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 import { trackEvent } from '../../../shared/utils/analytics'
+import { whatsAppLink } from '../config/contact'
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -66,7 +67,14 @@ function validate(v: FormValues, captchaInput: string, expected: number): FormEr
   return errors
 }
 
-export function ContactSection({ standalone = false }: { standalone?: boolean }) {
+export function ContactSection({
+  standalone = false,
+  source = 'contact',
+}: {
+  standalone?: boolean
+  /** Where the form is embedded — demo submissions get tagged so they can be routed and measured. */
+  source?: 'contact' | 'demo'
+}) {
   const ref = useScrollReveal<HTMLDivElement>()
   const [values, setValues] = useState<FormValues>({ name: '', email: '', phone: '', message: '' })
   const [errors, setErrors] = useState<FormErrors>({})
@@ -99,15 +107,19 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
 
     setStatus('submitting')
     try {
+      // Tag demo requests in the message body — no schema change needed
+      const message = source === 'demo'
+        ? `[Demo request] ${values.message.trim()}`
+        : values.message.trim()
       const { error } = await supabase.from('contact_messages').insert({
         name:    values.name.trim() || null,
         email:   values.email.trim(),
         phone:   values.phone.trim(),
-        message: values.message.trim(),
+        message,
       })
       if (error) throw error
       setStatus('success')
-      trackEvent('Contact Form Submitted')
+      trackEvent('Contact Form Submitted', { source })
     } catch {
       setStatus('error')
     }
@@ -159,7 +171,7 @@ export function ContactSection({ standalone = false }: { standalone?: boolean })
                   <p className="text-sm text-red-700">
                     Something went wrong. Please try again or{' '}
                     <a
-                      href="https://wa.me/PHONENUMBER"
+                      href={whatsAppLink()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold underline"

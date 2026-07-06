@@ -1,9 +1,10 @@
 import { trackEvent } from '../../../shared/utils/analytics'
+import { whatsAppLink } from '../config/contact'
 
 export function WhatsAppButton() {
   return (
     <a
-      href="https://wa.me/PHONENUMBER?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20AgriManagerX"
+      href={whatsAppLink("Hi, I'd like to know more about AgriManagerX")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"

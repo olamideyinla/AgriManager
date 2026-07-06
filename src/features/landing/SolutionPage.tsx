@@ -2,6 +2,7 @@ import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { Check, XCircle } from 'lucide-react'
 import { LandingLayout } from './components/LandingLayout'
 import { useScrollReveal } from '../../shared/hooks/useScrollReveal'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 import { trackEvent } from '../../shared/utils/analytics'
 import { getSolution } from './config/solutions'
 
@@ -11,6 +12,10 @@ export default function SolutionPage() {
   const solution = getSolution(slug)
   const workflowsRef = useScrollReveal<HTMLDivElement>()
   const benefitsRef = useScrollReveal<HTMLDivElement>()
+  usePageMeta(
+    solution ? `${solution.name} — AgriManagerX` : 'Solutions — AgriManagerX',
+    solution?.subheadline
+  )
 
   if (!solution) return <Navigate to="/features" replace />
 

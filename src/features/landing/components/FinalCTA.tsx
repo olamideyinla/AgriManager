@@ -14,7 +14,7 @@ export function FinalCTA() {
             Your farm has outgrown the notebook.
           </h2>
           <p className="text-primary-200 text-lg mb-10 font-body">
-            Join 5,000+ farms already running on AgriManagerX — or let us show you around first.
+            Join 100+ farms already running on AgriManagerX — or let us show you around first.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

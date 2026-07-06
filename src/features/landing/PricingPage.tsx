@@ -4,6 +4,7 @@ import { CurrencyProvider } from './context/CurrencyContext'
 import { LandingLayout } from './components/LandingLayout'
 import { PricingSection } from './components/PricingSection'
 import { useScrollReveal } from '../../shared/hooks/useScrollReveal'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 import { trackEvent } from '../../shared/utils/analytics'
 
 const principles = [
@@ -26,6 +27,10 @@ const principles = [
 
 export default function PricingPage() {
   const navigate = useNavigate()
+  usePageMeta(
+    'Pricing — AgriManagerX',
+    'Simple, transparent farm software pricing in your local currency. Start free, upgrade when you are ready.'
+  )
   const valueRef = useScrollReveal<HTMLDivElement>()
 
   return (

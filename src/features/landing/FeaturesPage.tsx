@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { LandingLayout } from './components/LandingLayout'
 import { useScrollReveal } from '../../shared/hooks/useScrollReveal'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 import { trackEvent } from '../../shared/utils/analytics'
 import { FEATURE_MODULES, type FeatureModule } from './config/modules'
 
@@ -47,6 +48,10 @@ function ModuleSection({ module, index }: { module: FeatureModule; index: number
 
 export default function FeaturesPage() {
   const navigate = useNavigate()
+  usePageMeta(
+    'Features — AgriManagerX',
+    'Six farm management modules in one platform: livestock, crops, machinery, inventory, reporting, and an offline-first mobile app.'
+  )
 
   return (
     <LandingLayout>

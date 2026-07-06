@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Compass, Eye, HeartHandshake } from 'lucide-react'
 import { LandingLayout } from './components/LandingLayout'
 import { useScrollReveal } from '../../shared/hooks/useScrollReveal'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 import { trackEvent } from '../../shared/utils/analytics'
 
 const commitments = [
@@ -29,6 +30,10 @@ const commitments = [
 
 export default function AboutPage() {
   const navigate = useNavigate()
+  usePageMeta(
+    'About Us — AgriManagerX',
+    'Why AgriManagerX exists: giving every growing farm the operational power of a large enterprise, in a tool every farmhand can use.'
+  )
   const whyRef = useScrollReveal<HTMLDivElement>()
   const commitRef = useScrollReveal<HTMLDivElement>()
 

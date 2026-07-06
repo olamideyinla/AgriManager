@@ -1,6 +1,7 @@
 import { LandingLayout } from './components/LandingLayout'
 import { ContactSection } from './components/ContactSection'
 import { useScrollReveal } from '../../shared/hooks/useScrollReveal'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 
 const steps = [
   {
@@ -23,6 +24,10 @@ const steps = [
 
 export default function DemoPage() {
   const stepsRef = useScrollReveal<HTMLDivElement>()
+  usePageMeta(
+    'Book a Demo — AgriManagerX',
+    'A 30-minute live walkthrough of AgriManagerX set up for a farm like yours. No sales script, no obligation.'
+  )
 
   return (
     <LandingLayout>
@@ -69,7 +74,7 @@ export default function DemoPage() {
             We'll confirm a time within one business day.
           </p>
         </div>
-        <ContactSection standalone />
+        <ContactSection standalone source="demo" />
       </section>
     </LandingLayout>
   )

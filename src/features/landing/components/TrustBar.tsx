@@ -1,9 +1,9 @@
 import { useScrollReveal } from '../../../shared/hooks/useScrollReveal'
 
 const stats = [
-  { value: '5,000+', label: 'Farms' },
-  { value: '12', label: 'Countries' },
-  { value: '2M+', label: 'Records Logged' },
+  { value: '100+', label: 'Farms' },
+  { value: '4', label: 'Countries' },
+  { value: '100K+', label: 'Records Logged' },
   { value: '98%', label: 'Offline Reliable' },
 ]
 

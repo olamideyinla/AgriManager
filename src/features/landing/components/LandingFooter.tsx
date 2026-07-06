@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { whatsAppLink } from '../config/contact'
 
 export function LandingFooter() {
   return (
@@ -50,7 +51,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <a
-                  href="https://wa.me/PHONENUMBER?text=Hi%2C%20I%20need%20help%20with%20AgriManagerX"
+                  href={whatsAppLink('Hi, I need help with AgriManagerX')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
@@ -90,7 +91,7 @@ export function LandingFooter() {
                 𝕏
               </a>
               <a
-                href="https://wa.me/PHONENUMBER"
+                href={whatsAppLink()}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
