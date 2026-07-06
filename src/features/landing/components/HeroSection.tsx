@@ -18,8 +18,8 @@ export function HeroSection() {
           <div>
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/30 text-secondary-700 text-sm font-semibold px-3 py-1.5 rounded-full mb-6">
-              <span>🏆</span>
-              <span>Rated #1 Farm App in East Africa</span>
+              <span className="text-amber-500" aria-hidden="true">★★★★★</span>
+              <span>Rated 4.6/5 by current users</span>
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-gray-900 leading-tight mb-6">
