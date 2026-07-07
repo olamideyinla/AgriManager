@@ -10,7 +10,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, RefreshCw, LogOut, Mail, Phone, MessageSquare, User, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, RefreshCw, LogOut, Mail, Phone, MessageSquare, User, Calendar, ChevronDown, ChevronUp, CalendarClock } from 'lucide-react'
 import { supabase } from '../../core/config/supabase'
 import { useAuthStore } from '../../stores/auth-store'
 
@@ -21,6 +21,16 @@ type ContactMessage = {
   phone: string
   message: string
   created_at: string
+}
+
+const DEMO_PREFIX = '[Demo request]'
+
+function isDemoRequest(msg: ContactMessage): boolean {
+  return msg.message.startsWith(DEMO_PREFIX)
+}
+
+function displayMessage(msg: ContactMessage): string {
+  return isDemoRequest(msg) ? msg.message.slice(DEMO_PREFIX.length).trim() : msg.message
 }
 
 function formatDate(iso: string) {
@@ -41,9 +51,11 @@ function timeAgo(iso: string) {
 
 function MessageCard({ msg }: { msg: ContactMessage }) {
   const [expanded, setExpanded] = useState(false)
+  const demo = isDemoRequest(msg)
+  const text = displayMessage(msg)
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+    <div className={`bg-white border rounded-2xl shadow-sm overflow-hidden ${demo ? 'border-amber-200' : 'border-gray-100'}`}>
       <div className="p-4 sm:p-5">
         {/* Top row */}
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -52,9 +64,16 @@ function MessageCard({ msg }: { msg: ContactMessage }) {
               {(msg.name ?? msg.email).charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 text-sm truncate">
-                {msg.name ?? <span className="text-gray-400 font-normal italic">No name</span>}
-              </p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-semibold text-gray-900 text-sm truncate">
+                  {msg.name ?? <span className="text-gray-400 font-normal italic">No name</span>}
+                </p>
+                {demo && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
+                    <CalendarClock size={10} /> DEMO REQUEST
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-400">{timeAgo(msg.created_at)}</p>
             </div>
           </div>
@@ -85,7 +104,7 @@ function MessageCard({ msg }: { msg: ContactMessage }) {
         <div className="text-sm text-gray-700 leading-relaxed">
           {expanded ? (
             <>
-              <p className="whitespace-pre-wrap">{msg.message}</p>
+              <p className="whitespace-pre-wrap">{text}</p>
               <button
                 onClick={() => setExpanded(false)}
                 className="mt-2 text-xs text-primary-600 flex items-center gap-1 hover:underline"
@@ -95,8 +114,8 @@ function MessageCard({ msg }: { msg: ContactMessage }) {
             </>
           ) : (
             <>
-              <p className="line-clamp-3">{msg.message}</p>
-              {msg.message.length > 150 && (
+              <p className="line-clamp-3">{text}</p>
+              {text.length > 150 && (
                 <button
                   onClick={() => setExpanded(true)}
                   className="mt-1 text-xs text-primary-600 flex items-center gap-1 hover:underline"
@@ -147,6 +166,7 @@ export default function AdminContactsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'demo' | 'general'>('all')
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -169,16 +189,22 @@ export default function AdminContactsPage() {
     return () => { cancelled = true }
   }, [refreshKey])
 
+  const demoCount = useMemo(() => messages.filter(isDemoRequest).length, [messages])
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return messages
+    let list = messages
+    if (sourceFilter === 'demo') list = list.filter(isDemoRequest)
+    else if (sourceFilter === 'general') list = list.filter(m => !isDemoRequest(m))
+
+    if (!search.trim()) return list
     const q = search.toLowerCase()
-    return messages.filter(m =>
+    return list.filter(m =>
       m.email.toLowerCase().includes(q) ||
       m.phone.includes(q) ||
       (m.name ?? '').toLowerCase().includes(q) ||
       m.message.toLowerCase().includes(q)
     )
-  }, [messages, search])
+  }, [messages, search, sourceFilter])
 
   const todayCount = useMemo(() => {
     const today = new Date().toDateString()
@@ -227,19 +253,28 @@ export default function AdminContactsPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {[
             { label: 'Total', value: messages.length, icon: <MessageSquare size={16} /> },
             { label: 'Today', value: todayCount, icon: <Calendar size={16} /> },
             { label: 'Contacts', value: new Set(messages.map(m => m.email)).size, icon: <User size={16} /> },
+            { label: 'Demo Requests', value: demoCount, icon: <CalendarClock size={16} />, highlight: demoCount > 0 },
           ].map(s => (
-            <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
-              <div className="text-primary-600 flex justify-center mb-1">{s.icon}</div>
+            <div key={s.label} className={`bg-white border rounded-2xl p-3 text-center shadow-sm ${s.highlight ? 'border-amber-200' : 'border-gray-100'}`}>
+              <div className={`flex justify-center mb-1 ${s.highlight ? 'text-amber-600' : 'text-primary-600'}`}>{s.icon}</div>
               <p className="text-xl font-bold text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500">{s.label}</p>
             </div>
           ))}
         </div>
+
+        {/* Demo requests health check */}
+        {demoCount === 0 && !loading && !error && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 text-xs text-blue-700">
+            No demo requests have come in yet. Submit a test booking at{' '}
+            <span className="font-mono">agrimanagerx.com/demo</span> to confirm the flow is working end to end.
+          </div>
+        )}
 
         {/* Quick links */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -288,6 +323,25 @@ export default function AdminContactsPage() {
               View →
             </span>
           </button>
+        </div>
+
+        {/* Source filter */}
+        <div className="flex gap-2">
+          {([
+            { id: 'all', label: `All (${messages.length})` },
+            { id: 'demo', label: `Demo Requests (${demoCount})` },
+            { id: 'general', label: `General (${messages.length - demoCount})` },
+          ] as const).map(f => (
+            <button
+              key={f.id}
+              onClick={() => setSourceFilter(f.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                sourceFilter === f.id ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         {/* Search */}
