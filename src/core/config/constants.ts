@@ -21,6 +21,10 @@ export const AlertRuleId = {
   opNoData: (enterpriseId: string) => `op_no_data_${enterpriseId}`,
   opBatchNearingEnd: (enterpriseId: string) => `op_batch_nearing_end_${enterpriseId}`,
   finCostExceedingRevenue: 'fin_cost_exceeding_revenue',
+  machineryMaintenanceOverdue: (scheduleId: string) => `machinery_maintenance_overdue_${scheduleId}`,
+  machineryMaintenanceDueSoon: (scheduleId: string) => `machinery_maintenance_due_soon_${scheduleId}`,
+  machineryInsuranceExpiring: (machineId: string) => `machinery_insurance_expiring_${machineId}`,
+  machineryHighFuelConsumption: (machineId: string) => `machinery_high_fuel_${machineId}`,
 } as const
 
 // Alert thresholds
@@ -46,6 +50,10 @@ export const AlertThresholds = {
   finCostPct: 0.90,
   defaultDedupHours: 24,
   longTermDedupHours: 168,
+  machineryDueSoonDays: 7,
+  machineryDueSoonHours: 50,
+  machineryInsuranceExpiringDays: 30,
+  machineryHighFuelConsumptionPct: 1.3, // this week's fuel > 130% of trailing 4-week average
 } as const
 
 // Ross 308 standard weights by day (kg)

@@ -1,8 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
+import { subDays } from 'date-fns'
 import { db } from '../database/db'
 import { AlertRuleId, AlertThresholds } from '../config/constants'
 import { henDayProductionPct, ross308WeightForDay } from './kpi-calculator'
 import { checkBudgetAlerts } from './budget-alert-checker'
+import { calculateNextMaintenanceDue } from '../../features/machinery/services/machinery-calculator'
 import type { Alert, AlertSeverity } from '../../shared/types'
 
 export class AlertEngine {
@@ -19,6 +21,7 @@ export class AlertEngine {
       this._checkOperationalAlerts(orgId),
       this._checkHealthAlerts(orgId),
       this._checkWithdrawalAlerts(orgId),
+      this._checkMachineryAlerts(orgId),
       checkBudgetAlerts(orgId, this._maybeCreate.bind(this)),
     ])
   }
@@ -244,6 +247,88 @@ export class AlertEngine {
             dedupHours: 24,
           })
         }
+      }
+    }
+  }
+
+  private async _checkMachineryAlerts(orgId: string): Promise<void> {
+    const machines = await db.machines.where('organizationId').equals(orgId).toArray()
+    if (machines.length === 0) return
+    const machineIds = machines.map(m => m.id)
+    const machineMap = new Map(machines.map(m => [m.id, m]))
+
+    // Maintenance overdue / due soon
+    const schedules = await db.maintenanceSchedules.where('machineId').anyOf(machineIds).toArray()
+    for (const schedule of schedules) {
+      const machine = machineMap.get(schedule.machineId)
+      if (!machine) continue
+      const due = calculateNextMaintenanceDue(schedule, machine)
+      const unit = due.daysUntilDue != null ? 'days' : 'hours'
+      const remaining = due.daysUntilDue ?? due.hoursUntilDue
+
+      if (due.isOverdue && remaining != null) {
+        await this._maybeCreate({
+          ruleId: AlertRuleId.machineryMaintenanceOverdue(schedule.id),
+          severity: 'high',
+          message: `${machine.name}: ${schedule.name} is overdue by ${Math.abs(remaining)} ${unit}`,
+          actionRoute: `/machinery/${machine.id}`,
+          actionLabel: 'View Machine',
+          dedupHours: 24,
+        })
+        continue
+      }
+
+      const dueSoon =
+        (due.daysUntilDue != null && due.daysUntilDue <= AlertThresholds.machineryDueSoonDays) ||
+        (due.hoursUntilDue != null && due.hoursUntilDue <= AlertThresholds.machineryDueSoonHours)
+      if (dueSoon && remaining != null) {
+        await this._maybeCreate({
+          ruleId: AlertRuleId.machineryMaintenanceDueSoon(schedule.id),
+          severity: 'medium',
+          message: `${machine.name}: ${schedule.name} due in ${remaining} ${unit}`,
+          actionRoute: `/machinery/${machine.id}`,
+          actionLabel: 'View Machine',
+          dedupHours: 24,
+        })
+      }
+    }
+
+    // Insurance expiring
+    const today = new Date()
+    for (const machine of machines) {
+      if (!machine.insuranceExpiryDate) continue
+      const daysLeft = Math.floor((new Date(machine.insuranceExpiryDate).getTime() - today.getTime()) / 86_400_000)
+      if (daysLeft >= 0 && daysLeft <= AlertThresholds.machineryInsuranceExpiringDays) {
+        await this._maybeCreate({
+          ruleId: AlertRuleId.machineryInsuranceExpiring(machine.id),
+          severity: 'medium',
+          message: `Insurance for ${machine.name} expires on ${machine.insuranceExpiryDate}`,
+          actionRoute: `/machinery/${machine.id}`,
+          actionLabel: 'View Machine',
+          dedupHours: 168,
+        })
+      }
+    }
+
+    // High fuel consumption — this week vs trailing 4-week average
+    const weekAgo = subDays(today, 7)
+    const fourWeeksAgo = subDays(today, 28)
+    const fuelLogs = await db.fuelLogs.where('machineId').anyOf(machineIds).toArray()
+    for (const machine of machines) {
+      const logs = fuelLogs.filter(f => f.machineId === machine.id)
+      const thisWeek = logs.filter(f => new Date(f.date) >= weekAgo).reduce((s, f) => s + f.quantity, 0)
+      const trailing = logs.filter(f => new Date(f.date) >= fourWeeksAgo && new Date(f.date) < weekAgo)
+      const avgWeekly = trailing.reduce((s, f) => s + f.quantity, 0) / 3
+      if (avgWeekly > 0 && thisWeek > avgWeekly * AlertThresholds.machineryHighFuelConsumptionPct) {
+        const pctOver = Math.round(((thisWeek - avgWeekly) / avgWeekly) * 100)
+        await this._maybeCreate({
+          ruleId: AlertRuleId.machineryHighFuelConsumption(machine.id),
+          severity: 'medium',
+          message: `${machine.name} fuel consumption is ${pctOver}% above average this week`,
+          actionRoute: `/machinery/${machine.id}`,
+          actionLabel: 'View Machine',
+          dedupHours: 168,
+        })
       }
     }
   }

@@ -13,7 +13,7 @@ import type { FinancialCategory, FinancialBudget } from '../../shared/types'
 
 const EXPENSE_CATEGORIES: FinancialCategory[] = [
   'feed', 'labor', 'medication', 'transport', 'utilities',
-  'rent', 'insurance', 'equipment', 'administrative', 'other',
+  'rent', 'insurance', 'equipment', 'fuel', 'administrative', 'other',
 ]
 
 const CATEGORY_LABEL: Record<FinancialCategory, string> = {
@@ -31,12 +31,13 @@ const CATEGORY_LABEL: Record<FinancialCategory, string> = {
   rent:           'Rent',
   insurance:      'Insurance',
   equipment:      'Equipment',
+  fuel:           'Fuel',
   administrative: 'Admin',
   other:          'Other',
 }
 
 const CATEGORY_ICON: Partial<Record<FinancialCategory, string>> = {
-  feed: '🌾', labor: '👷', medication: '💊', transport: '🚚',
+  feed: '🌾', labor: '👷', medication: '💊', transport: '🚚', fuel: '⛽',
   utilities: '⚡', rent: '🏠', insurance: '🛡️', equipment: '🔧',
   administrative: '📋', other: '📦',
 }

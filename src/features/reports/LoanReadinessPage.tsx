@@ -4,7 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { format, subDays, parseISO } from 'date-fns'
 import { ArrowLeft, Share2 } from 'lucide-react'
 import { useAuthStore } from '../../stores/auth-store'
+import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
+import { calculateDepreciation } from '../machinery/services/machinery-calculator'
 
 // ── Score bands ────────────────────────────────────────────────────────────────
 
@@ -119,6 +121,7 @@ function DimensionCard({ dim }: { dim: Dimension }) {
 export default function LoanReadinessPage() {
   const navigate = useNavigate()
   const userId   = useAuthStore(s => s.user?.id)
+  const { fmt }  = useCurrency()
 
   const data = useLiveQuery(async () => {
     if (!userId) return null
@@ -142,6 +145,18 @@ export default function LoanReadinessPage() {
     // Inventory items
     const invItems = await db.inventoryItems
       .where('organizationId').equals(orgId).toArray()
+
+    // Machines (asset register — informational only, not part of the score)
+    const machines = await db.machines
+      .where('organizationId').equals(orgId)
+      .filter(m => m.status !== 'sold')
+      .toArray()
+    const assetRegister = machines.map(m => ({
+      id: m.id,
+      name: m.name,
+      bookValue: m.currentEstimatedValue ?? calculateDepreciation(m).currentBookValue,
+    }))
+    const totalAssetValue = assetRegister.reduce((s, a) => s + a.bookValue, 0)
 
     // ── Dimension 1: Record Completeness (25 pts) ─────────────────────────
     // Days with at least one daily entry / 30 days
@@ -270,6 +285,8 @@ export default function LoanReadinessPage() {
       totalTxns: allTxns.length,
       activeTypes,
       invScore,
+      assetRegister,
+      totalAssetValue,
     }
   }, [userId])
 
@@ -352,6 +369,27 @@ export default function LoanReadinessPage() {
                 ))}
               </div>
             </div>
+
+            {/* Asset register — informational, machinery is often loan collateral */}
+            {data.assetRegister.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-gray-800">Asset Register</p>
+                  <span className="text-sm font-bold text-primary-700">{fmt(data.totalAssetValue)}</span>
+                </div>
+                <p className="text-xs text-gray-400 mb-2">
+                  Machinery and equipment book values — often accepted as loan collateral.
+                </p>
+                <div className="space-y-1.5">
+                  {data.assetRegister.map(a => (
+                    <div key={a.id} className="flex justify-between text-sm">
+                      <span className="text-gray-600">{a.name}</span>
+                      <span className="font-medium text-gray-800">{fmt(a.bookValue)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Methodology note */}
             <div className="bg-gray-50 rounded-xl border border-gray-200 p-3">

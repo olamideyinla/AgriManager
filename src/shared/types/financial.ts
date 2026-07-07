@@ -17,6 +17,7 @@ export type FinancialCategory =
   | 'rent'
   | 'insurance'
   | 'equipment'
+  | 'fuel'
   | 'administrative'
   | 'other'
 

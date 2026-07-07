@@ -30,6 +30,7 @@ const CATEGORY_COLORS: Partial<Record<FinancialCategory, string>> = {
   sales_crops:   '#84cc16',
   sales_other:   '#a3e635',
   equipment:     '#8b5cf6',
+  fuel:          '#f59e0b',
   rent:          '#ec4899',
   other:         '#9ca3af',
 }

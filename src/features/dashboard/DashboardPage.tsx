@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { Bell, TrendingUp, ShoppingCart, CreditCard, Package, BarChart3, CheckCircle, Clock, Stethoscope, Users2, ClipboardList } from 'lucide-react'
+import { Bell, TrendingUp, ShoppingCart, CreditCard, Package, BarChart3, CheckCircle, Clock, Stethoscope, Users2, ClipboardList, Wrench } from 'lucide-react'
 import { format } from 'date-fns'
 import { useAuthStore } from '../../stores/auth-store'
 import { useEffectiveAppUser } from '../../shared/hooks/useEffectiveUser'
@@ -11,8 +11,10 @@ import { useMonthlyFinancials } from '../../core/database/hooks/use-financials'
 import { useUpcomingHealthEvents } from '../../core/database/hooks/use-health'
 import { useTodayAttendanceSummary } from '../../core/database/hooks/use-labor'
 import { useTeamDailyStatus } from '../../core/database/hooks/use-worker-tasks'
+import { useMachineryDashboardSummary } from '../../core/database/hooks/use-machinery'
 import { useCurrency } from '../../shared/hooks/useCurrency'
 import { usePageTitle } from '../../shared/hooks/usePageTitle'
+import { FeatureGate } from '../../shared/components/FeatureGate'
 import { BudgetWidget } from './BudgetWidget'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
 
@@ -224,6 +226,7 @@ export default function DashboardPage() {
   const now     = new Date()
   const isTeamRole = appUser?.role === 'owner' || appUser?.role === 'manager' || appUser?.role === 'supervisor'
   const teamTaskStatus = useTeamDailyStatus(isTeamRole ? appUser?.organizationId : undefined, format(now, 'yyyy-MM-dd'))
+  const machinerySummary = useMachineryDashboardSummary(appUser?.organizationId)
   const year    = now.getFullYear()
   const month   = now.getMonth() + 1
   const financials = useMonthlyFinancials(year, month)
@@ -458,6 +461,30 @@ export default function DashboardPage() {
             </div>
             <span className="text-indigo-400 text-sm">→</span>
           </button>
+        )}
+
+        {/* Machinery summary card */}
+        {machinerySummary && machinerySummary.totalMachines > 0 && (
+          <FeatureGate feature="machinery_equipment">
+            <button
+              onClick={() => navigate('/machinery')}
+              className="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3.5 active:bg-slate-100 transition-colors text-left"
+            >
+              <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Wrench size={18} className="text-slate-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-700">Machinery</p>
+                <p className="text-xs text-slate-500">
+                  {machinerySummary.activeCount} machine{machinerySummary.activeCount !== 1 ? 's' : ''} active
+                  {machinerySummary.maintenanceDueCount > 0 && (
+                    <span className="text-amber-600 font-medium"> · {machinerySummary.maintenanceDueCount} maintenance due</span>
+                  )}
+                </p>
+              </div>
+              <span className="text-slate-400 text-sm">→</span>
+            </button>
+          </FeatureGate>
         )}
 
         {/* Quick actions */}

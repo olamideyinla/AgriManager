@@ -180,6 +180,16 @@ const WithdrawalTrackerPage       = lazy(() => import('../features/health/Withdr
 const BatchComparisonPage         = lazy(() => import('../features/reports/BatchComparisonPage'))
 const MarketPricePage             = lazy(() => import('../features/decision-support/MarketPricePage'))
 
+// Machinery & Equipment (Pro)
+const MachineryPage                 = lazy(() => import('../features/machinery/MachineryPage'))
+const MachineDetailPage             = lazy(() => import('../features/machinery/MachineDetailPage'))
+const AddMachineForm                = lazy(() => import('../features/machinery/forms/AddMachineForm'))
+const RecordMaintenanceForm         = lazy(() => import('../features/machinery/forms/RecordMaintenanceForm'))
+const AddMaintenanceScheduleForm    = lazy(() => import('../features/machinery/forms/AddMaintenanceScheduleForm'))
+const AddFuelForm                   = lazy(() => import('../features/machinery/forms/AddFuelForm'))
+const LogUsageForm                  = lazy(() => import('../features/machinery/forms/LogUsageForm'))
+const MachineryReportPage           = lazy(() => import('../features/reports/MachineryReportPage'))
+
 function LoadingScreen() {
   return (
     <div className="flex h-dvh items-center justify-center bg-primary-500">
@@ -386,6 +396,19 @@ export function AppRoutes() {
           <Route path="/health/withdrawal"                element={<ProtectedRoute><WithdrawalTrackerPage /></ProtectedRoute>} />
           <Route path="/reports/batch-comparison"         element={<ProtectedRoute><BatchComparisonPage /></ProtectedRoute>} />
           <Route path="/decision/market-prices"           element={<ProtectedRoute><MarketPricePage /></ProtectedRoute>} />
+
+          {/* Machinery & Equipment — outside shell (specific before :id) */}
+          <Route path="/machinery"                                element={<ProtectedRoute><MachineryPage /></ProtectedRoute>} />
+          <Route path="/machinery/add"                             element={<ProtectedRoute><AddMachineForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id/edit"                        element={<ProtectedRoute><AddMachineForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id/maintenance/record"          element={<ProtectedRoute><RecordMaintenanceForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id/maintenance/schedule/add"    element={<ProtectedRoute><AddMaintenanceScheduleForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id/fuel/add"                    element={<ProtectedRoute><AddFuelForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id/usage/add"                   element={<ProtectedRoute><LogUsageForm /></ProtectedRoute>} />
+          <Route path="/machinery/:id"                             element={<ProtectedRoute><MachineDetailPage /></ProtectedRoute>} />
+
+          {/* Machinery & Equipment report */}
+          <Route path="/reports/machinery" element={<ProtectedRoute><MachineryReportPage /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

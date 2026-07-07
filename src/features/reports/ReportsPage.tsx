@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
-  FileText, BarChart3, TrendingUp, Package, DollarSign, ClipboardList, ChevronRight, RefreshCw, Users2, Award, Activity,
+  FileText, BarChart3, TrendingUp, Package, DollarSign, ClipboardList, ChevronRight, RefreshCw, Users2, Award, Activity, Wrench,
 } from 'lucide-react'
 import { db } from '../../core/database/db'
 import { useAuthStore } from '../../stores/auth-store'
@@ -109,6 +109,14 @@ const REPORT_CARDS: ReportCard[] = [
     description: 'Compare historical batch closeouts by FCR, mortality, and profit',
     icon: <BarChart3 className='w-5 h-5 text-primary-600' />,
     route: '/reports/batch-comparison',
+  },
+  {
+    id: 'machinery',
+    category: 'operational',
+    title: 'Machinery & Equipment',
+    description: 'Asset register, maintenance, fuel consumption, and total cost of ownership',
+    icon: <Wrench className='w-5 h-5 text-primary-600' />,
+    route: '/reports/machinery',
   },
 ]
 

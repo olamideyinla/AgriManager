@@ -22,6 +22,7 @@ const EXPENSE_CATEGORIES: { value: FinancialCategory; label: string }[] = [
   { value: 'rent',           label: '🏠 Rent'       },
   { value: 'insurance',      label: '🛡️ Insurance' },
   { value: 'equipment',      label: '🔧 Equipment'  },
+  { value: 'fuel',           label: '⛽ Fuel'       },
   { value: 'administrative', label: '📋 Admin'      },
   { value: 'other',          label: '📌 Other'      },
 ]

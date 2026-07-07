@@ -48,6 +48,11 @@ export const SYNC_ORDER = [
   'reproductiveEvents',
   'withdrawalRecords',
   'marketPrices',
+  'machines',
+  'maintenanceSchedules',
+  'maintenanceRecords',
+  'fuelLogs',
+  'usageLogs',
 ] as const
 
 export type SyncTableName = typeof SYNC_ORDER[number]
@@ -100,6 +105,11 @@ export const TABLE_SUPABASE_NAME: Record<SyncTableName, string> = {
   reproductiveEvents: 'reproductive_events',
   withdrawalRecords: 'withdrawal_records',
   marketPrices: 'market_prices',
+  machines: 'machines',
+  maintenanceSchedules: 'maintenance_schedules',
+  maintenanceRecords: 'maintenance_records',
+  fuelLogs: 'fuel_logs',
+  usageLogs: 'usage_logs',
 }
 
 /**

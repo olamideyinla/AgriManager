@@ -18,6 +18,7 @@ import type {
   RecurringTransaction,
   PurchaseOrder, PurchaseOrderItem, FinancialBudget,
   ReproductiveEvent, WithdrawalRecord, MarketPrice,
+  Machine, MaintenanceSchedule, MaintenanceRecord, FuelLog, UsageLog,
 } from '../../shared/types'
 import type { ConflictRecord } from '../sync/conflict-resolver'
 
@@ -102,6 +103,11 @@ export class AgriDatabase extends Dexie {
   reproductiveEvents!: EntityTable<ReproductiveEvent, 'id'>
   withdrawalRecords!: EntityTable<WithdrawalRecord, 'id'>
   marketPrices!: EntityTable<MarketPrice, 'id'>
+  machines!: EntityTable<Machine, 'id'>
+  maintenanceSchedules!: EntityTable<MaintenanceSchedule, 'id'>
+  maintenanceRecords!: EntityTable<MaintenanceRecord, 'id'>
+  fuelLogs!: EntityTable<FuelLog, 'id'>
+  usageLogs!: EntityTable<UsageLog, 'id'>
 
   constructor() {
     super('agri-manager-db')
@@ -278,6 +284,20 @@ export class AgriDatabase extends Dexie {
     this.version(16).stores({
       purchaseOrders:
         '&id, organizationId, supplierId, status, orderDate, [organizationId+status], poNumber',
+    })
+
+    // v17 — adds machinery & equipment module
+    this.version(17).stores({
+      machines:
+        '&id, organizationId, category, status, [organizationId+status]',
+      maintenanceSchedules:
+        '&id, machineId, nextDueDate',
+      maintenanceRecords:
+        '&id, machineId, date, type, [machineId+date]',
+      fuelLogs:
+        '&id, machineId, date, [machineId+date]',
+      usageLogs:
+        '&id, machineId, date, [machineId+date]',
     })
   }
 }
