@@ -9,6 +9,7 @@ import { Bell, BarChart2, Building2, LogOut, ChevronRight, RefreshCw, Users, Cli
 import { PermissionGate } from '../../shared/components/PermissionGate'
 import { db } from '../../core/database/db'
 import type { UserRole } from '../../shared/types'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 // ── Logo helpers ───────────────────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ const FONT_SIZES: { value: FontSize; label: string }[] = [
 ]
 
 export default function MorePage() {
+  usePageTitle('Settings')
   const navigate  = useNavigate()
   const appUser   = useAuthStore(s => s.appUser)
   const signOut   = useAuthStore(s => s.signOut)

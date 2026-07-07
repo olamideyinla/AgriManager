@@ -1,0 +1,47 @@
+# AgriManagerX robots.txt
+User-agent: *
+
+# Public marketing pages
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /contact
+Allow: /features
+Allow: /solutions/
+Allow: /about
+Allow: /pricing
+Allow: /demo
+Allow: /partners
+Allow: /partners/apply
+
+# Block app routes (behind auth, no value for search engines)
+Disallow: /dashboard
+Disallow: /daily-entry
+Disallow: /enterprises
+Disallow: /inventory
+Disallow: /financials
+Disallow: /reports
+Disallow: /alerts
+Disallow: /settings
+Disallow: /import
+Disallow: /worker
+Disallow: /worker-entry
+Disallow: /team
+Disallow: /payroll
+Disallow: /invoicing
+Disallow: /labor
+Disallow: /decision
+Disallow: /sync
+Disallow: /health
+Disallow: /admin
+Disallow: /partners/signin
+Disallow: /partners/portal
+Disallow: /auth/
+
+# Allow assets
+Allow: /icons/
+Allow: /og-image.png
+Allow: /manifest.json
+
+# Sitemap
+Sitemap: https://www.agrimanagerx.com/sitemap.xml

@@ -3,6 +3,14 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "agrimanagerx.com" }],
+      "destination": "https://www.agrimanagerx.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -15,6 +23,12 @@
     },
     {
       "source": "/icons/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/og-image.png",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
@@ -39,7 +53,7 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(), microphone=()" }
+        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(self), microphone=()" }
       ]
     }
   ]

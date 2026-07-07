@@ -16,6 +16,7 @@ import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
 import { FeatureGate } from '../../shared/components/FeatureGate'
 import type { PayrollRun, RemittanceObligation } from '../../shared/types'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -415,6 +416,7 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 export default function PayrollPage() {
+  usePageTitle('Payroll')
   const navigate       = useNavigate()
   const organizationId = useAuthStore(s => s.appUser?.organizationId)
   const { fmt }        = useCurrency()

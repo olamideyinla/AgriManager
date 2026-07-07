@@ -3,32 +3,117 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <title>AgriManagerX — Farm Management App for Poultry, Fish, Crops & Livestock</title>
+    <meta name="description" content="Track eggs, feed, mortality, and profit — from your phone, even without internet. Manage poultry, fish, cattle, crops, inventory, payroll, and invoicing. Free to start." />
+    <link rel="canonical" href="https://www.agrimanagerx.com/" />
+
+    <!-- SEO -->
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="AgriManagerX" />
+    <meta name="keywords" content="farm management app, poultry management, egg tracking, broiler management, fish farming app, livestock management, farm accounting, agricultural software, offline farm app, Nigeria farm app, Kenya farm app, Africa agriculture" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.agrimanagerx.com/" />
+    <meta property="og:title" content="AgriManagerX — Farm Management App" />
+    <meta property="og:description" content="Track eggs, feed, mortality, and profit — from your phone, even without internet. Free to start." />
+    <meta property="og:image" content="https://www.agrimanagerx.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AgriManagerX farm management app showing production dashboard on a phone" />
+    <meta property="og:site_name" content="AgriManagerX" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AgriManagerX — Farm Management App" />
+    <meta name="twitter:description" content="Track eggs, feed, mortality, and profit — from your phone, even without internet. Free to start." />
+    <meta name="twitter:image" content="https://www.agrimanagerx.com/og-image.png" />
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#2D6A4F" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AgriManagerX" />
-    <meta name="theme-color" content="#2D6A4F" />
-    <meta name="description" content="Offline-first farm management for smallholder farmers. Track livestock, crops, inventory and finances — works without internet." />
+    <meta name="application-name" content="AgriManagerX" />
+    <meta name="msapplication-TileColor" content="#2D6A4F" />
 
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="AgriManagerX — Farm Management PWA" />
-    <meta property="og:description" content="Offline-first farm management for smallholder farmers." />
-    <meta property="og:image" content="/icons/icon-512.png" />
-
-    <!-- Google Fonts: landing page typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 
     <!-- Plausible Analytics (loaded only when domain is set via env at build time) -->
     <!-- This comment is replaced at build time if VITE_PLAUSIBLE_DOMAIN is set -->
 
-    <title>AgriManagerX — Farm Management for Smallholder Farmers</title>
+    <!-- Structured data: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AgriManagerX",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Android, iOS, Web",
+      "description": "Farm management app for poultry, fish, cattle, crops, and livestock. Track production, finances, inventory, payroll, and invoicing. Works offline.",
+      "url": "https://www.agrimanagerx.com",
+      "image": "https://www.agrimanagerx.com/og-image.png",
+      "screenshot": "https://www.agrimanagerx.com/og-image.png",
+      "author": {
+        "@type": "Organization",
+        "name": "AgriManagerX",
+        "url": "https://www.agrimanagerx.com"
+      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Free Plan",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "Up to 3 enterprises, full daily tracking, financial dashboard, works offline"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro Plan",
+          "price": "10",
+          "priceCurrency": "USD",
+          "description": "Team access, PDF reports, payroll, invoicing, batch comparison, full alerts (first-year promotional price, USD default)"
+        },
+        {
+          "@type": "Offer",
+          "name": "X Plan",
+          "price": "1500",
+          "priceCurrency": "USD",
+          "description": "Unlimited everything, multi-farm, custom reports, priority support (first-year promotional price, USD default)",
+          "billingDuration": "P1Y"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured data: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AgriManagerX",
+      "url": "https://www.agrimanagerx.com",
+      "logo": "https://www.agrimanagerx.com/icons/icon-512.png",
+      "description": "Farm management software for small and mid-size agricultural operations across Africa, Asia, and Latin America.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "availableLanguage": "English",
+        "url": "https://www.agrimanagerx.com"
+      },
+      "sameAs": []
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

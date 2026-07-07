@@ -7,6 +7,7 @@ import { ChevronLeft, Eye, EyeOff, Loader2, Zap, Crown, Ticket } from 'lucide-re
 import { useAuthStore } from '../../../stores/auth-store'
 import { supabase } from '../../../core/config/supabase'
 import { getCurrencyConfig } from '../../../core/config/currencies'
+import { usePageTitle } from '../../../shared/hooks/usePageTitle'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SignUpPage() {
+  usePageTitle('Create Account')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const plan = searchParams.get('plan') as 'free' | 'pro' | 'x' | null

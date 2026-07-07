@@ -12,6 +12,7 @@ import { useUpcomingHealthEvents } from '../../core/database/hooks/use-health'
 import { useTodayAttendanceSummary } from '../../core/database/hooks/use-labor'
 import { useTeamDailyStatus } from '../../core/database/hooks/use-worker-tasks'
 import { useCurrency } from '../../shared/hooks/useCurrency'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 import { BudgetWidget } from './BudgetWidget'
 import type { EnterpriseType, EnterpriseInstance } from '../../shared/types'
 
@@ -207,6 +208,7 @@ function SyncPill({ pendingSync, isOnline }: { pendingSync: number; isOnline: bo
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  usePageTitle('Dashboard')
   const navigate = useNavigate()
   const userId   = useAuthStore(s => s.user?.id)
   const isOnline = useUIStore(s => s.isOnline)

@@ -8,6 +8,7 @@ import { useCurrency } from '../../shared/hooks/useCurrency'
 import { db } from '../../core/database/db'
 import { FeatureGate } from '../../shared/components/FeatureGate'
 import type { Invoice, Receipt as ReceiptType } from '../../shared/types'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
@@ -93,6 +94,7 @@ function ReceiptRow({ receipt, fmt }: { receipt: ReceiptType; fmt: (n: number) =
 type Tab = 'invoices' | 'receipts'
 
 export default function InvoicingPage() {
+  usePageTitle('Invoices & Receipts')
   const navigate       = useNavigate()
   const organizationId = useAuthStore(s => s.appUser?.organizationId)
   const { fmt }        = useCurrency()

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { db } from '../../core/database/db'
 import { useAuthStore } from '../../stores/auth-store'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 type ReportCategory = 'enterprise' | 'financial' | 'operational'
 
@@ -120,6 +121,7 @@ const CATEGORY_LABELS: Record<ReportCategory, string> = {
 const CATEGORY_ORDER: ReportCategory[] = ['enterprise', 'financial', 'operational']
 
 export default function ReportsPage() {
+  usePageTitle('Reports')
   const navigate = useNavigate()
   const userId = useAuthStore((s) => s.user?.id)
   const [pendingCount, setPendingCount] = useState(0)

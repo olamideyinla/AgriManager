@@ -9,6 +9,7 @@ import { useInventoryItems, useLowStockItems } from '../../core/database/hooks/u
 import { useAuthStore } from '../../stores/auth-store'
 import { exportInventoryReport } from '../../core/services/csv-export'
 import type { InventoryCategory, InventoryItem, InventoryTransaction } from '../../shared/types'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -395,6 +396,7 @@ function AlertsTab() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function InventoryPage() {
+  usePageTitle('Inventory')
   const [activeTab, setActiveTab] = useState<TabId>('stock')
   const [fabOpen,   setFabOpen]   = useState(false)
   const navigate  = useNavigate()

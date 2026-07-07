@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../../../stores/auth-store'
+import { usePageTitle } from '../../../shared/hooks/usePageTitle'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ type FormValues = z.infer<typeof schema>
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SignInPage() {
+  usePageTitle('Sign In')
   const navigate = useNavigate()
   const { signInWithEmail, isLoading, error, clearError } = useAuthStore()
 

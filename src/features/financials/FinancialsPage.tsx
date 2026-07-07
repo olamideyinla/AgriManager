@@ -13,6 +13,7 @@ import { useAuthStore } from '../../stores/auth-store'
 import { db } from '../../core/database/db'
 import { useCurrency } from '../../shared/hooks/useCurrency'
 import type { FinancialCategory, FinancialTransaction } from '../../shared/types'
+import { usePageTitle } from '../../shared/hooks/usePageTitle'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -357,6 +358,7 @@ function OverviewTab() {
 type TabId = 'income' | 'expenses' | 'overview'
 
 export default function FinancialsPage() {
+  usePageTitle('Finances')
   const navigate = useNavigate()
   const now      = new Date()
   const monthly  = useMonthlyFinancials(now.getFullYear(), now.getMonth() + 1)
