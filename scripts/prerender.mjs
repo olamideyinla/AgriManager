@@ -23,6 +23,8 @@ import path from 'path'
 const root = process.cwd()
 const mode = process.env.PRERENDER_MODE || 'production'
 
+const SITE_ORIGIN = 'https://www.agrimanagerx.com'
+
 const ROUTES = [
   {
     path: '/',
@@ -79,6 +81,15 @@ async function main() {
     page = page.replace(
       /(<meta property="og:description" content=")[^"]*(")/,
       `$1${route.description}$2`
+    )
+    const canonicalUrl = `${SITE_ORIGIN}${route.path}`
+    page = page.replace(
+      /(<link rel="canonical" href=")[^"]*(")/,
+      `$1${canonicalUrl}$2`
+    )
+    page = page.replace(
+      /(<meta property="og:url" content=")[^"]*(")/,
+      `$1${canonicalUrl}$2`
     )
 
     const outPath = path.resolve(root, route.out)

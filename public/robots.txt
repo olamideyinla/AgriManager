@@ -14,6 +14,12 @@ Allow: /demo
 Allow: /partners
 Allow: /partners/apply
 
+# Public auth entry points — legitimate landing targets for branded searches
+Allow: /auth/signin
+Allow: /auth/signup
+Allow: /auth/welcome
+Allow: /auth/forgot-password
+
 # Block app routes (behind auth, no value for search engines)
 Disallow: /dashboard
 Disallow: /daily-entry
@@ -34,9 +40,11 @@ Disallow: /decision
 Disallow: /sync
 Disallow: /health
 Disallow: /admin
+Disallow: /machinery
+Disallow: /more
 Disallow: /partners/signin
 Disallow: /partners/portal
-Disallow: /auth/
+Disallow: /auth/accept-invite
 
 # Allow assets
 Allow: /icons/

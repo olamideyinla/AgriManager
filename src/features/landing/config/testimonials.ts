@@ -17,6 +17,16 @@ export type Testimonial = {
 }
 
 export const ALL_TESTIMONIALS: Testimonial[] = [
+  {
+    quote:
+      'I have three poultry houses and a fish pond. Before AgriManagerX, I was running between notebooks and WhatsApp groups trying to keep track. Now my workers enter everything on their phones and I see it all from my office. Last month I discovered my fish pond was actually more profitable than I thought — I\'m expanding it.',
+    name: 'Chidi O.',
+    role: 'Mixed farm, 8,000 birds + fish pond — Ibadan, Nigeria',
+    countryCode: 'NG',
+    flag: '🇳🇬',
+    region: 'west_africa',
+  },
+
   // ── East Africa ──────────────────────────────────────────────────────────────
   {
     quote:

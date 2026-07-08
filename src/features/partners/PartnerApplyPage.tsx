@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle, Users, Briefcase, Eye, EyeOff } from 'lucide-react'
 import { partnerSupabase } from '../../core/config/supabase-partner'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 
 // ── Schemas ────────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,7 @@ function Field({ label, hint, error, children }: {
 
 export default function PartnerApplyPage() {
   const navigate = useNavigate()
+  usePageMeta('Apply to Partner — AgriManagerX', 'Apply to the AgriManagerX Partner programme in a few minutes.')
 
   useEffect(() => {
     const via = new URLSearchParams(window.location.search).get('via')

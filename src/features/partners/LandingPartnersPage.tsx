@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LandingNav } from '../landing/components/LandingNav'
 import { LandingFooter } from '../landing/components/LandingFooter'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 import {
   DollarSign, Users, TrendingUp, CheckCircle, ChevronDown, ChevronUp,
   Briefcase, Leaf, HandshakeIcon, GraduationCap,
@@ -56,6 +57,10 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export default function LandingPartnersPage() {
   const navigate = useNavigate()
+  usePageMeta(
+    'Become a Partner — AgriManagerX',
+    'Earn commission referring farmers to AgriManagerX. Apply to the partner programme — no tech background required.'
+  )
 
   return (
     <div className="bg-white">

@@ -42,10 +42,6 @@ const xFeatures = [
   'Priority support',
 ]
 
-function PriceSkeleton() {
-  return <div className="h-10 w-28 bg-white/20 rounded-lg animate-pulse my-1" />
-}
-
 export function PricingSection() {
   const navigate = useNavigate()
   const [yearly, setYearly] = useState(false)
@@ -54,15 +50,18 @@ export function PricingSection() {
 
   const currency = getCurrencyConfig(countryCode)
 
-  const freeStr            = isDetecting ? null : formatPrice(0, currency)
+  // `currency` is always populated (defaults to USD synchronously before geo-detection
+  // resolves), so prices render immediately — no skeleton flash, and prerendered/crawled
+  // HTML shows real numbers instead of empty loading placeholders.
+  const freeStr            = formatPrice(0, currency)
   // Year-1 launch prices (50% off full price = original pre-doubling price)
-  const proMonthlyStr      = isDetecting ? null : formatPrice(currency.pro.monthly * FIRST_YEAR_DISCOUNT, currency) + '/mo'
-  const proAnnualStr       = isDetecting ? null : formatPrice(currency.pro.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
-  const xAnnualStr         = isDetecting ? null : formatPrice(currency.x.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
+  const proMonthlyStr      = formatPrice(currency.pro.monthly * FIRST_YEAR_DISCOUNT, currency) + '/mo'
+  const proAnnualStr       = formatPrice(currency.pro.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
+  const xAnnualStr         = formatPrice(currency.x.annual * FIRST_YEAR_DISCOUNT, currency) + '/yr'
   // Full prices (shown as strikethrough)
-  const proMonthlyFullStr  = isDetecting ? null : formatPrice(currency.pro.monthly, currency) + '/mo'
-  const proAnnualFullStr   = isDetecting ? null : formatPrice(currency.pro.annual, currency) + '/yr'
-  const xAnnualFullStr     = isDetecting ? null : formatPrice(currency.x.annual, currency) + '/yr'
+  const proMonthlyFullStr  = formatPrice(currency.pro.monthly, currency) + '/mo'
+  const proAnnualFullStr   = formatPrice(currency.pro.annual, currency) + '/yr'
+  const xAnnualFullStr     = formatPrice(currency.x.annual, currency) + '/yr'
 
   return (
     <section id="pricing" className="py-20 bg-white">
@@ -72,7 +71,19 @@ export function PricingSection() {
             Simple, Transparent Pricing
           </h2>
           <p className="text-gray-500 text-lg font-body mb-3">Start free. Upgrade when you're ready.</p>
+
+          {/* Launch discount banner */}
+          <div className="max-w-md mx-auto bg-amber-50 border-2 border-accent rounded-xl p-4 mb-6 text-center">
+            <p className="font-bold text-accent text-lg">🎉 Launch Offer — 50% Off Your First Year</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Prices shown reflect the launch discount. Standard pricing applies from year two.
+            </p>
+          </div>
+
           <CurrencySelector />
+          {isDetecting && (
+            <p className="text-xs text-gray-400 mt-2">Detecting your local currency…</p>
+          )}
 
           {/* Monthly / Yearly toggle */}
           <div className="inline-flex items-center gap-3 bg-gray-100 rounded-full p-1 mt-4">
@@ -95,11 +106,7 @@ export function PricingSection() {
           {/* Free */}
           <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
             <h3 className="text-xl font-bold text-gray-900 mb-1 font-body">Free</h3>
-            {isDetecting ? (
-              <div className="h-10 w-20 bg-gray-100 rounded-lg animate-pulse my-1" />
-            ) : (
-              <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">{freeStr}</p>
-            )}
+            <p className="text-4xl font-bold text-gray-900 mb-1 kpi-value">{freeStr}</p>
             <p className="text-gray-500 text-sm mb-6">Forever</p>
             <ul className="space-y-3 flex-1 mb-8">
               {freeFeatures.map((f) => (
@@ -127,10 +134,8 @@ export function PricingSection() {
             </div>
             <h3 className="text-xl font-bold text-white mb-1 font-body">Pro</h3>
 
-            {/* Price — skeleton while detecting */}
-            {isDetecting ? (
-              <PriceSkeleton />
-            ) : yearly ? (
+            {/* Price */}
+            {yearly ? (
               <>
                 <div className="inline-flex items-center gap-1.5 bg-accent/20 border border-accent/40 text-accent text-xs font-bold px-2.5 py-1 rounded-full mb-2">
                   50% off · 1st year
@@ -153,7 +158,6 @@ export function PricingSection() {
                 <p className="text-primary-200 text-xs mb-6">or {proAnnualStr}/yr (save 17%)</p>
               </>
             )}
-            {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
 
             <ul className="space-y-3 flex-1 mb-8">
               {proFeatures.map((f) => (
@@ -181,21 +185,14 @@ export function PricingSection() {
               <h3 className="text-xl font-bold text-white font-body">X</h3>
             </div>
 
-            {isDetecting ? (
-              <PriceSkeleton />
-            ) : (
-              <>
-                <div className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full mb-2">
-                  50% off · 1st year
-                </div>
-                <p className="text-4xl font-bold text-white kpi-value mb-1">{xAnnualStr}</p>
-                <p className="text-gray-500 text-sm mb-1">
-                  <span className="line-through">{xAnnualFullStr}</span> regular price
-                </p>
-                <p className="text-gray-400 text-xs mb-6">per year · billed annually</p>
-              </>
-            )}
-            {isDetecting && <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-6" />}
+            <div className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full mb-2">
+              50% off · 1st year
+            </div>
+            <p className="text-4xl font-bold text-white kpi-value mb-1">{xAnnualStr}</p>
+            <p className="text-gray-500 text-sm mb-1">
+              <span className="line-through">{xAnnualFullStr}</span> regular price
+            </p>
+            <p className="text-gray-400 text-xs mb-6">per year · billed annually</p>
 
             <ul className="space-y-3 flex-1 mb-8">
               {xFeatures.map((f) => (
