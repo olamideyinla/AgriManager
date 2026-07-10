@@ -48,6 +48,7 @@ Disallow: /auth/accept-invite
 
 # Allow assets
 Allow: /icons/
+Allow: /assets/
 Allow: /og-image.png
 Allow: /manifest.json
 

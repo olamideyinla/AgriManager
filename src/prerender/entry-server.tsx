@@ -1,14 +1,37 @@
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { StaticRouter } from 'react-router-dom'
+import { StaticRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from '../features/landing/LandingPage'
 import PrivacyPage from '../features/landing/PrivacyPage'
 import TermsPage from '../features/landing/TermsPage'
+import ContactPage from '../features/landing/ContactPage'
+import FeaturesPage from '../features/landing/FeaturesPage'
+import SolutionPage from '../features/landing/SolutionPage'
+import AboutPage from '../features/landing/AboutPage'
+import PricingPage from '../features/landing/PricingPage'
+import DemoPage from '../features/landing/DemoPage'
+import LandingPartnersPage from '../features/partners/LandingPartnersPage'
+import PartnerApplyPage from '../features/partners/PartnerApplyPage'
 
-const PAGES: Record<string, ComponentType> = {
-  '/': LandingPage,
-  '/privacy': PrivacyPage,
-  '/terms': TermsPage,
+/**
+ * path → { route pattern, component }. The pattern matters for pages that read
+ * useParams (e.g. /solutions/:slug) — rendering the component bare inside
+ * StaticRouter would leave params empty.
+ */
+const PAGES: Record<string, { pattern: string; Component: ComponentType }> = {
+  '/':                     { pattern: '/',                 Component: LandingPage },
+  '/privacy':              { pattern: '/privacy',          Component: PrivacyPage },
+  '/terms':                { pattern: '/terms',            Component: TermsPage },
+  '/contact':              { pattern: '/contact',          Component: ContactPage },
+  '/features':             { pattern: '/features',         Component: FeaturesPage },
+  '/about':                { pattern: '/about',            Component: AboutPage },
+  '/pricing':              { pattern: '/pricing',          Component: PricingPage },
+  '/demo':                 { pattern: '/demo',             Component: DemoPage },
+  '/partners':             { pattern: '/partners',         Component: LandingPartnersPage },
+  '/partners/apply':       { pattern: '/partners/apply',   Component: PartnerApplyPage },
+  '/solutions/livestock':  { pattern: '/solutions/:slug',  Component: SolutionPage },
+  '/solutions/crops':      { pattern: '/solutions/:slug',  Component: SolutionPage },
+  '/solutions/machinery':  { pattern: '/solutions/:slug',  Component: SolutionPage },
 }
 
 /**
@@ -20,12 +43,15 @@ const PAGES: Record<string, ComponentType> = {
  * which is fine here since only text content matters for this pass.
  */
 export function renderPage(path: string): string {
-  const Page = PAGES[path]
-  if (!Page) throw new Error(`No prerender mapping for path "${path}"`)
+  const entry = PAGES[path]
+  if (!entry) throw new Error(`No prerender mapping for path "${path}"`)
+  const { pattern, Component } = entry
 
   return renderToStaticMarkup(
     <StaticRouter location={path}>
-      <Page />
+      <Routes>
+        <Route path={pattern} element={<Component />} />
+      </Routes>
     </StaticRouter>
   )
 }

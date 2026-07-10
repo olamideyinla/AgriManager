@@ -1,8 +1,13 @@
 import { LandingNav } from './components/LandingNav'
 import { LandingFooter } from './components/LandingFooter'
 import { ContactSection } from './components/ContactSection'
+import { usePageMeta } from '../../shared/hooks/usePageMeta'
 
 export default function ContactPage() {
+  usePageMeta(
+    'Contact Us — AgriManagerX',
+    'Questions or feedback about AgriManagerX? Get in touch — we respond within one business day.'
+  )
   return (
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <LandingNav />
