@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { updateCanonicalUrl } from './updateCanonicalUrl'
 
-const DEFAULT_TITLE = 'AgriManagerX — Farm Management App for Poultry, Fish & Crops'
+const DEFAULT_TITLE = 'AgriManagerX — Free Farm Management App for Poultry & Crops'
 
 /** Sets document.title, og:title, canonical, and og:url for the current route. */
 export function usePageTitle(title: string) {

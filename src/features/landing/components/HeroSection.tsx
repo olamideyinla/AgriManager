@@ -27,8 +27,8 @@ export function HeroSection() {
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-600 font-body leading-relaxed mb-8">
-              AgriManagerX is the operational OS for growing farms — livestock, crops, inventory,
-              and reports in one simple platform your whole team can use. Even offline.
+              AgriManagerX is the free farm management app for livestock, crops, and inventory —
+              one simple platform your whole team can use, even offline.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
