@@ -40,9 +40,9 @@ const ROUTES = [
   {
     path: '/',
     out: 'dist/index.html',
-    title: 'AgriManagerX — Farm Management App for Poultry, Fish, Crops & Livestock',
+    title: 'AgriManagerX — Farm Management App for Poultry, Fish & Crops',
     description:
-      'Track eggs, feed, mortality, and profit — from your phone, even without internet. Manage poultry, fish, cattle, crops, inventory, payroll, and invoicing. Free to start.',
+      'Track eggs, feed, mortality, and profit from your phone — even offline. Manage poultry, fish, cattle, crops, inventory, payroll, and invoicing. Free to start.',
   },
   {
     path: '/features',
